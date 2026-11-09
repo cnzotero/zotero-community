@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "../link.tsx";
+import { PageHero } from "../pageHero.tsx";
 import {
   CATEGORIES, DEFAULT_FILTERS, ZOTERO_VERSIONS as ZV, cardTags, downloadFilename, downloadHost, isAllowedXpiUrl, pickDownload, ZOTERO_VERSIONS, applyFilters, compatSummary, computeStats, formatStars, freshness,
   parseFilters, pluginIdFromPath, pluginPath, relatedPlugins, relativeTime, serializeFilters,
@@ -50,17 +51,6 @@ function SafeImg({ src, className, alt = "" }: { src: string; className?: string
   const [ok, setOk] = useState(true);
   if (!ok) return null;
   return <img src={src} className={className} alt={alt} loading="lazy" decoding="async" onError={() => setOk(false)} />;
-}
-
-function Hero() {
-  const [ok, setOk] = useState(true);
-  if (!ok) return null;
-  return (
-    <picture className="hero-art" aria-hidden>
-      <source media="(prefers-color-scheme: dark)" srcSet={`${IMG}hero-dark.png`} />
-      <img src={`${IMG}hero-light.png`} alt="" decoding="async" onError={() => setOk(false)} />
-    </picture>
-  );
 }
 
 function EmptyArt() {
@@ -196,9 +186,9 @@ export function PluginsList() {
 
   return (
     <section className="section">
-      <Hero />
-      <h1 className="page-title">插件广场</h1>
-      <p className="lead">收录常用的 Zotero 插件,按公开数据整理,点击查看详情。</p>
+      <PageHero kind="hero" title="插件广场" lead="收录常用的 Zotero 插件,按公开数据整理,点击查看详情。">
+        <Link to="/rules" className="inline-link hero-link">收录规则</Link>
+      </PageHero>
       <input
         className="search"
         type="search"

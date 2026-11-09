@@ -9,7 +9,8 @@ import {
 } from "./content.ts";
 import { Link } from "./link.tsx";
 import { PluginDetail, PluginsList } from "./plugins/PluginsPage.tsx";
-import { About, Journals, Rules, Submission } from "./pages/StaticPages.tsx";
+import { JournalsPage } from "./journals/JournalsPage.tsx";
+import { About, Rules, Submission } from "./pages/StaticPages.tsx";
 import { ROUTES, useRoute, type Route } from "./router.ts";
 import { filterGuides, filterPlugins, searchAll } from "./search.ts";
 
@@ -179,7 +180,7 @@ export function App() {
         {route === "plugin" && <PluginDetail />}
         {route === "styles" && <Styles />}
         {route === "forum" && <Forum />}
-        {route === "journals" && <Journals />}
+        {route === "journals" && <JournalsPage />}
         {route === "submission" && <Submission />}
         {route === "rules" && <Rules />}
         {route === "about" && <About />}
