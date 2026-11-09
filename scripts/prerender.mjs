@@ -63,11 +63,14 @@ const crumbs = (items) => ld({
   itemListElement: items.map(([name, path], i) => ({ "@type": "ListItem", position: i + 1, name, item: `${SITE}${path}` })),
 });
 
+const HOME_LINKS = [["/plugins", "插件广场"], ["/guides", "教程"], ["/journals", "期刊查询"], ["/plugins/charts", "插件数据看板"], ["/rules", "收录规则"], ["/about", "关于本站"]];
+
 function staticBody(meta, articles = []) {
   const list = meta.path === "/guides" && articles.length
     ? `<h2>插件开发系列</h2><ol>${articles.map((a) => `<li><a href="/guides/${esc(a.slug)}">${esc(a.title)}</a> - ${esc(a.description)}</li>`).join("")}</ol>`
     : "";
-  return `<main class="container"><section class="section prerender"><h1 class="page-title">${esc(meta.h1)}</h1><p class="lead">${esc(meta.description)}</p>${list}</section></main>`;
+  const home = meta.path === "/" ? `<ul>${HOME_LINKS.map(([h, t]) => `<li><a href="${h}">${esc(t)}</a></li>`).join("")}</ul>` : "";
+  return `<main class="container"><section class="section prerender"><h1 class="page-title">${esc(meta.h1)}</h1><p class="lead">${esc(meta.description)}</p>${home}${list}</section></main>`;
 }
 
 function pluginBody(p, meta) {

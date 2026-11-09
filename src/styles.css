@@ -445,3 +445,10 @@ body { background: var(--bg); }
 @media (max-width: 640px) { .series-item { grid-template-columns: 32px 1fr; } .series-time { display: none; } }
 
 .cat-link { margin: 4px 0 10px; font-size: 14px; }
+
+.hero-search { max-width: 560px; margin: 0 auto; }
+.hero-cta { display: flex; justify-content: center; gap: 10px; margin: 14px 0 0; flex-wrap: wrap; }
+.home-note { margin: 0 0 10px; }
+.tool-card { gap: 6px; padding: 16px; }
+.tool-card h3 { margin: 0; font-size: 16px; }
+.tool-card p { margin: 0; }

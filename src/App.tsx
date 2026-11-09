@@ -11,6 +11,7 @@ import { Link } from "./link.tsx";
 import { GithubIcon } from "./icons.tsx";
 import { PluginDetail, PluginsList } from "./plugins/PluginsPage.tsx";
 import { GuideArticle, GuideSeries } from "./guides/GuidesPages.tsx";
+import { Home } from "./pages/Home.tsx";
 import { CategoryPage } from "./plugins/CategoryPage.tsx";
 import { ChartsPage } from "./plugins/ChartsPage.tsx";
 import { JournalsPage } from "./journals/JournalsPage.tsx";
@@ -96,66 +97,6 @@ function GuideCard({ g }: { g: GuideEntry }) {
 
 function Empty({ text }: { text: string }) {
   return <p className="empty">{text}</p>;
-}
-
-function Home() {
-  const [q, setQ] = useState("");
-  const result = useMemo(() => searchAll(PLUGINS, GUIDES, q), [q]);
-  const searching = q.trim().length > 0;
-  return (
-    <>
-      <section className="hero">
-        <h1>把 Zotero 用顺手</h1>
-        <p>教程、插件、引用样式和经验交流,给每一位用 Zotero 做研究的人。</p>
-        <SearchBox value={q} onChange={setQ} placeholder="搜索教程或插件,例如:翻译、Word、标签" />
-      </section>
-      {searching ? (
-        <section className="section">
-          <h2>搜索结果</h2>
-          {result.guides.length + result.plugins.length === 0 && <Empty text="没有找到相关内容,换个词试试。" />}
-          {result.guides.length > 0 && (
-            <div className="grid">{result.guides.map((g) => <GuideCard key={g.id} g={g} />)}</div>
-          )}
-          {result.plugins.length > 0 && (
-            <div className="grid">
-              {result.plugins.map((p) => (
-                <a key={p.id} className="card" href={p.homepage} target="_blank" rel="noopener noreferrer">
-                  <div className="card-tags"><span className="tag">{PLUGIN_CATEGORIES[p.category]}</span></div>
-                  <h3>{p.name}</h3>
-                  <p>{p.summary}</p>
-                </a>
-              ))}
-            </div>
-          )}
-        </section>
-      ) : (
-        <>
-          <section className="section">
-            <div className="section-head">
-              <h2>新手入门</h2>
-              <Link to="/guides" className="more">全部教程</Link>
-            </div>
-            <div className="grid">{GUIDES.slice(0, 3).map((g) => <GuideCard key={g.id} g={g} />)}</div>
-          </section>
-          <section className="section">
-            <div className="section-head">
-              <h2>插件广场</h2>
-              <Link to="/plugins" className="more">查看全部</Link>
-            </div>
-            <div className="grid">
-              {PLUGINS.slice(0, 3).map((p) => (
-                <a key={p.id} className="card" href={p.homepage} target="_blank" rel="noopener noreferrer">
-                  <div className="card-tags"><span className="tag">{PLUGIN_CATEGORIES[p.category]}</span></div>
-                  <h3>{p.name}</h3>
-                  <p>{p.summary}</p>
-                </a>
-              ))}
-            </div>
-          </section>
-        </>
-      )}
-    </>
-  );
 }
 
 function Guides() {
