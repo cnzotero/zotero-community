@@ -1,4 +1,5 @@
 import { Link } from "../link.tsx";
+import { PageHero } from "../pageHero.tsx";
 
 const REPO = "https://github.com/cnzotero/zotero-community";
 
@@ -118,8 +119,7 @@ export function About() {
 function Planned({ title, lead, items, rules }: { title: string; lead: string; items: string[]; rules: string[] }) {
   return (
     <article className="section prose">
-      <h1 className="page-title">{title}</h1>
-      <p className="lead">{lead}</p>
+      <PageHero kind="hero-submission" title={title} lead={lead} />
       <div className="notice">这个板块正在筹备中,下面是计划提供的内容和使用规则,上线时会按此执行。</div>
       <h2>计划提供</h2>
       <ul>{items.map((t) => <li key={t}>{t}</li>)}</ul>
