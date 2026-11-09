@@ -9,6 +9,7 @@ import {
 } from "./content.ts";
 import { Link } from "./link.tsx";
 import { PluginDetail, PluginsList } from "./plugins/PluginsPage.tsx";
+import { About, Journals, Rules, Submission } from "./pages/StaticPages.tsx";
 import { ROUTES, useRoute, type Route } from "./router.ts";
 import { filterGuides, filterPlugins, searchAll } from "./search.ts";
 
@@ -21,7 +22,7 @@ function Header({ route }: { route: Route }) {
           <span>Zotero 中文社区</span>
         </Link>
         <nav aria-label="主导航" className="nav">
-          {ROUTES.map((r) => (
+          {ROUTES.filter((r) => !r.footer).map((r) => (
             <Link key={r.route} to={r.path} className={r.route === route || (route === "plugin" && r.route === "plugins") ? "nav-link active" : "nav-link"}>
               {r.label}
             </Link>
@@ -178,9 +179,19 @@ export function App() {
         {route === "plugin" && <PluginDetail />}
         {route === "styles" && <Styles />}
         {route === "forum" && <Forum />}
+        {route === "journals" && <Journals />}
+        {route === "submission" && <Submission />}
+        {route === "rules" && <Rules />}
+        {route === "about" && <About />}
       </main>
       <footer className="footer">
-        <div className="container">Zotero 中文社区 · 社区自发运营 · 本站与 Zotero 官方无隶属关系</div>
+        <div className="container">
+          <nav aria-label="页脚导航" className="footer-nav">
+            {ROUTES.filter((r) => r.footer).map((r) => <Link key={r.route} to={r.path}>{r.label}</Link>)}
+            <a href="https://github.com/cnzotero/zotero-community" target="_blank" rel="noopener noreferrer">GitHub</a>
+          </nav>
+          Zotero 中文社区 · 社区自发运营 · 本站与 Zotero 官方无隶属关系
+        </div>
       </footer>
     </>
   );

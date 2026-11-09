@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  DEFAULT_FILTERS, activityTag, applyFilters, cardTags, popularityTag, compatSummary, computeStats, filterPlugins, formatStars, freshness,
+  DEFAULT_FILTERS, activityTag, compareVersions, downloadFilename, downloadHost, isAllowedXpiUrl, pickDownload, applyFilters, cardTags, popularityTag, compatSummary, computeStats, filterPlugins, formatStars, freshness,
   parseFilters, pluginIdFromPath, relatedPlugins, relativeTime, serializeFilters, sortPlugins, supportsZotero,
   type Plugin,
 } from "./lib.ts";
@@ -137,4 +137,40 @@ test("每个插件固定四个标签且顺序固定,缺数据也不少", () => {
   }
   assert.equal(cardTags(C, NOW)[1].text, "兼容范围未声明");
   assert.equal(cardTags(D, NOW)[2].text, "更新未知");
+});
+
+test("版本比较:支持通配符与不等长", () => {
+  assert.equal(compareVersions("2.4.8", "2.3.16"), 1);
+  assert.equal(compareVersions("10.0", "10.0.0"), 0);
+  assert.equal(compareVersions("8.0.*", "8.0.9"), 1);
+  assert.equal(compareVersions("7.9.9", "8"), -1);
+});
+
+test("下载直链白名单:只认 github.com / gitee.com 的 https .xpi", () => {
+  assert.equal(isAllowedXpiUrl("https://github.com/o/r/releases/download/v1/a.xpi"), true);
+  assert.equal(isAllowedXpiUrl("https://gitee.com/o/r/releases/download/v1/a.xpi"), true);
+  assert.equal(isAllowedXpiUrl("http://github.com/o/r/a.xpi"), false);
+  assert.equal(isAllowedXpiUrl("https://evil.com/github.com/a.xpi"), false);
+  assert.equal(isAllowedXpiUrl("https://github.com.evil.com/o/r/a.xpi"), false);
+  assert.equal(isAllowedXpiUrl("https://github.com/o/r/a.zip"), false);
+  assert.equal(isAllowedXpiUrl("https://github.com/o/r/a.xpi?x=1"), false);
+  assert.equal(downloadHost("https://github.com/o/r/a.xpi"), "github.com");
+  assert.equal(downloadFilename("https://github.com/o/r/releases/download/v1/my%20plugin.xpi"), "my plugin.xpi");
+});
+
+test("选安装包:按 Zotero 大版本取覆盖它的最新版;未声明范围或不覆盖就不给", () => {
+  const dl = [
+    { t: 7, v: "2.3.16", u: "https://github.com/o/r/releases/download/v2.3.16/a.xpi", min: "6.9.9", max: "8.0.*" },
+    { t: 8, v: "2.4.8", u: "https://github.com/o/r/releases/download/v2.4.8/a.xpi", min: "7.9.9", max: "10.9.9" },
+    { t: 9, v: "9.9.9", u: "https://evil.com/a.xpi", min: "9", max: "9.9" },
+    { t: 10, v: "1.0.0", u: "https://github.com/o/r/releases/download/v1/b.xpi" },
+  ];
+  const p = mk({ id: "o/r", downloads: dl });
+  assert.equal(pickDownload(p, 7)?.v, "2.3.16"); // 2.4.8 的最低版本是 7.9.9,不覆盖 Zotero 7
+  assert.equal(pickDownload(p, 8)?.v, "2.4.8");
+  assert.equal(pickDownload(p, 10)?.v, "2.4.8");
+  assert.equal(pickDownload(p, 9)?.v, "2.4.8"); // 白名单之外的直链不会被选中
+  assert.equal(pickDownload(mk({ id: "o/s" }), 10), null);
+  assert.equal(pickDownload(mk({ id: "o/s", downloads: [dl[3]] }), 10), null);
+  assert.equal(pickDownload(mk({ id: "o/s", downloads: [dl[0]] }), 10), null);
 });

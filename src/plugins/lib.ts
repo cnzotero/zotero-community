@@ -32,6 +32,17 @@ export interface Plugin {
   updated: string; // YYYY-MM-DD,可能为空串
   /** declared:作者是否声明了兼容范围;majors:声明范围覆盖的 Zotero 大版本 */
   zotero: { declared: boolean; majors: number[] };
+  /** 各 Zotero 大版本对应的安装包(.xpi)直链,仅限 github.com / gitee.com */
+  downloads?: Download[];
+}
+
+export interface Download {
+  t: number; // 面向的 Zotero 大版本
+  v: string; // 插件版本
+  u: string; // https 直链
+  min?: string; // 作者声明的最低 Zotero 版本
+  max?: string; // 作者声明的最高 Zotero 版本(支持 *)
+  d?: string; // 发布日期
 }
 
 export type SortKey = "stars" | "updated" | "name";
@@ -188,6 +199,56 @@ export function compatSummary(p: Plugin): { kind: CompatKind; text: string } {
   const contiguous = m.length === last - first + 1;
   const text = m.length === 1 ? `适配 Zotero ${first}` : contiguous ? `适配 Zotero ${first}–${last}` : `适配 Zotero ${m.join("/")}`;
   return { kind: m.length === ZOTERO_VERSIONS.length ? "full" : "partial", text };
+}
+
+// ---------- 下载 ----------
+
+const WILD = 999_999;
+function vparts(v: string, wild: boolean): number[] {
+  return String(v ?? "").trim().split(/[.\-+_]/).map((x) => (x === "*" ? (wild ? WILD : 0) : Number.parseInt(x, 10) || 0));
+}
+export function compareVersions(a: string, b: string): number {
+  const pa = vparts(a, true);
+  const pb = vparts(b, true);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const d = (pa[i] ?? 0) - (pb[i] ?? 0);
+    if (d) return d < 0 ? -1 : 1;
+  }
+  return 0;
+}
+
+/** 只允许 github.com / gitee.com 的 https .xpi 直链;其它一律不渲染成下载按钮。 */
+export function isAllowedXpiUrl(url: string): boolean {
+  return /^https:\/\/(github\.com|gitee\.com)\/[^\s?#]+\.xpi$/i.test(url);
+}
+
+export function downloadHost(url: string): string {
+  return /^https:\/\/([^/]+)/i.exec(url)?.[1]?.toLowerCase() ?? "";
+}
+
+export function downloadFilename(url: string): string {
+  const last = url.split("/").pop() ?? "";
+  try {
+    return decodeURIComponent(last);
+  } catch {
+    return last;
+  }
+}
+
+function releaseCovers(r: Download, major: number): boolean {
+  if (!r.min && !r.max) return false; // 没声明范围的不算覆盖
+  const v = String(major);
+  if (r.min && compareVersions(v, r.min) < 0) return false;
+  if (r.max && compareVersions(v, r.max) > 0) return false;
+  return true;
+}
+
+/** 选出能装在指定 Zotero 大版本上的最新一份安装包;没有就返回 null(不拿别的版本充数)。 */
+export function pickDownload(p: Plugin, major: number): Download | null {
+  const ok = (p.downloads ?? []).filter((r) => isAllowedXpiUrl(r.u) && releaseCovers(r, major));
+  if (ok.length === 0) return null;
+  ok.sort((a, b) => compareVersions(b.v, a.v) || Math.abs(a.t - major) - Math.abs(b.t - major));
+  return ok[0];
 }
 
 export type ActivityKind = "recent" | "active" | "slow" | "stale" | "unknown";

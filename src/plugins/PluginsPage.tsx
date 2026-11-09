@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "../link.tsx";
 import {
-  CATEGORIES, DEFAULT_FILTERS, cardTags, ZOTERO_VERSIONS, applyFilters, compatSummary, computeStats, formatStars, freshness,
+  CATEGORIES, DEFAULT_FILTERS, ZOTERO_VERSIONS as ZV, cardTags, downloadFilename, downloadHost, isAllowedXpiUrl, pickDownload, ZOTERO_VERSIONS, applyFilters, compatSummary, computeStats, formatStars, freshness,
   parseFilters, pluginIdFromPath, pluginPath, relatedPlugins, relativeTime, serializeFilters,
   type CategoryKey, type Filters, type Plugin, type SortKey, type UpdatedWithin,
 } from "./lib.ts";
@@ -249,6 +249,55 @@ export function PluginsList() {
   );
 }
 
+function DownloadBox({ p }: { p: Plugin }) {
+  const majors = ZV.filter((v) => pickDownload(p, v));
+  const [major, setMajor] = useState<number>(() => (majors.length ? Math.max(...majors) : 10));
+  const d = pickDownload(p, major);
+  const fallback = (p.downloads ?? []).filter((r) => isAllowedXpiUrl(r.u));
+  return (
+    <section className="download" aria-labelledby="dl-title">
+      <h2 id="dl-title">下载安装包</h2>
+      <div className="dl-row">
+        <span className="filter-label">我的 Zotero 版本</span>
+        <div role="group" aria-label="选择 Zotero 版本" className="dl-versions">
+          {ZV.map((v) => (
+            <button
+              key={v}
+              className={major === v ? "chip chip-sm on" : "chip chip-sm"}
+              aria-pressed={major === v}
+              onClick={() => setMajor(v)}
+            >
+              {v}
+            </button>
+          ))}
+        </div>
+      </div>
+      {d ? (
+        <p className="dl-main">
+          <a className="btn" href={d.u} target="_blank" rel="noopener noreferrer">下载 v{d.v}(.xpi)</a>
+          <span className="meta">{downloadFilename(d.u)} · 来自 {downloadHost(d.u)}</span>
+        </p>
+      ) : (
+        <p className="empty">
+          {fallback.length === 0
+            ? "作者没有提供可直接下载的安装包,请到项目主页查看安装方法。"
+            : `没有找到明确适配 Zotero ${major} 的安装包,请换一个版本,或到项目主页确认。`}
+        </p>
+      )}
+      <details className="how">
+        <summary>怎么安装?</summary>
+        <ol>
+          <li>保存下载的 <code>.xpi</code> 文件,不要解压。</li>
+          <li>打开 Zotero,菜单选择「工具 → 插件」。</li>
+          <li>点右上角齿轮,选「Install Plugin From File…」,选中刚下载的文件。</li>
+          <li>按提示重启 Zotero。</li>
+        </ol>
+        <p className="data-note">本站不托管安装包,链接指向作者的发布页。安装第三方插件前建议先备份文献库,详见<Link to="/rules" className="inline-link">收录规则</Link>。</p>
+      </details>
+    </section>
+  );
+}
+
 export function PluginDetail() {
   const loaded = usePluginData();
   const key = usePopstateKey();
@@ -293,6 +342,7 @@ export function PluginDetail() {
             <div><dt>适配 Zotero</dt><dd><CompatBadge p={p} /></dd></div>
             <div><dt>GitHub 星标</dt><dd>★ {p.stars.toLocaleString("zh-CN")}</dd></div>
           </dl>
+          <DownloadBox p={p} />
           <h2>简介</h2>
           <p className="detail-summary">{p.summary}</p>
           {p.tags && p.tags.length > 0 && (
