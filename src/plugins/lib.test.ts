@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  DEFAULT_FILTERS, activityTag, compareVersions, downloadFilename, downloadHost, isAllowedXpiUrl, pickDownload, applyFilters, cardTags, popularityTag, compatSummary, computeStats, filterPlugins, formatStars, freshness,
+  DEFAULT_FILTERS, activityTag, authorOf, authorStats, barHeights, cadenceText, speedText, topAuthors, compareVersions, downloadFilename, downloadHost, isAllowedXpiUrl, pickDownload, applyFilters, cardTags, popularityTag, compatSummary, computeStats, filterPlugins, formatStars, freshness,
   parseFilters, pluginIdFromPath, relatedPlugins, relativeTime, serializeFilters, sortPlugins, supportsZotero,
   type Plugin,
 } from "./lib.ts";
@@ -59,7 +59,7 @@ test("排序不改变原数组", () => {
 
 test("URL:只写非默认项,往返一致,非法值回落默认", () => {
   assert.equal(serializeFilters(DEFAULT_FILTERS), "");
-  const f = { query: "翻译", category: "reading" as const, zotero: 10, within: "30" as const, sort: "updated" as const };
+  const f = { author: "", query: "翻译", category: "reading" as const, zotero: 10, within: "30" as const, sort: "updated" as const };
   const s = serializeFilters(f);
   assert.deepEqual(parseFilters(s), f);
   assert.deepEqual(parseFilters("?cat=evil&zv=99&up=7&sort=x&q=" + "a".repeat(200)), { ...DEFAULT_FILTERS, query: "a".repeat(80) });
@@ -173,4 +173,36 @@ test("选安装包:按 Zotero 大版本取覆盖它的最新版;未声明范围�
   assert.equal(pickDownload(mk({ id: "o/s" }), 10), null);
   assert.equal(pickDownload(mk({ id: "o/s", downloads: [dl[3]] }), 10), null);
   assert.equal(pickDownload(mk({ id: "o/s", downloads: [dl[0]] }), 10), null);
+});
+
+test("作者:提取、有多个插件的作者排序、统计、作者筛选与网址", () => {
+  const L = [mk({ id: "a/x", stars: 10 }), mk({ id: "a/y", stars: 5 }), mk({ id: "b/z", stars: 1 }), mk({ id: "c/w" }), mk({ id: "c/v" }), mk({ id: "c/u" })];
+  assert.equal(authorOf("Owner/Repo"), "Owner");
+  assert.deepEqual(topAuthors(L), [{ author: "c", count: 3 }, { author: "a", count: 2 }]);
+  assert.deepEqual(authorStats(L, "a"), { count: 2, stars: 15 });
+  assert.deepEqual(filterPlugins(L, { ...DEFAULT_FILTERS, author: "a" }, NOW).map((p) => p.id), ["a/x", "a/y"]);
+  assert.equal(parseFilters("?au=windingwind").author, "windingwind");
+  assert.equal(parseFilters("?au=../../x").author, "");
+  assert.equal(serializeFilters({ ...DEFAULT_FILTERS, author: "a" }), "?au=a");
+});
+
+test("更新速度:次数文案、平均间隔文案、柱高与按更新频率排序", () => {
+  const c = (r12: number, medianDays: number | null, extra: object = {}) => mk({ id: "q/r", cadence: { r12, monthly: Array(12).fill(0), medianDays, last: "2026-11-01", ...extra } });
+  assert.equal(cadenceText(c(14, 12)), "近一年发布 14 次");
+  assert.equal(cadenceText(c(100, 0.1, { capped: true })), "近一年发布 100+ 次");
+  assert.equal(cadenceText(c(0, null)), "近一年无发布");
+  assert.equal(cadenceText(mk({ id: "q/n" })), "发布记录未知");
+  assert.equal(speedText(c(100, 0.1)), "一天多次更新");
+  assert.equal(speedText(c(50, 1.5)), "约每天更新");
+  assert.equal(speedText(c(10, 12.4)), "约 12 天一更");
+  assert.equal(speedText(c(3, 95)), "约 3 个月一更");
+  assert.equal(speedText(c(1, 400)), "一年以上才更一次");
+  assert.equal(speedText(c(0, 300)), null);
+  assert.equal(speedText(mk({ id: "q/n" })), null);
+  assert.deepEqual(barHeights([0, 2, 4, 0]), [0, 0.5, 1, 0]);
+  assert.deepEqual(barHeights([0, 0]), [0, 0]);
+  const a = mk({ id: "a/a", stars: 1, cadence: { r12: 9, monthly: [], medianDays: 1, last: "" } });
+  const b = mk({ id: "b/b", stars: 99, cadence: { r12: 3, monthly: [], medianDays: 1, last: "" } });
+  const n = mk({ id: "c/c", stars: 500 });
+  assert.deepEqual(sortPlugins([n, b, a], "cadence").map((p) => p.id), ["a/a", "b/b", "c/c"]);
 });

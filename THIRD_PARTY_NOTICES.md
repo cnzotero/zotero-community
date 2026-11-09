@@ -28,6 +28,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
+## 图标
+
+GitHub 标志、下载与星标图标来自 Octicons(Copyright (c) GitHub, Inc.),以 MIT 协议发布,许可证全文见 https://github.com/primer/octicons/blob/main/LICENSE 。作者头像来自 GitHub 的公开头像地址,版权归各作者所有。
+
+## 数据
+
 星标数、版本与发布日期等信息来自各插件在 GitHub 上的公开页面。
 
 Zotero 是 Corporation for Digital Scholarship 的商标。本站为社区自发运营的非官方站点,与 Zotero 官方无隶属关系。收录不代表对任何插件的安全性或质量的背书。

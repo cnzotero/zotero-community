@@ -8,11 +8,37 @@ import {
   type PluginCategory,
 } from "./content.ts";
 import { Link } from "./link.tsx";
+import { GithubIcon } from "./icons.tsx";
 import { PluginDetail, PluginsList } from "./plugins/PluginsPage.tsx";
+import { ChartsPage } from "./plugins/ChartsPage.tsx";
 import { JournalsPage } from "./journals/JournalsPage.tsx";
 import { About, Rules, Submission } from "./pages/StaticPages.tsx";
 import { ROUTES, useRoute, type Route } from "./router.ts";
+import { STATIC_PAGES } from "./seo/pages.ts";
 import { filterGuides, filterPlugins, searchAll } from "./search.ts";
+
+const SKINS = [
+  { key: "red", label: "洁净红", color: "#c9252f" },
+  { key: "indigo", label: "靛蓝", color: "#3451b2" },
+] as const;
+
+function SkinSwitch() {
+  const [skin, setSkin] = useState<string>(() => document.documentElement.dataset.skin || "red");
+  const pick = (k: string) => {
+    setSkin(k);
+    if (k === "red") delete document.documentElement.dataset.skin;
+    else document.documentElement.dataset.skin = k;
+    try { localStorage.setItem("skin", k); } catch { /* 隐私模式下忽略 */ }
+  };
+  return (
+    <span className="skin-switch" role="group" aria-label="配色">
+      <span>配色</span>
+      {SKINS.map((s) => (
+        <button key={s.key} className={skin === s.key ? "skin-dot on" : "skin-dot"} style={{ background: s.color }} title={s.label} aria-label={`切换为${s.label}`} aria-pressed={skin === s.key} onClick={() => pick(s.key)} />
+      ))}
+    </span>
+  );
+}
 
 function Header({ route }: { route: Route }) {
   return (
@@ -29,6 +55,9 @@ function Header({ route }: { route: Route }) {
             </Link>
           ))}
         </nav>
+        <a className="icon-btn header-gh" href="https://github.com/cnzotero/zotero-community" target="_blank" rel="noopener noreferrer" title="GitHub 仓库" aria-label="GitHub 仓库(新标签打开)">
+          <GithubIcon size={17} />
+        </a>
       </div>
     </header>
   );
@@ -166,9 +195,14 @@ function Forum() {
 export function App() {
   const route = useRoute();
   useEffect(() => {
-    if (route === "plugin") return;
-    const label = ROUTES.find((r) => r.route === route)?.label;
-    document.title = route === "home" || !label ? "Zotero 中文社区" : `${label} · Zotero 中文社区`;
+    if (route === "plugin") return; // 插件详情页自己设置标题
+    const path = ROUTES.find((r) => r.route === route)?.path ?? "/";
+    const meta = STATIC_PAGES.find((m) => m.path === path);
+    document.title = meta?.title ?? "Zotero 中文社区";
+    const desc = document.querySelector('meta[name="description"]');
+    if (desc && meta) desc.setAttribute("content", meta.description);
+    const canon = document.querySelector('link[rel="canonical"]');
+    if (canon) canon.setAttribute("href", `https://zoterocn.org${path === "/" ? "/" : path}`);
   }, [route]);
   return (
     <>
@@ -181,6 +215,7 @@ export function App() {
         {route === "styles" && <Styles />}
         {route === "forum" && <Forum />}
         {route === "journals" && <JournalsPage />}
+        {route === "charts" && <ChartsPage />}
         {route === "submission" && <Submission />}
         {route === "rules" && <Rules />}
         {route === "about" && <About />}
@@ -192,6 +227,7 @@ export function App() {
             <a href="https://github.com/cnzotero/zotero-community" target="_blank" rel="noopener noreferrer">GitHub</a>
           </nav>
           Zotero 中文社区 · 社区自发运营 · 本站与 Zotero 官方无隶属关系
+          <SkinSwitch />
         </div>
       </footer>
     </>

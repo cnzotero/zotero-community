@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-export type Route = "home" | "guides" | "plugins" | "plugin" | "journals" | "submission" | "styles" | "forum" | "rules" | "about";
+export type Route = "home" | "guides" | "plugins" | "plugin" | "journals" | "submission" | "styles" | "forum" | "rules" | "about" | "charts";
 
 export const ROUTES: { route: Route; path: string; label: string; footer?: boolean }[] = [
   { route: "home", path: "/", label: "首页" },
@@ -10,6 +10,7 @@ export const ROUTES: { route: Route; path: string; label: string; footer?: boole
   { route: "submission", path: "/submission", label: "投稿建议" },
   { route: "styles", path: "/styles", label: "引用样式" },
   { route: "forum", path: "/forum", label: "问答讨论" },
+  { route: "charts", path: "/plugins/charts", label: "数据看板", footer: true },
   { route: "rules", path: "/rules", label: "收录规则", footer: true },
   { route: "about", path: "/about", label: "关于本站", footer: true },
 ];

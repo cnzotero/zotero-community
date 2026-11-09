@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "../link.tsx";
 import { PageHero } from "../pageHero.tsx";
+import { downloadsPerDay } from "./charts-lib.ts";
+import { pluginMeta } from "../seo/pages.ts";
+import { DownloadIcon, ExternalIcon, GithubIcon, ShareIcon, StarIcon } from "../icons.tsx";
 import {
-  CATEGORIES, DEFAULT_FILTERS, ZOTERO_VERSIONS as ZV, cardTags, downloadFilename, downloadHost, isAllowedXpiUrl, pickDownload, ZOTERO_VERSIONS, applyFilters, compatSummary, computeStats, formatStars, freshness,
-  parseFilters, pluginIdFromPath, pluginPath, relatedPlugins, relativeTime, serializeFilters,
+  CATEGORIES, DEFAULT_FILTERS, ZOTERO_VERSIONS as ZV, ZOTERO_VERSIONS, applyFilters, authorOf, authorStats, barHeights, cadenceText,
+  cardTags, compatSummary, computeStats, downloadFilename, downloadHost, formatCount, formatStars, isAllowedXpiUrl, parseFilters, pickDownload,
+  pluginIdFromPath, pluginPath, relatedPlugins, relativeTime, serializeFilters, speedText, topAuthors,
   type CategoryKey, type Filters, type Plugin, type SortKey, type UpdatedWithin,
 } from "./lib.ts";
 
@@ -18,7 +22,7 @@ const CATEGORY_LABEL = Object.fromEntries(CATEGORIES.map((c) => [c.key, c.label]
 type Loaded = { state: "loading" } | { state: "error" } | { state: "ready"; data: PluginData };
 
 /** 插件数据较大,只在进入插件广场时才加载。 */
-function usePluginData(): Loaded & { retry: () => void } {
+export function usePluginData(): Loaded & { retry: () => void } {
   const [s, setS] = useState<Loaded>({ state: "loading" });
   const [tick, setTick] = useState(0);
   useEffect(() => {
@@ -64,19 +68,47 @@ function EmptyArt() {
   );
 }
 
-function Avatar({ name, art = false }: { name: string; art?: boolean }) {
-  const ch = (name.match(/[A-Za-z0-9\u4e00-\u9fa5]/)?.[0] ?? "插").toUpperCase();
+/** 作者头像:来自 GitHub 公开头像地址;加载失败(例如网络无法访问)时退回首字母方块。 */
+function Avatar({ p, big = false }: { p: Plugin; big?: boolean }) {
+  const ch = (p.name.match(/[A-Za-z0-9\u4e00-\u9fa5]/)?.[0] ?? "插").toUpperCase();
   const [ok, setOk] = useState(true);
-  // 详情页大头像:用默认图标底 + 首字母角标;图缺失时退回纯字母方块
-  if (art && ok) {
-    return (
-      <span className="avatar avatar-art" aria-hidden>
-        <img src={`${IMG}plugin-default.png`} alt="" onError={() => setOk(false)} />
-        <b>{ch}</b>
-      </span>
-    );
-  }
-  return <span className="avatar" aria-hidden>{ch}</span>;
+  const owner = authorOf(p.id);
+  return (
+    <span className={big ? "avatar avatar-lg" : "avatar"} aria-hidden>
+      {ch}
+      {ok && owner && (
+        <img
+          src={`https://avatars.githubusercontent.com/${encodeURIComponent(owner)}?s=${big ? 160 : 96}&v=4`}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          referrerPolicy="no-referrer"
+          onError={() => setOk(false)}
+        />
+      )}
+    </span>
+  );
+}
+
+function ShareButton({ p, label = false }: { p: Plugin; label?: boolean }) {
+  const [done, setDone] = useState(false);
+  const share = async () => {
+    const url = `${location.origin}${pluginPath(p.id)}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setDone(true);
+      setTimeout(() => setDone(false), 1600);
+    } catch {
+      window.prompt("复制这个链接分享:", url);
+    }
+  };
+  return (
+    <button className={label ? "btn btn-ghost btn-sm" : "icon-btn"} onClick={share} title="复制链接" aria-label={`复制 ${p.name} 的链接`}>
+      <ShareIcon size={15} />
+      {label && <span>{done ? "已复制" : "分享"}</span>}
+      {!label && done && <span className="toast" role="status">已复制</span>}
+    </button>
+  );
 }
 
 function CompatBadge({ p }: { p: Plugin }) {
@@ -94,32 +126,90 @@ function CardTags({ p, now }: { p: Plugin; now: Date }) {
   );
 }
 
-function PluginCard({ p, now }: { p: Plugin; now: Date }) {
+function PluginCard({ p, now, zv, onAuthor }: { p: Plugin; now: Date; zv: number | null; onAuthor?: (a: string) => void }) {
+  const dl = pickDownload(p, zv ?? 10) ?? (zv === null ? ZV.map((v) => pickDownload(p, v)).find(Boolean) ?? null : null);
   return (
-    <Link to={pluginPath(p.id)} className="card plugin-card">
-      <div className="plugin-head">
-        <Avatar name={p.name} />
-        <div className="plugin-title">
-          <h3>{p.name}</h3>
-          <span className="meta">{p.author} · {CATEGORY_LABEL[p.category]}</span>
+    <article className="card plugin-card">
+      <Link to={pluginPath(p.id)} className="card-main">
+        <div className="plugin-head">
+          <Avatar p={p} />
+          <div className="plugin-title">
+            <h3>{p.name}</h3>
+            <span className="meta">{authorOf(p.id)}</span>
+          </div>
         </div>
+        <p className="clamp2">{p.summary}</p>
+        <div className="plugin-stats">
+          <span title="GitHub 星标"><StarIcon size={13} /> {formatStars(p.stars)}</span>
+          {p.dl && p.dl.total > 0 && <span title="GitHub 累计下载次数"><DownloadIcon size={13} /> {formatCount(p.dl.total)}</span>}
+          {p.latest && <span>v{p.latest.version}</span>}
+          <span title={speedText(p) ?? undefined}>{cadenceText(p)}</span>
+        </div>
+        <CardTags p={p} now={now} />
+      </Link>
+      <div className="card-actions">
+        {dl ? (
+          <a className="btn btn-sm" href={dl.u} target="_blank" rel="noopener noreferrer" title={`下载 v${dl.v}`}>
+            <DownloadIcon size={14} /> 下载
+          </a>
+        ) : (
+          <Link to={pluginPath(p.id)} className="btn btn-sm btn-ghost">查看详情</Link>
+        )}
+        {dl && <Link to={pluginPath(p.id)} className="btn btn-sm btn-ghost">详情</Link>}
+        <span className="spacer" />
+        {onAuthor && (
+          <button className="icon-btn" title={`只看 ${authorOf(p.id)} 的插件`} aria-label={`只看 ${authorOf(p.id)} 的插件`} onClick={() => onAuthor(authorOf(p.id))}>
+            <span className="icon-text">作者</span>
+          </button>
+        )}
+        <a className="icon-btn" href={p.homepage} target="_blank" rel="noopener noreferrer" title="GitHub 仓库" aria-label={`${p.name} 的 GitHub 仓库`}>
+          <GithubIcon size={16} />
+        </a>
+        <ShareButton p={p} />
       </div>
-      <p className="clamp2">{p.summary}</p>
-      <div className="plugin-foot">
-        <span title="GitHub 星标">★ {formatStars(p.stars)}</span>
-        <span title={p.updated || undefined}>
-          {p.latest ? `v${p.latest.version} · ` : ""}{relativeTime(p.updated, now)}
-        </span>
-      </div>
-      <CardTags p={p} now={now} />
-    </Link>
+    </article>
   );
 }
 
-function Filters_({ f, set, openMobile }: { f: Filters; set: (n: Partial<Filters>) => void; openMobile: boolean }) {
+function Filters_({ f, set, openMobile, authors }: { f: Filters; set: (n: Partial<Filters>) => void; openMobile: boolean; authors: { author: string; count: number }[] }) {
   return (
     <div className={openMobile ? "filters open" : "filters"}>
-      <div className="chips" role="group" aria-label="分类">
+      <div className="filter-bar">
+        <label className="field">
+          <span className="filter-label">Zotero 版本</span>
+          <select className="select" value={f.zotero ?? ""} onChange={(e) => set({ zotero: e.target.value ? Number(e.target.value) : null })}>
+            <option value="">不限</option>
+            {ZOTERO_VERSIONS.map((v) => <option key={v} value={v}>Zotero {v}</option>)}
+          </select>
+        </label>
+        <label className="field">
+          <span className="filter-label">更新时间</span>
+          <select className="select" value={f.within} onChange={(e) => set({ within: e.target.value as UpdatedWithin })}>
+            <option value="any">不限</option>
+            <option value="30">30 天内</option>
+            <option value="365">1 年内</option>
+          </select>
+        </label>
+        <label className="field">
+          <span className="filter-label">排序</span>
+          <select className="select" value={f.sort} onChange={(e) => set({ sort: e.target.value as SortKey })}>
+            <option value="stars">热度(星标)</option>
+            <option value="updated">最近更新</option>
+            <option value="cadence">更新频率</option>
+            <option value="downloads">下载量</option>
+            <option value="name">名称</option>
+          </select>
+        </label>
+        <label className="field">
+          <span className="filter-label">作者</span>
+          <select className="select" value={f.author} onChange={(e) => set({ author: e.target.value })}>
+            <option value="">全部作者</option>
+            {f.author && !authors.some((a) => a.author === f.author) && <option value={f.author}>{f.author}</option>}
+            {authors.map((a) => <option key={a.author} value={a.author}>{a.author}({a.count})</option>)}
+          </select>
+        </label>
+      </div>
+      <div className="chips cat-chips" role="group" aria-label="分类">
         <button className={f.category === "all" ? "chip on" : "chip"} onClick={() => set({ category: "all" })}>全部</button>
         {CATEGORIES.map((c) => (
           <button key={c.key} className={f.category === c.key ? "chip on" : "chip"} onClick={() => set({ category: c.key })}>
@@ -128,38 +218,29 @@ function Filters_({ f, set, openMobile }: { f: Filters; set: (n: Partial<Filters
           </button>
         ))}
       </div>
-      <div className="filter-row">
-        <div className="filter-group" role="group" aria-label="Zotero 版本">
-          <span className="filter-label">Zotero 版本</span>
-          {ZOTERO_VERSIONS.map((v) => (
-            <button
-              key={v}
-              className={f.zotero === v ? "chip chip-sm on" : "chip chip-sm"}
-              aria-pressed={f.zotero === v}
-              onClick={() => set({ zotero: f.zotero === v ? null : v })}
-            >
-              {v}
-            </button>
-          ))}
-        </div>
-        <label className="filter-group">
-          <span className="filter-label">更新时间</span>
-          <select className="select" value={f.within} onChange={(e) => set({ within: e.target.value as UpdatedWithin })}>
-            <option value="any">不限</option>
-            <option value="30">30 天内</option>
-            <option value="365">1 年内</option>
-          </select>
-        </label>
-        <label className="filter-group">
-          <span className="filter-label">排序</span>
-          <select className="select" value={f.sort} onChange={(e) => set({ sort: e.target.value as SortKey })}>
-            <option value="stars">热度</option>
-            <option value="updated">最近更新</option>
-            <option value="name">名称</option>
-          </select>
-        </label>
-      </div>
     </div>
+  );
+}
+
+function AuthorStrip({ author, all, onClear }: { author: string; all: Plugin[]; onClear: () => void }) {
+  const st = authorStats(all, author);
+  const [ok, setOk] = useState(true);
+  return (
+    <section className="author-strip" aria-label={`作者 ${author}`}>
+      <span className="avatar avatar-lg" aria-hidden>
+        {author.slice(0, 1).toUpperCase()}
+        {ok && <img src={`https://avatars.githubusercontent.com/${encodeURIComponent(author)}?s=160&v=4`} alt="" referrerPolicy="no-referrer" onError={() => setOk(false)} />}
+      </span>
+      <div className="author-name">
+        <b>{author}</b>
+        <a href={`https://github.com/${encodeURIComponent(author)}`} target="_blank" rel="noopener noreferrer" className="inline-link"><GithubIcon size={13} /> 作者主页</a>
+      </div>
+      <dl className="author-nums">
+        <div><dt>已收录插件</dt><dd>{st.count}</dd></div>
+        <div><dt>收到星标</dt><dd>{st.stars.toLocaleString("zh-CN")}</dd></div>
+      </dl>
+      <button className="icon-btn" onClick={onClear} aria-label="取消作者筛选" title="取消作者筛选">✕</button>
+    </section>
   );
 }
 
@@ -192,11 +273,14 @@ export function PluginsList() {
   const all = loaded.state === "ready" ? loaded.data.plugins : [];
   const stats = useMemo(() => computeStats(all, now), [all, now]);
   const list = useMemo(() => applyFilters(all, f, now), [all, f, now]);
-  const active = f.category !== "all" || f.zotero !== null || f.within !== "any" || f.query.trim() !== "";
+  const authors = useMemo(() => topAuthors(all), [all]);
+  const active = f.category !== "all" || f.zotero !== null || f.within !== "any" || f.query.trim() !== "" || f.author !== "";
 
   return (
     <section className="section">
       <PageHero kind="hero" title="插件广场" lead="收录常用的 Zotero 插件,按公开数据整理,点击查看详情。">
+        <Link to="/plugins/charts" className="inline-link hero-link">数据看板</Link>
+        <span className="hero-sep"> · </span>
         <Link to="/rules" className="inline-link hero-link">收录规则</Link>
       </PageHero>
       <input
@@ -216,7 +300,8 @@ export function PluginsList() {
       <button className="chip filter-toggle" aria-expanded={mobileOpen} onClick={() => setMobileOpen((o) => !o)}>
         {mobileOpen ? "收起筛选" : "筛选与排序"}
       </button>
-      <Filters_ f={f} set={set} openMobile={mobileOpen} />
+      <Filters_ f={f} set={set} openMobile={mobileOpen} authors={authors} />
+      {f.author && loaded.state === "ready" && <AuthorStrip author={f.author} all={all} onClear={() => set({ author: "" })} />}
 
       {loaded.state === "loading" && <p className="empty" role="status">正在加载插件列表…</p>}
       {loaded.state === "error" && (
@@ -235,7 +320,7 @@ export function PluginsList() {
         <>
           <p className="result-count">共 {list.length} 款</p>
           <div className="grid plugin-grid">
-            {list.slice(0, shown).map((p) => <PluginCard key={p.id} p={p} now={now} />)}
+            {list.slice(0, shown).map((p) => <PluginCard key={p.id} p={p} now={now} zv={f.zotero} onAuthor={(a) => set({ author: a })} />)}
           </div>
           {shown < list.length && (
             <div className="more-wrap">
@@ -245,6 +330,31 @@ export function PluginsList() {
         </>
       )}
       <DataNote />
+    </section>
+  );
+}
+
+/** 近 12 个月发布节奏:迷你柱图,每根柱是该月的发布次数。 */
+function CadenceChart({ p, now }: { p: Plugin; now: Date }) {
+  const c = p.cadence;
+  if (!c) return null;
+  const hs = barHeights(c.monthly);
+  const months = Array.from({ length: 12 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - (11 - i), 1);
+    return `${d.getMonth() + 1}月`;
+  });
+  return (
+    <section className="cadence" aria-labelledby="cad-title">
+      <h2 id="cad-title">更新节奏</h2>
+      <div className="bars" role="img" aria-label={`近 12 个月每月发布次数:${c.monthly.join("、")}`}>
+        {hs.map((h, i) => (
+          <div key={i} className="bar-col" title={`${months[i]}:${c.monthly[i]} 次`}>
+            <span className="bar" style={{ height: `${Math.max(h * 100, c.monthly[i] > 0 ? 6 : 0)}%` }} />
+            <span className="bar-label">{months[i]}</span>
+          </div>
+        ))}
+      </div>
+      <p className="meta">{cadenceText(p)}{speedText(p) ? ` · ${speedText(p)}` : ""} · 最近发布 {c.last}。数据来自 GitHub 发布记录。</p>
     </section>
   );
 }
@@ -274,7 +384,7 @@ function DownloadBox({ p }: { p: Plugin }) {
       </div>
       {d ? (
         <p className="dl-main">
-          <a className="btn" href={d.u} target="_blank" rel="noopener noreferrer">下载 v{d.v}(.xpi)</a>
+          <a className="btn" href={d.u} target="_blank" rel="noopener noreferrer"><DownloadIcon size={15} /> 下载 v{d.v}(.xpi)</a>
           <span className="meta">{downloadFilename(d.u)} · 来自 {downloadHost(d.u)}</span>
         </p>
       ) : (
@@ -306,9 +416,14 @@ export function PluginDetail() {
   const all = loaded.state === "ready" ? loaded.data.plugins : [];
   const p = useMemo(() => (id ? all.find((x) => x.id === id) ?? null : null), [all, id]);
   const related = useMemo(() => (p ? relatedPlugins(all, p) : []), [all, p]);
+  const headerDl = useMemo(() => (p ? ([10, 9, 8, 7].map((v) => pickDownload(p, v)).find(Boolean) ?? null) : null), [p]);
 
   useEffect(() => {
-    document.title = p ? `${p.name} · 插件广场 · Zotero 中文社区` : "插件广场 · Zotero 中文社区";
+    if (!p) { document.title = "插件广场 · Zotero 中文社区"; return; }
+    const meta = pluginMeta(p);
+    document.title = meta.title;
+    document.querySelector('meta[name="description"]')?.setAttribute("content", meta.description);
+    document.querySelector('link[rel="canonical"]')?.setAttribute("href", `https://zoterocn.org${meta.path}`);
   }, [p]);
 
   return (
@@ -324,15 +439,19 @@ export function PluginDetail() {
       {p && (
         <>
           <header className="detail-head">
-            <Avatar name={p.name} art />
+            <Avatar p={p} big />
             <div>
               <h1 className="page-title">{p.name}</h1>
-              <p className="meta">作者 {p.author} · {CATEGORY_LABEL[p.category]}</p>
+              <p className="meta">作者 {authorOf(p.id)} · {CATEGORY_LABEL[p.category]}</p>
               <div className="detail-actions">
-                <a className="btn" href={p.homepage} target="_blank" rel="noopener noreferrer">前往项目主页</a>
+                {headerDl ? (
+                  <a className="btn" href={headerDl.u} target="_blank" rel="noopener noreferrer"><DownloadIcon size={15} /> 下载 v{headerDl.v}</a>
+                ) : null}
+                <a className={headerDl ? "btn btn-ghost" : "btn"} href={p.homepage} target="_blank" rel="noopener noreferrer"><GithubIcon size={15} /> GitHub 仓库</a>
                 {p.latest && (
-                  <a className="btn btn-ghost" href={p.latest.releaseUrl} target="_blank" rel="noopener noreferrer">查看发布页</a>
+                  <a className="btn btn-ghost" href={p.latest.releaseUrl} target="_blank" rel="noopener noreferrer">发布页 <ExternalIcon size={13} /></a>
                 )}
+                <ShareButton p={p} label />
               </div>
             </div>
           </header>
@@ -340,9 +459,13 @@ export function PluginDetail() {
             <div><dt>最新版本</dt><dd>{p.latest ? `v${p.latest.version}` : "未获取到"}</dd></div>
             <div><dt>发布日期</dt><dd title={p.updated}>{p.updated ? `${p.updated}(${relativeTime(p.updated, now)})` : "未知"}</dd></div>
             <div><dt>适配 Zotero</dt><dd><CompatBadge p={p} /></dd></div>
-            <div><dt>GitHub 星标</dt><dd>★ {p.stars.toLocaleString("zh-CN")}</dd></div>
+            <div><dt>GitHub 星标</dt><dd><StarIcon size={14} /> {p.stars.toLocaleString("zh-CN")}</dd></div>
+            <div><dt>累计下载(GitHub)</dt><dd>{p.dl ? formatCount(p.dl.total) : "暂无"}{downloadsPerDay(p) ? <small className="dd-sub"> +{Math.round(downloadsPerDay(p) as number).toLocaleString("zh-CN")}/天</small> : null}</dd></div>
+            <div><dt>更新速度</dt><dd>{speedText(p) ?? "暂无"}</dd></div>
+            <div><dt>近一年发布</dt><dd>{p.cadence ? `${p.cadence.r12}${p.cadence.capped ? "+" : ""} 次` : "暂无"}</dd></div>
           </dl>
           <DownloadBox p={p} />
+          <CadenceChart p={p} now={now} />
           <h2>简介</h2>
           <p className="detail-summary">{p.summary}</p>
           {p.tags && p.tags.length > 0 && (
@@ -351,7 +474,7 @@ export function PluginDetail() {
           {related.length > 0 && (
             <>
               <h2>相关插件</h2>
-              <div className="grid plugin-grid">{related.map((r) => <PluginCard key={r.id} p={r} now={now} />)}</div>
+              <div className="grid plugin-grid">{related.map((r) => <PluginCard key={r.id} p={r} now={now} zv={null} />)}</div>
             </>
           )}
           <DataNote />

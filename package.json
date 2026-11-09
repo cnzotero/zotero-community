@@ -7,9 +7,10 @@
   "scripts": {
     "dev": "vite",
     "typecheck": "tsc --noEmit",
-    "build": "tsc && vite build",
+    "build": "tsc && vite build && node --experimental-strip-types scripts/prerender.mjs",
     "preview": "vite preview",
-    "test": "node --test --experimental-strip-types \"src/**/*.test.ts\""
+    "test": "node --test --experimental-strip-types \"src/**/*.test.ts\" \"scripts/*.test.mjs\"",
+    "refresh": "node scripts/refresh-plugins.mjs"
   },
   "dependencies": {
     "react": "^19.2.4",

@@ -34,6 +34,23 @@ export interface Plugin {
   zotero: { declared: boolean; majors: number[] };
   /** 各 Zotero 大版本对应的安装包(.xpi)直链,仅限 github.com / gitee.com */
   downloads?: Download[];
+  /** 更新节奏:由 GitHub 发布记录算出 */
+  cadence?: Cadence;
+  archived?: boolean;
+  forks?: number;
+  watchers?: number;
+  issues?: number; // 未关闭的 Issues 数
+  /** GitHub 安装包累计下载(只统计 .xpi);prevTotal/prevAt 是上一次的基线,用来算每天新增 */
+  dl?: { total: number; at: string; prevTotal?: number; prevAt?: string };
+}
+
+export interface Cadence {
+  r12: number; // 近一年发布次数
+  days12?: number; // 近一年有发布的天数(同一天发多次只算一天)
+  monthly: number[]; // 近 12 个月每月发布次数,旧 → 新
+  medianDays: number | null; // 最近若干次发布间隔的中位数(天)
+  last: string; // 最近一次发布日期
+  capped?: boolean; // 接口取满上限,实际次数不少于 r12
 }
 
 export interface Download {
@@ -45,10 +62,11 @@ export interface Download {
   d?: string; // 发布日期
 }
 
-export type SortKey = "stars" | "updated" | "name";
+export type SortKey = "stars" | "updated" | "cadence" | "downloads" | "name";
 export type UpdatedWithin = "any" | "30" | "365";
 
 export interface Filters {
+  author: string; // 作者(GitHub 用户名,小写);空串为不限
   query: string;
   category: CategoryKey | "all";
   zotero: number | null;
@@ -56,7 +74,7 @@ export interface Filters {
   sort: SortKey;
 }
 
-export const DEFAULT_FILTERS: Filters = { query: "", category: "all", zotero: null, within: "any", sort: "stars" };
+export const DEFAULT_FILTERS: Filters = { author: "", query: "", category: "all", zotero: null, within: "any", sort: "stars" };
 
 const DAY = 86_400_000;
 
@@ -86,6 +104,7 @@ export function supportsZotero(p: Plugin, major: number): boolean {
 export function filterPlugins(list: Plugin[], f: Filters, now: Date): Plugin[] {
   return list.filter((p) => {
     if (f.category !== "all" && p.category !== f.category) return false;
+    if (f.author && authorOf(p.id) !== f.author) return false;
     if (f.zotero !== null && !supportsZotero(p, f.zotero)) return false;
     if (f.within !== "any") {
       const d = daysSince(p.updated, now);
@@ -101,6 +120,8 @@ export function sortPlugins(list: Plugin[], sort: SortKey): Plugin[] {
   out.sort((a, b) => {
     if (sort === "stars") return b.stars - a.stars || byName(a, b);
     if (sort === "updated") return (b.updated || "").localeCompare(a.updated || "") || byName(a, b);
+    if (sort === "downloads") return (b.dl?.total ?? -1) - (a.dl?.total ?? -1) || b.stars - a.stars || byName(a, b);
+    if (sort === "cadence") return (b.cadence?.r12 ?? -1) - (a.cadence?.r12 ?? -1) || b.stars - a.stars || byName(a, b);
     return byName(a, b);
   });
   return out;
@@ -121,11 +142,12 @@ export function parseFilters(search: string): Filters {
   const within = sp.get("up");
   const sort = sp.get("sort");
   return {
+    author: /^[a-z0-9][a-z0-9-]{0,38}$/.test(sp.get("au") ?? "") ? (sp.get("au") as string) : "",
     query: (sp.get("q") ?? "").slice(0, 80),
     category: CATEGORY_KEYS.has(cat) ? (cat as CategoryKey) : "all",
     zotero: (ZOTERO_VERSIONS as readonly number[]).includes(zv) ? zv : null,
     within: within === "30" || within === "365" ? within : "any",
-    sort: sort === "updated" || sort === "name" ? sort : "stars",
+    sort: sort === "updated" || sort === "name" || sort === "cadence" || sort === "downloads" ? sort : "stars",
   };
 }
 
@@ -134,6 +156,7 @@ export function serializeFilters(f: Filters): string {
   const sp = new URLSearchParams();
   if (f.query.trim()) sp.set("q", f.query.trim());
   if (f.category !== "all") sp.set("cat", f.category);
+  if (f.author) sp.set("au", f.author);
   if (f.zotero !== null) sp.set("zv", String(f.zotero));
   if (f.within !== "any") sp.set("up", f.within);
   if (f.sort !== "stars") sp.set("sort", f.sort);
@@ -291,6 +314,66 @@ export function cardTags(p: Plugin, now: Date): CardTag[] {
     { slot: "activity", kind: act.kind, text: act.text },
     { slot: "popularity", kind: pop.kind, text: pop.text },
   ];
+}
+
+// ---------- 作者与更新速度 ----------
+
+export function authorOf(id: string): string {
+  return id.split("/")[0] ?? "";
+}
+
+/** 有 2 个及以上插件的作者,按插件数倒序(同数按名称),用于作者筛选。 */
+export function topAuthors(list: Plugin[], min = 2): { author: string; count: number }[] {
+  const m = new Map<string, number>();
+  for (const p of list) m.set(authorOf(p.id), (m.get(authorOf(p.id)) ?? 0) + 1);
+  return [...m.entries()]
+    .filter(([, n]) => n >= min)
+    .map(([author, count]) => ({ author, count }))
+    .sort((a, b) => b.count - a.count || a.author.localeCompare(b.author));
+}
+
+export function authorStats(list: Plugin[], author: string): { count: number; stars: number } {
+  const mine = list.filter((p) => authorOf(p.id) === author);
+  return { count: mine.length, stars: mine.reduce((s, p) => s + p.stars, 0) };
+}
+
+/** 「近一年发布 12 次」/「近一年发布 100+ 次」/「近一年无发布」/「发布记录未知」 */
+export function cadenceText(p: Plugin): string {
+  const c = p.cadence;
+  if (!c) return "发布记录未知";
+  if (c.r12 === 0) return "近一年无发布";
+  return `近一年发布 ${c.r12}${c.capped ? "+" : ""} 次`;
+}
+
+/** 平均几天一更:不足 1 天写「一天多次」;没有数据返回 null。 */
+export function speedText(p: Plugin): string | null {
+  const d = p.cadence?.medianDays;
+  if (d === null || d === undefined || !p.cadence || p.cadence.r12 === 0) return null;
+  if (d < 1) return "一天多次更新";
+  if (d < 2) return "约每天更新";
+  if (d < 60) return `约 ${Math.round(d)} 天一更`;
+  if (d < 365) return `约 ${Math.round(d / 30)} 个月一更`;
+  return "一年以上才更一次";
+}
+
+/** 中文计数:1,234 / 12.3 万 / 1.2 亿。 */
+export function formatCount(n: number): string {
+  if (n >= 100_000_000) return `${(n / 100_000_000).toFixed(1).replace(/\.0$/, "")} 亿`;
+  if (n >= 10_000) return `${(n / 10_000).toFixed(1).replace(/\.0$/, "")} 万`;
+  return n.toLocaleString("zh-CN");
+}
+
+/** 累计下载文案:「234.1 万次下载」;没有数据返回 null。 */
+export function downloadsText(p: Plugin): string | null {
+  if (!p.dl || p.dl.total <= 0) return null;
+  const c = formatCount(p.dl.total);
+  return /[万亿]$/.test(c) ? `${c}次下载` : `${c} 次下载`; // 「234.1 万次下载」「1,000 次下载」
+}
+
+/** 12 个柱的相对高度(0–1),全 0 时都为 0。 */
+export function barHeights(monthly: number[]): number[] {
+  const max = Math.max(0, ...monthly);
+  return monthly.map((v) => (max === 0 ? 0 : v / max));
 }
 
 /** 详情页路径:/plugins/owner/repo */
