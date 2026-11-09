@@ -64,8 +64,18 @@ function EmptyArt() {
   );
 }
 
-function Avatar({ name }: { name: string }) {
-  const ch = (name.match(/[A-Za-z0-9一-龥]/)?.[0] ?? "插").toUpperCase();
+function Avatar({ name, art = false }: { name: string; art?: boolean }) {
+  const ch = (name.match(/[A-Za-z0-9\u4e00-\u9fa5]/)?.[0] ?? "插").toUpperCase();
+  const [ok, setOk] = useState(true);
+  // 详情页大头像:用默认图标底 + 首字母角标;图缺失时退回纯字母方块
+  if (art && ok) {
+    return (
+      <span className="avatar avatar-art" aria-hidden>
+        <img src={`${IMG}plugin-default.png`} alt="" onError={() => setOk(false)} />
+        <b>{ch}</b>
+      </span>
+    );
+  }
   return <span className="avatar" aria-hidden>{ch}</span>;
 }
 
@@ -314,7 +324,7 @@ export function PluginDetail() {
       {p && (
         <>
           <header className="detail-head">
-            <Avatar name={p.name} />
+            <Avatar name={p.name} art />
             <div>
               <h1 className="page-title">{p.name}</h1>
               <p className="meta">作者 {p.author} · {CATEGORY_LABEL[p.category]}</p>
