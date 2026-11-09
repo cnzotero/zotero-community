@@ -132,3 +132,21 @@ a { color: inherit; text-decoration: none; }
 .empty-art { display: block; margin: 0 auto 8px; }
 .empty-art img { width: min(320px, 80%); height: auto; }
 @media (prefers-color-scheme: dark) { .chip.on .chip-icon { filter: brightness(0); } }
+
+/* 卡片固定四个标签:分类 · 适配 · 维护 · 人气 */
+.ptag { font-size: 12px; padding: 1px 8px; border-radius: 6px; border: 1px solid transparent; white-space: nowrap; }
+.ptag-category { background: var(--mist); color: var(--accent); }
+.ptag-compat-full { background: var(--accent); color: var(--paper); }
+.ptag-compat-partial { background: var(--mist); color: var(--ink-soft); border-color: var(--line); }
+.ptag-compat-undeclared { border: 1px dashed var(--muted); color: var(--muted); }
+.ptag-activity-recent { background: #e3f3e8; color: #1d6b3a; }
+.ptag-activity-active { background: var(--mist); color: var(--ink-soft); }
+.ptag-activity-slow, .ptag-activity-unknown { background: var(--mist); color: var(--muted); }
+.ptag-activity-stale { border: 1px dashed var(--muted); color: var(--muted); }
+.ptag-popularity-hot { background: #fdeccf; color: #8a4b00; }
+.ptag-popularity-common { background: var(--mist); color: var(--ink-soft); }
+.ptag-popularity-growing, .ptag-popularity-niche { background: var(--mist); color: var(--muted); }
+@media (prefers-color-scheme: dark) {
+  .ptag-activity-recent { background: #173a28; color: #8fd6aa; }
+  .ptag-popularity-hot { background: #4a3210; color: #ffd28a; }
+}

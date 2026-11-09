@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "../link.tsx";
 import {
-  CATEGORIES, DEFAULT_FILTERS, ZOTERO_VERSIONS, applyFilters, compatSummary, computeStats, formatStars, freshness,
+  CATEGORIES, DEFAULT_FILTERS, cardTags, ZOTERO_VERSIONS, applyFilters, compatSummary, computeStats, formatStars, freshness,
   parseFilters, pluginIdFromPath, pluginPath, relatedPlugins, relativeTime, serializeFilters,
   type CategoryKey, type Filters, type Plugin, type SortKey, type UpdatedWithin,
 } from "./lib.ts";
@@ -84,11 +84,14 @@ function CompatBadge({ p }: { p: Plugin }) {
   return <span className={`compat compat-${c.kind}`}>{c.text}</span>;
 }
 
-function FreshTag({ date, now }: { date: string; now: Date }) {
-  const f = freshness(date, now);
-  if (f === "fresh") return <span className="fresh">新近更新</span>;
-  if (f === "stale") return <span className="stale">久未更新</span>;
-  return null;
+function CardTags({ p, now }: { p: Plugin; now: Date }) {
+  return (
+    <div className="plugin-badges" aria-label="标签">
+      {cardTags(p, now).map((t) => (
+        <span key={t.slot} className={`ptag ptag-${t.slot} ptag-${t.slot}-${t.kind}`}>{t.text}</span>
+      ))}
+    </div>
+  );
 }
 
 function PluginCard({ p, now }: { p: Plugin; now: Date }) {
@@ -108,10 +111,7 @@ function PluginCard({ p, now }: { p: Plugin; now: Date }) {
           {p.latest ? `v${p.latest.version} · ` : ""}{relativeTime(p.updated, now)}
         </span>
       </div>
-      <div className="plugin-badges">
-        <CompatBadge p={p} />
-        <FreshTag date={p.updated} now={now} />
-      </div>
+      <CardTags p={p} now={now} />
     </Link>
   );
 }

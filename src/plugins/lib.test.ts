@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  DEFAULT_FILTERS, applyFilters, compatSummary, computeStats, filterPlugins, formatStars, freshness,
+  DEFAULT_FILTERS, activityTag, applyFilters, cardTags, popularityTag, compatSummary, computeStats, filterPlugins, formatStars, freshness,
   parseFilters, pluginIdFromPath, relatedPlugins, relativeTime, serializeFilters, sortPlugins, supportsZotero,
   type Plugin,
 } from "./lib.ts";
@@ -108,4 +108,33 @@ test("相关插件:同分类、不含自己、按热度取前 n", () => {
   const list = [A, D, mk({ id: "x/e", category: "reading", stars: 700 })];
   assert.deepEqual(relatedPlugins(list, A, 1).map((p) => p.id), ["x/e"]);
   assert.deepEqual(relatedPlugins(list, A).map((p) => p.id), ["x/e", "x/d"]);
+});
+
+test("维护状态分档", () => {
+  assert.equal(activityTag("2026-10-20", NOW).text, "近期更新");
+  assert.equal(activityTag("2026-03-01", NOW).text, "维护中");
+  assert.equal(activityTag("2025-03-01", NOW).text, "更新放缓");
+  assert.equal(activityTag("2023-03-01", NOW).text, "久未更新");
+  assert.deepEqual(activityTag("", NOW), { kind: "unknown", text: "更新未知" });
+});
+
+test("人气档位边界", () => {
+  assert.equal(popularityTag(3000).text, "热门");
+  assert.equal(popularityTag(2999).text, "常用");
+  assert.equal(popularityTag(500).text, "常用");
+  assert.equal(popularityTag(499).text, "成长中");
+  assert.equal(popularityTag(100).text, "成长中");
+  assert.equal(popularityTag(99).text, "小众");
+  assert.equal(popularityTag(0).text, "小众");
+});
+
+test("每个插件固定四个标签且顺序固定,缺数据也不少", () => {
+  for (const p of ALL) {
+    const tags = cardTags(p, NOW);
+    assert.equal(tags.length, 4);
+    assert.deepEqual(tags.map((t) => t.slot), ["category", "compat", "activity", "popularity"]);
+    assert.ok(tags.every((t) => t.text.length > 0));
+  }
+  assert.equal(cardTags(C, NOW)[1].text, "兼容范围未声明");
+  assert.equal(cardTags(D, NOW)[2].text, "更新未知");
 });

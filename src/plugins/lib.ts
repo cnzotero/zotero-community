@@ -190,6 +190,48 @@ export function compatSummary(p: Plugin): { kind: CompatKind; text: string } {
   return { kind: m.length === ZOTERO_VERSIONS.length ? "full" : "partial", text };
 }
 
+export type ActivityKind = "recent" | "active" | "slow" | "stale" | "unknown";
+
+/** 维护状态:按最近一次发布距今的天数分档。只提示,不隐藏。 */
+export function activityTag(date: string, now: Date): { kind: ActivityKind; text: string } {
+  const d = daysSince(date, now);
+  if (d === null) return { kind: "unknown", text: "更新未知" };
+  if (d <= 90) return { kind: "recent", text: "近期更新" };
+  if (d <= 365) return { kind: "active", text: "维护中" };
+  if (d <= 730) return { kind: "slow", text: "更新放缓" };
+  return { kind: "stale", text: "久未更新" };
+}
+
+export type PopularityKind = "hot" | "common" | "growing" | "niche";
+
+/** 人气档位:按 GitHub 星标分档(只是热度,不代表质量)。 */
+export function popularityTag(stars: number): { kind: PopularityKind; text: string } {
+  if (stars >= 3000) return { kind: "hot", text: "热门" };
+  if (stars >= 500) return { kind: "common", text: "常用" };
+  if (stars >= 100) return { kind: "growing", text: "成长中" };
+  return { kind: "niche", text: "小众" };
+}
+
+export interface CardTag {
+  slot: "category" | "compat" | "activity" | "popularity";
+  kind: string;
+  text: string;
+}
+
+/** 每个插件固定四个标签:分类 · 适配版本 · 维护状态 · 人气档位。 */
+export function cardTags(p: Plugin, now: Date): CardTag[] {
+  const label = CATEGORIES.find((c) => c.key === p.category)?.label ?? "工具";
+  const compat = compatSummary(p);
+  const act = activityTag(p.updated, now);
+  const pop = popularityTag(p.stars);
+  return [
+    { slot: "category", kind: p.category, text: label },
+    { slot: "compat", kind: compat.kind, text: compat.text },
+    { slot: "activity", kind: act.kind, text: act.text },
+    { slot: "popularity", kind: pop.kind, text: pop.text },
+  ];
+}
+
 /** 详情页路径:/plugins/owner/repo */
 export function pluginPath(id: string): string {
   return `/plugins/${id}`;
