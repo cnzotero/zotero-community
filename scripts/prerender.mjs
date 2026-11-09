@@ -8,10 +8,20 @@ import { fileURLToPath } from "node:url";
 import { readdirSync } from "node:fs";
 import { blocksToHtml, parseArticle, wordCount } from "../src/guides/markdown.ts";
 import { OG_IMAGE, SITE, SITE_NAME, STATIC_PAGES, duplicateNames, pluginFacts, pluginMeta } from "../src/seo/pages.ts";
+import { ZOTERO_VERSIONS, pickDownload } from "../src/plugins/lib.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
 export const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+/** 与前端详情页同一逻辑:从高到低找第一个有兼容安装包的 Zotero 大版本,取该版本能装的最新包。 */
+export function bestDownload(p) {
+  for (const v of [...ZOTERO_VERSIONS].reverse()) {
+    const d = pickDownload(p, v);
+    if (d) return { ...d, major: v };
+  }
+  return null;
+}
 
 /** JSON-LD 内嵌进 <script>:把 < 转义,杜绝 </script> 注入。 */
 export const ld = (obj) => `<script type="application/ld+json">${JSON.stringify(obj).replace(/</g, "\\u003c")}</script>`;
@@ -62,15 +72,15 @@ function staticBody(meta, articles = []) {
 
 function pluginBody(p, meta) {
   const rows = pluginFacts(p).map(([k, v]) => `<tr><th scope="row">${esc(k)}</th><td>${esc(v)}</td></tr>`).join("");
-  const dl = (p.downloads ?? []).find((d) => /^https:\/\/(github\.com|gitee\.com)\//.test(d.u));
+  const dl = bestDownload(p);
   return `<main class="container"><article class="section prerender"><nav aria-label="面包屑"><a href="/plugins">插件广场</a></nav>` +
     `<h1 class="page-title">${esc(p.name)}</h1><p class="lead">${esc(p.summary)}</p>` +
     `<table><tbody>${rows}</tbody></table>` +
-    `<p><a href="${esc(p.homepage)}" rel="noopener noreferrer">GitHub 仓库</a>${dl ? ` · <a href="${esc(dl.u)}" rel="noopener noreferrer">下载安装包</a>` : ""}</p></article></main>`;
+    `<p><a href="${esc(p.homepage)}" target="_blank" rel="noopener noreferrer">GitHub 仓库</a>${dl ? ` · <a href="${esc(dl.u)}" target="_blank" rel="noopener noreferrer">下载 v${esc(dl.v)} 安装包(适配 Zotero ${dl.major})</a>` : ""}</p></article></main>`;
 }
 
 function pluginLd(p, meta) {
-  const dl = (p.downloads ?? []).find((d) => /^https:\/\/(github\.com|gitee\.com)\//.test(d.u));
+  const dl = bestDownload(p);
   return [
     ld({
       "@context": "https://schema.org",
@@ -92,7 +102,7 @@ function pluginLd(p, meta) {
 function articleBody(a) {
   return `<main class="container"><article class="section prose article prerender"><nav aria-label="面包屑"><a href="/guides">教程</a></nav>` +
     `<h1 class="page-title">${esc(a.title)}</h1>${blocksToHtml(a.blocks)}` +
-    `<section class="sources"><h2>参考来源</h2><ul>${a.sources.map((u) => `<li><a href="${esc(u)}" rel="noopener noreferrer">${esc(u)}</a></li>`).join("")}</ul></section></article></main>`;
+    `<section class="sources"><h2>参考来源</h2><ul>${a.sources.map((u) => `<li><a href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(u)}</a></li>`).join("")}</ul></section></article></main>`;
 }
 
 function articleLd(a, path) {
@@ -130,9 +140,17 @@ export function sitemapXml(entries) {
 
 export const robotsTxt = () => `User-agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: ${SITE}/sitemap.xml\n`;
 
+/** 构建期保险:预渲染页面里任何外链(http/https)都必须新标签打开并带 noopener,否则构建失败。 */
+export function assertExternalLinks(html, where) {
+  for (const m of html.matchAll(/<a\b[^>]*href="https?:\/\/[^"]*"[^>]*>/g)) {
+    if (!/target="_blank"/.test(m[0]) || !/rel="noopener noreferrer"/.test(m[0])) throw new Error(`预渲染外链缺少 target=_blank 或 rel=noopener:${where} ${m[0].slice(0, 120)}`);
+  }
+}
+
 export function build(distDir, plugins, today = new Date().toISOString().slice(0, 10), articles = []) {
   const template = readFileSync(join(distDir, "index.html"), "utf8");
   const write = (path, html) => {
+    assertExternalLinks(html, path);
     const file = path === "/" ? join(distDir, "index.html") : join(distDir, path, "index.html");
     mkdirSync(dirname(file), { recursive: true });
     writeFileSync(file, html);

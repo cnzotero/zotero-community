@@ -7,7 +7,7 @@ sources:
   - "https://github.com/windingwind/zotero-plugin-template/tree/15f7538c854d5f9751a470bf846389f744f9e920"
   - "https://github.com/windingwind/zotero-plugin-template/blob/15f7538c854d5f9751a470bf846389f744f9e920/.env.example"
   - "https://github.com/windingwind/zotero-plugin-template/blob/15f7538c854d5f9751a470bf846389f744f9e920/addon/manifest.json"
-  - "https://github.com/northword/zotero-plugin-scaffold"
+  - "https://github.com/zotero-plugin-dev/zotero-plugin-scaffold"
 ---
 
 # 十分钟认识第一个 Zotero 插件：模板与构建
@@ -29,7 +29,7 @@ sources:
  npm run build
 ```
 
-构建成功后查看 .scaffold/build/，其中有安装包及构建后的资源。本文实际执行了同一快照的依赖安装和构建，尚未用该模板安装包做 Zotero 真机运行验收。终端显示成功只能证明构建路径通过，不能代替功能测试。依赖安装若出现版本冲突，先核对锁文件与运行环境，不要第一步就强制安装或自动大幅升级依赖。
+构建成功后查看 .scaffold/build/，其中有安装包及构建后的资源。源码目录便于阅读与修改，安装包则供应用安装；不要把两者混用，也不要手动编辑构建产物来代替修改源码。本文实际执行了同一快照的依赖安装和构建，尚未用该模板安装包做 Zotero 真机运行验收。终端显示成功只能证明构建路径通过，不能代替功能测试。依赖安装若出现版本冲突，先核对锁文件与运行环境，不要第一步就强制安装或自动大幅升级依赖。
 
 ## 把模板改成自己的身份
 

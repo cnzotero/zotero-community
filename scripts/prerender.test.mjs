@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { build, esc, ld, loadArticles, robotsTxt, sitemapXml } from "./prerender.mjs";
+import { assertExternalLinks, bestDownload, build, esc, ld, loadArticles, robotsTxt, sitemapXml } from "./prerender.mjs";
 import { parseArticle } from "../src/guides/markdown.ts";
 
 const TEMPLATE = `<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8" /><meta name="description" content="旧描述" /><meta property="og:title" content="旧" /><title>旧标题</title></head><body><div id="root"></div><script type="module" src="/x.js"></script></body></html>`;
@@ -109,4 +109,42 @@ test("真实教程目录能被预渲染读取", () => {
   const arts = loadArticles(new URL("../src/content/guides", import.meta.url).pathname);
   assert.ok(arts.length >= 5);
   assert.deepEqual(arts.map((a) => a.order), arts.map((a) => a.order).sort((a, b) => a - b));
+});
+
+test("预渲染页面里所有外链都新标签打开;下载链接和「最新版本」指向同一个兼容包,不会拿旧包充数", () => {
+  const dir = mkdtempSync(join(tmpdir(), "prerender-"));
+  writeFileSync(join(dir, "index.html"), TEMPLATE);
+  const p = {
+    id: "w/tr", name: "Tr", summary: "s", category: "reading", author: "w", homepage: "https://github.com/w/tr", stars: 5, updated: "2026-10-03",
+    zotero: { declared: true, majors: [7, 8, 9, 10] },
+    latest: { version: "2.4.8", date: "2026-10-03", releaseUrl: "https://github.com/w/tr/releases/tag/v2.4.8" },
+    downloads: [
+      { t: 7, v: "2.3.16", u: "https://github.com/w/tr/releases/download/v2.3.16/t.xpi", min: "6.9.9", max: "8.0.*" },
+      { t: 10, v: "2.4.8", u: "https://github.com/w/tr/releases/download/v2.4.8/t.xpi", min: "7.9.9", max: "10.9.9" },
+    ],
+  };
+  assert.equal(bestDownload(p).v, "2.4.8");
+  assert.equal(bestDownload(p).major, 10);
+  assert.equal(bestDownload({ ...p, downloads: [] }), null);
+  const art = parseArticle('---\ntitle: "T"\ndescription: "D"\nslug: "x-1"\norder: 1\nsources:\n  - "https://www.zotero.org/s"\n---\n\n## A\n[外链](https://example.com/x)\n');
+  build(dir, [p], "2026-11-10", [art]);
+  const pages = [join(dir, "plugins/w/tr/index.html"), join(dir, "guides/x-1/index.html"), join(dir, "index.html"), join(dir, "guides/index.html")];
+  for (const f of pages) {
+    const html = readFileSync(f, "utf8");
+    for (const m of html.matchAll(/<a\b[^>]*href="https?:\/\/[^"]*"[^>]*>/g)) {
+      assert.match(m[0], /target="_blank"/, `${f}: ${m[0]}`);
+      assert.match(m[0], /rel="noopener noreferrer"/, `${f}: ${m[0]}`);
+    }
+  }
+  const html = readFileSync(pages[0], "utf8");
+  assert.match(html, /v2\.4\.8\(2026-10-03\)/); // 事实表里的最新版本
+  assert.match(html, /releases\/download\/v2\.4\.8\/t\.xpi/); // 下载链接是同一个版本
+  assert.ok(!html.includes("v2.3.16"));
+  assert.match(html, /"downloadUrl":"https:\/\/github\.com\/w\/tr\/releases\/download\/v2\.4\.8/);
+});
+
+test("构建期保险:漏掉新标签属性的外链会让构建失败", () => {
+  assert.doesNotThrow(() => assertExternalLinks('<a href="https://a.com" target="_blank" rel="noopener noreferrer">x</a><a href="/plugins">内链</a>', "t"));
+  assert.throws(() => assertExternalLinks('<a href="https://github.com/x">x</a>', "t"), /target=_blank/);
+  assert.throws(() => assertExternalLinks('<a href="https://a.com" target="_blank">x</a>', "t"), /noopener/);
 });
