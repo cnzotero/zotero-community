@@ -148,3 +148,22 @@ test("构建期保险:漏掉新标签属性的外链会让构建失败", () => {
   assert.throws(() => assertExternalLinks('<a href="https://github.com/x">x</a>', "t"), /target=_blank/);
   assert.throws(() => assertExternalLinks('<a href="https://a.com" target="_blank">x</a>', "t"), /noopener/);
 });
+
+test("分类落地页:每个有插件的分类一页,列出该分类全部插件、进 sitemap;404 页面禁止收录且不进 sitemap", () => {
+  const dir = mkdtempSync(join(tmpdir(), "prerender-"));
+  writeFileSync(join(dir, "index.html"), TEMPLATE);
+  const entries = build(dir, PLUGINS, "2026-11-10");
+  assert.ok(entries.some((e) => e.path === "/categories/reading"));
+  assert.ok(entries.some((e) => e.path === "/categories/ai"));
+  assert.ok(!entries.some((e) => e.path === "/categories/notes")); // 没有插件的分类不生成空页
+  const html = readFileSync(join(dir, "categories/reading/index.html"), "utf8");
+  assert.match(html, /<h1 class="page-title">阅读类 Zotero 插件<\/h1>/);
+  assert.match(html, /href="\/plugins\/a\/evil"/);
+  assert.ok(!html.includes("b/plain")); // 别的分类的插件不会混进来
+  assert.match(html, /"@type":"CollectionPage"/);
+  assert.match(html, /"@type":"ItemList"/);
+  const nf = readFileSync(join(dir, "404.html"), "utf8");
+  assert.match(nf, /noindex/);
+  assert.match(nf, /页面不存在/);
+  assert.ok(!readFileSync(join(dir, "sitemap.xml"), "utf8").includes("/404"));
+});

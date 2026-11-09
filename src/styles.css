@@ -443,3 +443,5 @@ body { background: var(--bg); }
 .sources ul { padding-left: 20px; word-break: break-all; }
 .article-nav { display: flex; justify-content: space-between; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
 @media (max-width: 640px) { .series-item { grid-template-columns: 32px 1fr; } .series-time { display: none; } }
+
+.cat-link { margin: 4px 0 10px; font-size: 14px; }

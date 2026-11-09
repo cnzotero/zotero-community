@@ -7,7 +7,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { readdirSync } from "node:fs";
 import { blocksToHtml, parseArticle, wordCount } from "../src/guides/markdown.ts";
-import { OG_IMAGE, SITE, SITE_NAME, STATIC_PAGES, duplicateNames, pluginFacts, pluginMeta } from "../src/seo/pages.ts";
+import { CATEGORY_KEYS, OG_IMAGE, SITE, SITE_NAME, STATIC_PAGES, categoryIntro, categoryMeta, duplicateNames, pluginFacts, pluginMeta } from "../src/seo/pages.ts";
 import { ZOTERO_VERSIONS, pickDownload } from "../src/plugins/lib.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -99,6 +99,32 @@ function pluginLd(p, meta) {
   ].join("\n    ");
 }
 
+function categoryBody(meta, key, list) {
+  const items = list.map((p) => `<li><a href="/plugins/${esc(p.id)}">${esc(p.name)}</a> - ${esc(p.summary)}</li>`).join("");
+  return `<main class="container"><section class="section prerender"><nav aria-label="面包屑"><a href="/plugins">插件广场</a></nav>` +
+    `<h1 class="page-title">${esc(meta.h1)}</h1><p class="lead">${esc(categoryIntro(key))}</p>` +
+    `<h2>收录的${esc(meta.h1.replace(/ Zotero.*/, ""))}(共 ${list.length} 款,按 GitHub 星标排序)</h2><ol>${items}</ol></section></main>`;
+}
+
+function categoryLd(meta, list) {
+  return [
+    ld({
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      name: meta.h1,
+      description: meta.description,
+      url: `${SITE}${meta.path}`,
+      inLanguage: "zh-CN",
+      mainEntity: {
+        "@type": "ItemList",
+        numberOfItems: list.length,
+        itemListElement: list.slice(0, 50).map((p, i) => ({ "@type": "ListItem", position: i + 1, url: `${SITE}/plugins/${p.id}`, name: p.name })),
+      },
+    }),
+    crumbs([["首页", "/"], ["插件广场", "/plugins"], [meta.h1, meta.path]]),
+  ].join("\n    ");
+}
+
 function articleBody(a) {
   return `<main class="container"><article class="section prose article prerender"><nav aria-label="面包屑"><a href="/guides">教程</a></nav>` +
     `<h1 class="page-title">${esc(a.title)}</h1>${blocksToHtml(a.blocks)}` +
@@ -177,6 +203,16 @@ export function build(distDir, plugins, today = new Date().toISOString().slice(0
     write(meta.path, applyTemplate(template, meta, pluginLd(p, meta), pluginBody(p, meta)));
     entries.push({ path: meta.path, lastmod: p.updated || today });
   }
+  for (const key of CATEGORY_KEYS) {
+    const meta = categoryMeta(key);
+    const list = plugins.filter((p) => p.category === key).sort((a, b) => b.stars - a.stars || a.name.localeCompare(b.name, "zh-Hans-CN"));
+    if (!meta || list.length === 0) continue;
+    write(meta.path, applyTemplate(template, meta, categoryLd(meta, list), categoryBody(meta, key, list)));
+    entries.push({ path: meta.path, lastmod: today });
+  }
+  // 404 页面:服务器对不存在的路径返回真正的 404 状态码并展示它;不进 sitemap,禁止收录
+  const nf = { path: "/404", title: `页面不存在｜${SITE_NAME}`, description: "你访问的页面不存在,可以回到首页、插件广场或教程继续浏览。", h1: "页面不存在", noindex: true };
+  writeFileSync(join(distDir, "404.html"), applyTemplate(template, nf, "", `<main class="container"><section class="section prerender"><h1 class="page-title">页面不存在</h1><p class="lead">${esc(nf.description)}</p><p><a href="/">回到首页</a> · <a href="/plugins">插件广场</a> · <a href="/guides">教程</a></p></section></main>`));
   for (const a of articles) {
     const path = `/guides/${a.slug}`;
     const meta = { path, title: `${a.title}｜${SITE_NAME}`, description: a.description, h1: a.title };

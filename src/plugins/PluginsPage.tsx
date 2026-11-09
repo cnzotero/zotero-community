@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "../link.tsx";
 import { PageHero } from "../pageHero.tsx";
 import { downloadsPerDay } from "./charts-lib.ts";
-import { duplicateNames, pluginMeta } from "../seo/pages.ts";
+import { categoryPath, duplicateNames, pluginMeta } from "../seo/pages.ts";
 import { DownloadIcon, ExternalIcon, GithubIcon, ShareIcon, StarIcon } from "../icons.tsx";
 import {
   CATEGORIES, DEFAULT_FILTERS, ZOTERO_VERSIONS as ZV, ZOTERO_VERSIONS, applyFilters, authorOf, authorStats, barHeights, cadenceText,
@@ -126,7 +126,7 @@ function CardTags({ p, now }: { p: Plugin; now: Date }) {
   );
 }
 
-function PluginCard({ p, now, zv, onAuthor }: { p: Plugin; now: Date; zv: number | null; onAuthor?: (a: string) => void }) {
+export function PluginCard({ p, now, zv, onAuthor }: { p: Plugin; now: Date; zv: number | null; onAuthor?: (a: string) => void }) {
   const dl = pickDownload(p, zv ?? 10) ?? (zv === null ? ZV.map((v) => pickDownload(p, v)).find(Boolean) ?? null : null);
   return (
     <article className="card plugin-card">
@@ -301,6 +301,9 @@ export function PluginsList() {
         {mobileOpen ? "收起筛选" : "筛选与排序"}
       </button>
       <Filters_ f={f} set={set} openMobile={mobileOpen} authors={authors} />
+      {f.category !== "all" && (
+        <p className="cat-link"><Link to={categoryPath(f.category)} className="inline-link">了解{CATEGORY_LABEL[f.category]}类插件 →</Link></p>
+      )}
       {f.author && loaded.state === "ready" && <AuthorStrip author={f.author} all={all} onClear={() => set({ author: "" })} />}
 
       {loaded.state === "loading" && <p className="empty" role="status">正在加载插件列表…</p>}
@@ -442,7 +445,7 @@ export function PluginDetail() {
             <Avatar p={p} big />
             <div>
               <h1 className="page-title">{p.name}</h1>
-              <p className="meta">作者 {authorOf(p.id)} · {CATEGORY_LABEL[p.category]}</p>
+              <p className="meta">作者 {authorOf(p.id)} · <Link to={categoryPath(p.category)} className="inline-link">{CATEGORY_LABEL[p.category]}类插件</Link></p>
               <div className="detail-actions">
                 {headerDl ? (
                   <a className="btn" href={headerDl.u} target="_blank" rel="noopener noreferrer"><DownloadIcon size={15} /> 下载 v{headerDl.v}</a>

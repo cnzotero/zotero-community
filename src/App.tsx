@@ -11,6 +11,7 @@ import { Link } from "./link.tsx";
 import { GithubIcon } from "./icons.tsx";
 import { PluginDetail, PluginsList } from "./plugins/PluginsPage.tsx";
 import { GuideArticle, GuideSeries } from "./guides/GuidesPages.tsx";
+import { CategoryPage } from "./plugins/CategoryPage.tsx";
 import { ChartsPage } from "./plugins/ChartsPage.tsx";
 import { JournalsPage } from "./journals/JournalsPage.tsx";
 import { About, Rules, Submission } from "./pages/StaticPages.tsx";
@@ -189,6 +190,20 @@ function Styles() {
   );
 }
 
+function NotFound() {
+  useEffect(() => {
+    document.title = "页面不存在｜Zotero 中文社区";
+    document.querySelector('meta[name="description"]')?.setAttribute("content", "你访问的页面不存在,可以回到首页、插件广场或教程继续浏览。");
+  }, []);
+  return (
+    <section className="section">
+      <h1 className="page-title">页面不存在</h1>
+      <p className="lead">你访问的地址没有对应的页面,可能是链接写错了,或者内容已经移动。</p>
+      <p><Link to="/" className="btn">回到首页</Link> <Link to="/plugins" className="btn btn-ghost">插件广场</Link> <Link to="/guides" className="btn btn-ghost">教程</Link></p>
+    </section>
+  );
+}
+
 function Forum() {
   return (
     <section className="section">
@@ -201,7 +216,7 @@ function Forum() {
 export function App() {
   const route = useRoute();
   useEffect(() => {
-    if (route === "plugin" || route === "guide") return; // 详情类页面自己设置标题
+    if (route === "plugin" || route === "guide" || route === "category" || route === "notfound") return; // 详情类页面自己设置标题
     const path = ROUTES.find((r) => r.route === route)?.path ?? "/";
     const meta = STATIC_PAGES.find((m) => m.path === path);
     document.title = meta?.title ?? "Zotero 中文社区";
@@ -223,6 +238,8 @@ export function App() {
         {route === "journals" && <JournalsPage />}
         {route === "charts" && <ChartsPage />}
         {route === "guide" && <GuideArticle />}
+        {route === "category" && <CategoryPage />}
+        {route === "notfound" && <NotFound />}
         {route === "submission" && <Submission />}
         {route === "rules" && <Rules />}
         {route === "about" && <About />}

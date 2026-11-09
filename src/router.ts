@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 
-export type Route = "home" | "guides" | "plugins" | "plugin" | "journals" | "submission" | "styles" | "forum" | "rules" | "about" | "charts" | "guide";
+const CATEGORY_SET = new Set(["ai", "reading", "metadata", "interface", "attachment", "integration", "notes", "utility", "writing", "visualization"]);
+
+export type Route = "home" | "guides" | "plugins" | "plugin" | "journals" | "submission" | "styles" | "forum" | "rules" | "about" | "charts" | "guide" | "category" | "notfound";
 
 export const ROUTES: { route: Route; path: string; label: string; footer?: boolean }[] = [
   { route: "home", path: "/", label: "首页" },
@@ -19,7 +21,10 @@ export function routeFromPath(pathname: string): Route {
   const clean = pathname.replace(/\/+$/, "") || "/";
   if (/^\/plugins\/[^/]+\/[^/]+$/.test(clean)) return "plugin";
   if (/^\/guides\/[^/]+$/.test(clean)) return "guide";
-  return ROUTES.find((r) => r.path === clean)?.route ?? "home";
+  const cat = /^\/categories\/([a-z]+)$/.exec(clean);
+  if (cat) return CATEGORY_SET.has(cat[1]) ? "category" : "notfound";
+  // 站内没有的路径一律是 404;服务器对这些路径也返回真正的 404 状态码
+  return ROUTES.find((r) => r.path === clean)?.route ?? "notfound";
 }
 
 export function navigate(path: string): void {

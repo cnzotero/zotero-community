@@ -2,6 +2,8 @@
 // 预渲染脚本(构建时)和前端路由(浏览器里切换页面时)共用这一份,保证两边一致。
 import { CATEGORIES, authorOf, cadenceText, compatSummary, downloadsText, formatStars, speedText, type Plugin } from "../plugins/lib.ts";
 
+import categoryCopy from "../content/category-copy.json" with { type: "json" };
+
 export const SITE = "https://zoterocn.org";
 export const SITE_NAME = "Zotero 中文社区";
 export const OG_IMAGE = `${SITE}/images/plugins/og-plugins.png`;
@@ -65,4 +67,21 @@ export function pluginFacts(p: Plugin): [string, string][] {
   if (dl) rows.push(["累计下载", dl.replace(/\s?次下载$/, " 次")]);
   rows.push(["更新节奏", [cadenceText(p), speedText(p)].filter(Boolean).join(",")]);
   return rows;
+}
+
+// ---------- 分类落地页 ----------
+
+export const CATEGORY_KEYS = CATEGORIES.map((c) => c.key as string);
+export const categoryPath = (key: string) => `/categories/${key}`;
+export const categoryIntro = (key: string): string => (categoryCopy as Record<string, string>)[key] ?? "";
+
+export function categoryMeta(key: string): PageMeta | null {
+  const c = CATEGORIES.find((x) => x.key === key);
+  if (!c) return null;
+  return {
+    path: categoryPath(key),
+    title: `${c.label}类 Zotero 插件｜用途、适配与下载`,
+    description: categoryIntro(key).slice(0, 160),
+    h1: `${c.label}类 Zotero 插件`,
+  };
 }
