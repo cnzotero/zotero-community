@@ -43,7 +43,12 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add src/data
-          if ! git diff --cached --quiet; then git commit -m "每日刷新插件数据" && git push origin HEAD:main; fi
+          if ! git diff --cached --quiet; then
+            git commit -m "每日刷新插件数据"
+            # 刷新期间 main 可能已有新提交:先同步再推送,避免因快进失败而丢掉当天数据
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
 
       - name: 测试
         run: npm test

@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { build, esc, ld, robotsTxt, sitemapXml } from "./prerender.mjs";
+import { build, esc, ld, loadArticles, robotsTxt, sitemapXml } from "./prerender.mjs";
+import { parseArticle } from "../src/guides/markdown.ts";
 
 const TEMPLATE = `<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8" /><meta name="description" content="旧描述" /><meta property="og:title" content="旧" /><title>旧标题</title></head><body><div id="root"></div><script type="module" src="/x.js"></script></body></html>`;
 const PLUGINS = [
@@ -84,4 +85,28 @@ test("没有声明兼容范围的插件,结构化数据里不写下载地址", (
   const { dir } = run();
   const html = readFileSync(join(dir, "plugins/b/plain/index.html"), "utf8");
   assert.ok(!html.includes("downloadUrl"));
+});
+
+test("教程文章:全文进入静态页面、带 TechArticle 结构化数据、进入 sitemap、危险内容被转义", () => {
+  const dir = mkdtempSync(join(tmpdir(), "prerender-"));
+  writeFileSync(join(dir, "index.html"), TEMPLATE);
+  const art = parseArticle('---\ntitle: "教程 <b>一</b>"\ndescription: "描述"\nslug: "dev-x"\norder: 1\nsources:\n  - "https://www.zotero.org/support/dev"\n---\n\n# 标题\n\n## 小节\n正文 <script>alert(1)</script> `npm start` [官方](https://www.zotero.org/x) [坏](javascript:1)\n\n```sh\necho "<hi>"\n```\n');
+  const entries = build(dir, [], "2026-11-10", [art]);
+  assert.ok(entries.some((e) => e.path === "/guides/dev-x"));
+  const html = readFileSync(join(dir, "guides/dev-x/index.html"), "utf8");
+  assert.match(html, /<title>教程 &lt;b&gt;一&lt;\/b&gt;｜Zotero 中文社区<\/title>/);
+  assert.match(html, /<h2>小节<\/h2>/);
+  assert.match(html, /<code>npm start<\/code>/);
+  assert.match(html, /<a href="https:\/\/www\.zotero\.org\/x" target="_blank" rel="noopener noreferrer">官方<\/a>/);
+  assert.ok(!html.includes("<script>alert(1)") && !html.includes("javascript:1"));
+  assert.match(html, /"@type":"TechArticle"/);
+  assert.match(readFileSync(join(dir, "sitemap.xml"), "utf8"), /\/guides\/dev-x/);
+  // /guides 列表页里带有文章链接,方便爬虫发现
+  assert.match(readFileSync(join(dir, "guides/index.html"), "utf8"), /href="\/guides\/dev-x"/);
+});
+
+test("真实教程目录能被预渲染读取", () => {
+  const arts = loadArticles(new URL("../src/content/guides", import.meta.url).pathname);
+  assert.ok(arts.length >= 5);
+  assert.deepEqual(arts.map((a) => a.order), arts.map((a) => a.order).sort((a, b) => a - b));
 });

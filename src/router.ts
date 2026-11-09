@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-export type Route = "home" | "guides" | "plugins" | "plugin" | "journals" | "submission" | "styles" | "forum" | "rules" | "about" | "charts";
+export type Route = "home" | "guides" | "plugins" | "plugin" | "journals" | "submission" | "styles" | "forum" | "rules" | "about" | "charts" | "guide";
 
 export const ROUTES: { route: Route; path: string; label: string; footer?: boolean }[] = [
   { route: "home", path: "/", label: "首页" },
@@ -18,6 +18,7 @@ export const ROUTES: { route: Route; path: string; label: string; footer?: boole
 export function routeFromPath(pathname: string): Route {
   const clean = pathname.replace(/\/+$/, "") || "/";
   if (/^\/plugins\/[^/]+\/[^/]+$/.test(clean)) return "plugin";
+  if (/^\/guides\/[^/]+$/.test(clean)) return "guide";
   return ROUTES.find((r) => r.path === clean)?.route ?? "home";
 }
 

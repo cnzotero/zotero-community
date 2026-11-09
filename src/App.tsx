@@ -10,6 +10,7 @@ import {
 import { Link } from "./link.tsx";
 import { GithubIcon } from "./icons.tsx";
 import { PluginDetail, PluginsList } from "./plugins/PluginsPage.tsx";
+import { GuideArticle, GuideSeries } from "./guides/GuidesPages.tsx";
 import { ChartsPage } from "./plugins/ChartsPage.tsx";
 import { JournalsPage } from "./journals/JournalsPage.tsx";
 import { About, Rules, Submission } from "./pages/StaticPages.tsx";
@@ -45,12 +46,15 @@ function Header({ route }: { route: Route }) {
     <header className="topbar">
       <div className="topbar-inner">
         <Link to="/" className="brand">
-          <span className="brand-mark" aria-hidden>中</span>
+          <picture className="brand-logo" aria-hidden>
+            <source media="(prefers-color-scheme: dark)" srcSet="/brand/logo-mark-dark.png" />
+            <img src="/brand/logo-mark-light.png" alt="" width="32" height="32" decoding="async" />
+          </picture>
           <span>Zotero 中文社区</span>
         </Link>
         <nav aria-label="主导航" className="nav">
           {ROUTES.filter((r) => !r.footer).map((r) => (
-            <Link key={r.route} to={r.path} className={r.route === route || (route === "plugin" && r.route === "plugins") ? "nav-link active" : "nav-link"}>
+            <Link key={r.route} to={r.path} className={r.route === route || (route === "plugin" && r.route === "plugins") || (route === "guide" && r.route === "guides") ? "nav-link active" : "nav-link"}>
               {r.label}
             </Link>
           ))}
@@ -161,6 +165,8 @@ function Guides() {
   return (
     <section className="section">
       <h1 className="page-title">教程</h1>
+      <GuideSeries />
+      <h2 className="more-guides">更多使用教程</h2>
       <SearchBox value={q} onChange={setQ} placeholder="搜索教程" />
       <div className="chips" role="group" aria-label="主题">
         <button className={topic === "all" ? "chip on" : "chip"} onClick={() => setTopic("all")}>全部</button>
@@ -195,7 +201,7 @@ function Forum() {
 export function App() {
   const route = useRoute();
   useEffect(() => {
-    if (route === "plugin") return; // 插件详情页自己设置标题
+    if (route === "plugin" || route === "guide") return; // 详情类页面自己设置标题
     const path = ROUTES.find((r) => r.route === route)?.path ?? "/";
     const meta = STATIC_PAGES.find((m) => m.path === path);
     document.title = meta?.title ?? "Zotero 中文社区";
@@ -216,6 +222,7 @@ export function App() {
         {route === "forum" && <Forum />}
         {route === "journals" && <JournalsPage />}
         {route === "charts" && <ChartsPage />}
+        {route === "guide" && <GuideArticle />}
         {route === "submission" && <Submission />}
         {route === "rules" && <Rules />}
         {route === "about" && <About />}

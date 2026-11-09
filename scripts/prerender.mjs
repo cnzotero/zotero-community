@@ -5,6 +5,8 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { readdirSync } from "node:fs";
+import { blocksToHtml, parseArticle, wordCount } from "../src/guides/markdown.ts";
 import { OG_IMAGE, SITE, SITE_NAME, STATIC_PAGES, duplicateNames, pluginFacts, pluginMeta } from "../src/seo/pages.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -51,8 +53,11 @@ const crumbs = (items) => ld({
   itemListElement: items.map(([name, path], i) => ({ "@type": "ListItem", position: i + 1, name, item: `${SITE}${path}` })),
 });
 
-function staticBody(meta) {
-  return `<main class="container"><section class="section prerender"><h1 class="page-title">${esc(meta.h1)}</h1><p class="lead">${esc(meta.description)}</p></section></main>`;
+function staticBody(meta, articles = []) {
+  const list = meta.path === "/guides" && articles.length
+    ? `<h2>插件开发系列</h2><ol>${articles.map((a) => `<li><a href="/guides/${esc(a.slug)}">${esc(a.title)}</a> - ${esc(a.description)}</li>`).join("")}</ol>`
+    : "";
+  return `<main class="container"><section class="section prerender"><h1 class="page-title">${esc(meta.h1)}</h1><p class="lead">${esc(meta.description)}</p>${list}</section></main>`;
 }
 
 function pluginBody(p, meta) {
@@ -84,6 +89,40 @@ function pluginLd(p, meta) {
   ].join("\n    ");
 }
 
+function articleBody(a) {
+  return `<main class="container"><article class="section prose article prerender"><nav aria-label="面包屑"><a href="/guides">教程</a></nav>` +
+    `<h1 class="page-title">${esc(a.title)}</h1>${blocksToHtml(a.blocks)}` +
+    `<section class="sources"><h2>参考来源</h2><ul>${a.sources.map((u) => `<li><a href="${esc(u)}" rel="noopener noreferrer">${esc(u)}</a></li>`).join("")}</ul></section></article></main>`;
+}
+
+function articleLd(a, path) {
+  return [
+    ld({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      headline: a.title,
+      description: a.description,
+      inLanguage: "zh-CN",
+      url: `${SITE}${path}`,
+      mainEntityOfPage: `${SITE}${path}`,
+      wordCount: wordCount(a.blocks),
+      isPartOf: { "@type": "CreativeWorkSeries", name: "Zotero 插件开发系列" },
+      publisher: { "@type": "Organization", name: SITE_NAME, logo: { "@type": "ImageObject", url: `${SITE}/brand/icon-512.png` } },
+      citation: a.sources,
+    }),
+    crumbs([["首页", "/"], ["教程", "/guides"], [a.title, path]]),
+  ].join("\n    ");
+}
+
+/** 读取教程文稿目录;不存在时返回空数组。 */
+export function loadArticles(dir) {
+  try {
+    return readdirSync(dir).filter((f) => f.endsWith(".md")).map((f) => parseArticle(readFileSync(join(dir, f), "utf8"))).sort((a, b) => a.order - b.order);
+  } catch {
+    return [];
+  }
+}
+
 export function sitemapXml(entries) {
   const rows = entries.map((e) => `  <url><loc>${esc(SITE + e.path)}</loc>${e.lastmod ? `<lastmod>${e.lastmod}</lastmod>` : ""}</url>`).join("\n");
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${rows}\n</urlset>\n`;
@@ -91,7 +130,7 @@ export function sitemapXml(entries) {
 
 export const robotsTxt = () => `User-agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: ${SITE}/sitemap.xml\n`;
 
-export function build(distDir, plugins, today = new Date().toISOString().slice(0, 10)) {
+export function build(distDir, plugins, today = new Date().toISOString().slice(0, 10), articles = []) {
   const template = readFileSync(join(distDir, "index.html"), "utf8");
   const write = (path, html) => {
     const file = path === "/" ? join(distDir, "index.html") : join(distDir, path, "index.html");
@@ -105,11 +144,13 @@ export function build(distDir, plugins, today = new Date().toISOString().slice(0
     name: SITE_NAME,
     url: `${SITE}/`,
     inLanguage: "zh-CN",
+    image: `${SITE}/brand/icon-512.png`,
     potentialAction: { "@type": "SearchAction", target: `${SITE}/plugins?q={search_term_string}`, "query-input": "required name=search_term_string" },
   });
+  const orgLd = ld({ "@context": "https://schema.org", "@type": "Organization", name: SITE_NAME, url: `${SITE}/`, logo: `${SITE}/brand/icon-512.png` });
   for (const meta of STATIC_PAGES) {
-    const extra = meta.path === "/" ? websiteLd : crumbs([["首页", "/"], [meta.h1, meta.path]]);
-    write(meta.path, applyTemplate(template, meta, extra, staticBody(meta)));
+    const extra = meta.path === "/" ? `${websiteLd}\n    ${orgLd}` : crumbs([["首页", "/"], [meta.h1, meta.path]]);
+    write(meta.path, applyTemplate(template, meta, extra, staticBody(meta, articles)));
     entries.push({ path: meta.path, lastmod: today });
   }
   const dups = duplicateNames(plugins);
@@ -117,6 +158,12 @@ export function build(distDir, plugins, today = new Date().toISOString().slice(0
     const meta = pluginMeta(p, dups.has(p.name));
     write(meta.path, applyTemplate(template, meta, pluginLd(p, meta), pluginBody(p, meta)));
     entries.push({ path: meta.path, lastmod: p.updated || today });
+  }
+  for (const a of articles) {
+    const path = `/guides/${a.slug}`;
+    const meta = { path, title: `${a.title}｜${SITE_NAME}`, description: a.description, h1: a.title };
+    write(path, applyTemplate(template, meta, articleLd(a, path), articleBody(a)));
+    entries.push({ path, lastmod: today });
   }
   writeFileSync(join(distDir, "sitemap.xml"), sitemapXml(entries));
   writeFileSync(join(distDir, "robots.txt"), robotsTxt());
@@ -126,6 +173,7 @@ export function build(distDir, plugins, today = new Date().toISOString().slice(0
 if (import.meta.url === `file://${process.argv[1]}`) {
   const dist = resolve(process.argv[2] ?? join(root, "dist"));
   const data = JSON.parse(readFileSync(join(root, "src/data/plugins.json"), "utf8"));
-  const entries = build(dist, data.plugins);
-  console.log(`预渲染完成:${entries.length} 个页面(含 ${data.plugins.length} 个插件详情页),已生成 sitemap.xml 与 robots.txt`);
+  const articles = loadArticles(join(root, "src/content/guides"));
+  const entries = build(dist, data.plugins, undefined, articles);
+  console.log(`预渲染完成:${entries.length} 个页面(含 ${data.plugins.length} 个插件详情页、${articles.length} 篇教程),已生成 sitemap.xml 与 robots.txt`);
 }

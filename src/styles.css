@@ -419,3 +419,27 @@ body { background: var(--bg); }
 /* 类别没有高低之分:灰条,不用深浅暗示优劣 */
 .rank-fill.neutral { background: color-mix(in srgb, var(--muted) 45%, var(--paper)); }
 .kpi-value { color: var(--ink); }
+
+.brand-logo { display: inline-flex; width: 32px; height: 32px; }
+.brand-logo img { width: 32px; height: 32px; display: block; }
+
+/* ---------- 教程 ---------- */
+.series { margin: 8px 0 28px; }
+.series h2, .more-guides { font-size: 20px; margin: 0 0 6px; }
+.more-guides { margin-top: 8px; }
+.series-list { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 10px; }
+.series-item { display: grid; grid-template-columns: 36px 1fr auto; align-items: center; gap: 14px; padding: 14px 16px; background: var(--paper); border: 1px solid var(--line); border-radius: 10px; }
+.series-item:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+.series-no { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+.series-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.series-text b { font-size: 16px; }
+.series-time { white-space: nowrap; }
+.article { max-width: 760px; }
+.article h2 { padding-top: 6px; }
+.article p, .article li { line-height: 1.85; }
+.codeblock { background: var(--mist); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; overflow-x: auto; font-size: 13.5px; line-height: 1.6; }
+.codeblock code { background: none; padding: 0; }
+.sources { margin-top: 28px; padding-top: 14px; border-top: 1px solid var(--line); }
+.sources ul { padding-left: 20px; word-break: break-all; }
+.article-nav { display: flex; justify-content: space-between; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+@media (max-width: 640px) { .series-item { grid-template-columns: 32px 1fr; } .series-time { display: none; } }
