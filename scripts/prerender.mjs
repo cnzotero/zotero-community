@@ -5,7 +5,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { OG_IMAGE, SITE, SITE_NAME, STATIC_PAGES, pluginFacts, pluginMeta } from "../src/seo/pages.ts";
+import { OG_IMAGE, SITE, SITE_NAME, STATIC_PAGES, duplicateNames, pluginFacts, pluginMeta } from "../src/seo/pages.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -112,8 +112,9 @@ export function build(distDir, plugins, today = new Date().toISOString().slice(0
     write(meta.path, applyTemplate(template, meta, extra, staticBody(meta)));
     entries.push({ path: meta.path, lastmod: today });
   }
+  const dups = duplicateNames(plugins);
   for (const p of plugins) {
-    const meta = pluginMeta(p);
+    const meta = pluginMeta(p, dups.has(p.name));
     write(meta.path, applyTemplate(template, meta, pluginLd(p, meta), pluginBody(p, meta)));
     entries.push({ path: meta.path, lastmod: p.updated || today });
   }

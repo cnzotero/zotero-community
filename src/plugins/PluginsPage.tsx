@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "../link.tsx";
 import { PageHero } from "../pageHero.tsx";
 import { downloadsPerDay } from "./charts-lib.ts";
-import { pluginMeta } from "../seo/pages.ts";
+import { duplicateNames, pluginMeta } from "../seo/pages.ts";
 import { DownloadIcon, ExternalIcon, GithubIcon, ShareIcon, StarIcon } from "../icons.tsx";
 import {
   CATEGORIES, DEFAULT_FILTERS, ZOTERO_VERSIONS as ZV, ZOTERO_VERSIONS, applyFilters, authorOf, authorStats, barHeights, cadenceText,
@@ -420,11 +420,11 @@ export function PluginDetail() {
 
   useEffect(() => {
     if (!p) { document.title = "插件广场 · Zotero 中文社区"; return; }
-    const meta = pluginMeta(p);
+    const meta = pluginMeta(p, duplicateNames(all).has(p.name));
     document.title = meta.title;
     document.querySelector('meta[name="description"]')?.setAttribute("content", meta.description);
     document.querySelector('link[rel="canonical"]')?.setAttribute("href", `https://zoterocn.org${meta.path}`);
-  }, [p]);
+  }, [p, all]);
 
   return (
     <section className="section">

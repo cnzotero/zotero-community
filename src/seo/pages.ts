@@ -15,29 +15,39 @@ export interface PageMeta {
   noindex?: boolean;
 }
 
+// 标题与描述由独立的文案调研产出,逐条核对过字数与事实;不夸大、不给任何插件特殊对待。
 export const STATIC_PAGES: PageMeta[] = [
-  { path: "/", title: "Zotero 中文社区 - Zotero 插件、教程与期刊查询", description: "Zotero 中文社区:收录 Zotero 插件并提供下载,查询期刊分区与影响因子,整理教程与插件开发指南,一视同仁、公开透明。", h1: "把 Zotero 用顺手" },
-  { path: "/plugins", title: "Zotero 插件广场 - 插件下载、适配版本与更新速度", description: "收录常用 Zotero 插件,按星标、下载、更新速度排序,查看适配的 Zotero 版本并直接下载安装包。数据来自各项目公开信息,每天更新。", h1: "插件广场" },
-  { path: "/plugins/charts", title: "Zotero 插件数据看板 - 星标、下载与更新榜单", description: "Zotero 插件的星标榜、下载榜、更新最勤榜、分类分布与 Zotero 版本适配统计,基于 GitHub 公开数据,每天自动更新。", h1: "插件数据看板" },
-  { path: "/journals", title: "期刊查询 - 影响因子、JCR 与中科院分区", description: "按期刊名称、缩写或 ISSN 查询影响因子、JCR 分区、中科院分区,以及 SCIE、SSCI、EI、CCF、北大核心、CSSCI 等收录与榜单。", h1: "期刊查询" },
-  { path: "/submission", title: "投稿建议 - 选刊、改稿与回复审稿意见", description: "从选刊、投稿前检查到回复审稿意见的经验整理,正在筹备中。", h1: "投稿建议" },
-  { path: "/guides", title: "Zotero 教程 - 从入门到插件开发", description: "Zotero 中文教程:安装与日常使用、插件使用技巧,以及 Zotero 插件开发入门到发布的完整指南。", h1: "教程" },
-  { path: "/styles", title: "引用样式 - 常用期刊与学位论文格式", description: "常用期刊与学位论文的 Zotero 引用样式整理,正在筹备中。", h1: "引用样式" },
-  { path: "/forum", title: "问答讨论 - Zotero 使用交流", description: "Zotero 使用问题的问答与讨论,正在筹备中。", h1: "问答讨论" },
-  { path: "/rules", title: "收录规则 - 插件收录、排序与下架说明", description: "Zotero 插件广场的收录范围、标准、排序与标签规则、数据来源,以及申请收录、更正和下架的办法。", h1: "收录规则" },
-  { path: "/about", title: "关于本站 - Zotero 中文社区", description: "Zotero 中文社区是社区自发运营的非官方站点,公开透明、一视同仁,说明站点内容、原则与反馈方式。", h1: "关于本站" },
+  { path: "/", title: "Zotero 中文社区｜插件、教程与期刊查询", description: "查找 Zotero 插件、阅读中文教程、查询期刊信息与引用样式。按自己的研究需要选择工具，查看兼容范围和公开更新记录。", h1: "Zotero 中文社区" },
+  { path: "/plugins", title: "Zotero 插件广场｜用途、兼容与更新", description: "按用途、Zotero 版本和更新时间筛选插件，查看适配范围、公开发布记录及下载入口。所有插件按同一规则展示。", h1: "Zotero 插件广场" },
+  { path: "/plugins/charts", title: "Zotero 插件数据看板｜星标、下载与更新", description: "查看已收录插件的公开星标、安装包下载次数、版本适配与发布节奏。结合统计日期和数据说明，了解社区插件的变化。", h1: "Zotero 插件数据看板" },
+  { path: "/journals", title: "期刊查询｜收录、分区与期刊指标", description: "输入期刊名称、缩写或 ISSN，查询收录、分区与期刊指标。查看数据版本，缺失项目显示暂无，帮助核对期刊信息。", h1: "期刊查询" },
+  { path: "/submission", title: "投稿建议｜了解期刊与投稿准备", description: "了解投稿前需要核对的期刊信息与准备事项。本栏目正在筹备，可先使用期刊查询核对收录、分区和相关指标。", h1: "投稿建议" },
+  { path: "/guides", title: "Zotero 教程｜从入门使用到插件开发", description: "阅读 Zotero 中文教程，了解插件开发准备、首个插件、调试与发布流程。每篇附参考来源，便于继续查证和实践。", h1: "Zotero 中文教程" },
+  { path: "/styles", title: "Zotero 引用样式｜查找与安装指南", description: "了解 Zotero 引用样式的查找与安装方法，前往官方样式库核对期刊要求。投稿前请以目标期刊的最新说明为准。", h1: "Zotero 引用样式" },
+  { path: "/forum", title: "Zotero 问答讨论｜使用问题与交流入口", description: "查找 Zotero 使用问题的交流入口，了解如何描述问题、提供版本与复现步骤，便于与其他使用者共同排查。", h1: "Zotero 问答讨论" },
+  { path: "/rules", title: "收录与数据规则｜Zotero 中文社区", description: "了解插件收录、兼容范围、公开数据和排序规则。所有插件一视同仁，不设付费置顶或推荐位，未声明的兼容范围不作推定。", h1: "收录与数据规则" },
+  { path: "/about", title: "关于本站｜Zotero 中文社区", description: "了解 Zotero 中文社区的用途与参与方式。本站由社区自发运营，提供插件信息、中文教程及期刊查询，与 Zotero 官方无隶属关系。", h1: "关于 Zotero 中文社区" },
 ];
 
 const CAT = Object.fromEntries(CATEGORIES.map((c) => [c.key, c.label])) as Record<string, string>;
 
 /** 插件详情页的元信息。描述只用事实字段拼出,不夸大、不对任何插件特殊对待。 */
-export function pluginMeta(p: Plugin): PageMeta {
+/** 出现不止一次的插件名(同名不同作者);这些插件的标题要加上作者区分,避免页面标题重复。 */
+export function duplicateNames(list: Plugin[]): Set<string> {
+  const seen = new Set<string>();
+  const dup = new Set<string>();
+  for (const p of list) (seen.has(p.name) ? dup : seen).add(p.name);
+  return dup;
+}
+
+export function pluginMeta(p: Plugin, dup = false): PageMeta {
   const compat = compatSummary(p).text;
-  const facts = [`作者 ${authorOf(p.id)}`, `${formatStars(p.stars)} 星标`, cadenceText(p), downloadsText(p)].filter(Boolean).join(",");
+  // 动态字段缺失就整句省略,不填 0、不猜测;星标只是热度,不代表质量
+  const facts = [`${formatStars(p.stars)} 星标`, p.cadence ? cadenceText(p) : null, downloadsText(p)].filter(Boolean).join(",");
   return {
     path: `/plugins/${p.id}`,
-    title: `${p.name} - Zotero 插件(${CAT[p.category] ?? "插件"})· ${compat}`,
-    description: `${p.summary} ${facts}。${compat}。可在页面直接下载安装包。`.slice(0, 200),
+    title: `${p.name}${dup ? `(${p.id})` : ""}｜Zotero ${CAT[p.category] ?? ""}插件`,
+    description: `${p.summary} 作者 ${authorOf(p.id)}。适配范围:${compat}。${facts ? facts + "。" : ""}查看发布记录与下载入口。`.slice(0, 200),
     h1: p.name,
   };
 }

@@ -66,6 +66,20 @@ test("sitemap 与 robots", () => {
   assert.match(robotsTxt(), /User-agent: \*/);
 });
 
+test("同名不同作者的插件:标题加作者区分,页面标题不重复", () => {
+  const dir = mkdtempSync(join(tmpdir(), "prerender-"));
+  writeFileSync(join(dir, "index.html"), TEMPLATE);
+  const mk = (id) => ({ id, name: "Same Name", summary: "s", category: "ai", author: "x", homepage: "https://github.com/" + id, stars: 1, updated: "2026-11-01", zotero: { declared: false, majors: [] } });
+  build(dir, [mk("alice/same"), mk("bob/same"), { ...mk("carol/other"), name: "Other" }], "2026-11-10");
+  const t = (p) => readFileSync(join(dir, "plugins", p, "index.html"), "utf8").match(/<title>([^<]*)<\/title>/)[1];
+  assert.match(t("alice/same"), /^Same Name\(alice\/same\)｜/);
+  assert.match(t("bob/same"), /^Same Name\(bob\/same\)｜/);
+  assert.ok(!t("carol/other").includes("(")); // 不重名的不加
+  // 同一作者的两个同名插件也能区分
+  build(dir, [mk("alice/one"), mk("alice/two")], "2026-11-10");
+  assert.notEqual(t("alice/one"), t("alice/two"));
+});
+
 test("没有声明兼容范围的插件,结构化数据里不写下载地址", () => {
   const { dir } = run();
   const html = readFileSync(join(dir, "plugins/b/plain/index.html"), "utf8");
