@@ -5,6 +5,7 @@ import { GithubIcon } from "./icons.tsx";
 import { lazyRoute } from "./lazy.ts";
 import { loadHistory, loadPluginData } from "./plugins/data.ts";
 import { ROUTES, useRoute, type Route } from "./router.ts";
+import { formatCount, useVisitBeacon, useVisitStats } from "./visits.ts";
 import { applyMeta } from "./seo/head.ts";
 import { pageMeta } from "./seo/pages.ts";
 
@@ -74,6 +75,17 @@ function Header({ route }: { route: Route }) {
   );
 }
 
+/** 页脚的访问量。数字来自服务器的汇总,取不到就不显示这一行(静态页面里也没有,接管后才出现)。 */
+function VisitCount() {
+  const stats = useVisitStats();
+  if (!stats) return null;
+  return (
+    <div className="footer-visits">
+      累计访问 {formatCount(stats.total)} 次 · 今日 {formatCount(stats.today)} 次
+    </div>
+  );
+}
+
 function Styles() {
   return (
     <section className="section">
@@ -140,6 +152,7 @@ export const preloadAllRoutes = (): Promise<unknown> => Promise.all(Object.value
 
 export function App() {
   const route = useRoute();
+  useVisitBeacon();
   useEffect(() => {
     if (route === "plugin" || route === "guide" || route === "category" || route === "notfound") return; // 详情类页面自己设置标题
     applyMeta(pageMeta(ROUTES.find((r) => r.route === route)?.path ?? "/"));
@@ -160,6 +173,7 @@ export function App() {
             <a href="https://github.com/cnzotero/zotero-community" target="_blank" rel="noopener noreferrer">GitHub</a>
           </nav>
           Zotero 中文社区 · 社区自发运营 · 本站与 Zotero 官方无隶属关系
+          <VisitCount />
           <SkinSwitch />
         </div>
       </footer>
