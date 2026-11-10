@@ -1,7 +1,7 @@
 {
   "/": {"hash":"11c1b4fb62997dcf","lastmod":"2026-11-10"},
   "/about": {"hash":"4689d8006245557b","lastmod":"2026-11-10"},
-  "/categories/ai": {"hash":"b8da2e96df6fe4be","lastmod":"2026-11-10"},
+  "/categories/ai": {"hash":"5bee7ee23a0d5e0b","lastmod":"2026-11-10"},
   "/categories/attachment": {"hash":"16ed08218bd7081e","lastmod":"2026-11-10"},
   "/categories/integration": {"hash":"65eb51b05278f91f","lastmod":"2026-11-10"},
   "/categories/interface": {"hash":"855399f5ca506446","lastmod":"2026-11-10"},
@@ -22,7 +22,7 @@
   "/guides/dev-04-build-release": {"hash":"a4b51d94ac972f33","lastmod":"2026-11-10"},
   "/guides/dev-05-submit-and-maintain": {"hash":"7525b56d834ab32d","lastmod":"2026-11-10"},
   "/journals": {"hash":"d39d0ed025cd1e27","lastmod":"2026-11-10"},
-  "/plugins": {"hash":"cb19749fdcef7669","lastmod":"2026-11-10"},
+  "/plugins": {"hash":"3a2cd09bcedad04b","lastmod":"2026-11-10"},
   "/plugins/018/zotcard": {"hash":"3b244db2fe763c95","lastmod":"2026-10-12"},
   "/plugins/018/zotero-excalidraw": {"hash":"b4e0dfbfe2aa8cb1","lastmod":"2026-10-12"},
   "/plugins/1654842532/zotero-ai-assistant": {"hash":"c290a7aaca5afe57","lastmod":"2026-06-01"},
@@ -60,7 +60,7 @@
   "/plugins/cabdoge/pdf2notelink": {"hash":"215a7308eb718773","lastmod":"2026-10-11"},
   "/plugins/cannolis/zotread": {"hash":"6f73b5d1957e3c13","lastmod":"2026-05-10"},
   "/plugins/chaoplayer/zotero-glossary": {"hash":"c86e588a3e70699c","lastmod":"2026-08-30"},
-  "/plugins/charts": {"hash":"feef3219b1cabd26","lastmod":"2026-11-10"},
+  "/plugins/charts": {"hash":"c373e2cd7e34b316","lastmod":"2026-11-10"},
   "/plugins/chen7447/item-pane-organizer-zotero": {"hash":"8166c7c619799c73","lastmod":"2026-08-22"},
   "/plugins/chen7447/journal-tags": {"hash":"a70fb20b1eabd385","lastmod":"2026-08-29"},
   "/plugins/chen7447/rapidocr-for-zotero": {"hash":"b6b9e9ee1aad7c62","lastmod":"2026-09-07"},
@@ -95,6 +95,7 @@
   "/plugins/egh/zotxt": {"hash":"17ed1a9382cc7a9a","lastmod":"2026-05-01"},
   "/plugins/elsevoid/zotero-close-to-tray": {"hash":"a84d352eac9f2bae","lastmod":"2026-11-04"},
   "/plugins/endoretic/zotero-wallpaper": {"hash":"c13763bebead8d13","lastmod":"2026-09-02"},
+  "/plugins/equalang/equalang-zotero-plugin": {"hash":"8469b139d4d7e565","lastmod":"2026-10-27"},
   "/plugins/et06731/zotero-paper2slides": {"hash":"5c79f011f68b73ad","lastmod":"2026-04-13"},
   "/plugins/ethanwillis/zotero-scihub": {"hash":"6eb884087db32609","lastmod":"2026-11-02"},
   "/plugins/etshaw-zh/zotero-career-tracker": {"hash":"ebf104cea61c1efd","lastmod":"2026-02-24"},
@@ -376,6 +377,6 @@
   "/plugins/zxyl1003/inthes": {"hash":"c88bf05565a02e23","lastmod":"2026-10-08"},
   "/plugins/zzlb0224/zotero-annotation-manage": {"hash":"0b5e9adda738cec9","lastmod":"2026-01-27"},
   "/plugins/zzq-02/zotero-vocab-builder": {"hash":"7d923cc610640be6","lastmod":"2026-09-23"},
-  "/rules": {"hash":"34b8abbf9172b958","lastmod":"2026-11-10"},
+  "/rules": {"hash":"b583338e85038d3d","lastmod":"2026-11-10"},
   "/styles": {"hash":"7db8eeb739b0475e","lastmod":"2026-11-10"}
 }
