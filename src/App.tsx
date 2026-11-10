@@ -51,6 +51,17 @@ function SkinSwitch() {
   );
 }
 
+/** 页眉右上角的访问量。数字来自服务器的汇总,取不到就不显示(静态页面里也没有,接管后才出现)。 */
+function VisitCount() {
+  const stats = useVisitStats();
+  if (!stats) return null;
+  return (
+    <span className="header-visits" title={`今日访问 ${formatCount(stats.today)} 次`}>
+      累计访问 {formatCount(stats.total)} 次
+    </span>
+  );
+}
+
 function Header({ route }: { route: Route }) {
   return (
     <header className="topbar">
@@ -69,24 +80,17 @@ function Header({ route }: { route: Route }) {
             </Link>
           ))}
         </nav>
-        <a className="icon-btn header-gh" href="https://github.com/cnzotero/zotero-community" target="_blank" rel="noopener noreferrer" title="GitHub 仓库" aria-label="GitHub 仓库(新标签打开)">
-          <GithubIcon size={17} />
-        </a>
+        <div className="header-right">
+          <VisitCount />
+          <a className="icon-btn header-gh" href="https://github.com/cnzotero/zotero-community" target="_blank" rel="noopener noreferrer" title="GitHub 仓库" aria-label="GitHub 仓库(新标签打开)">
+            <GithubIcon size={17} />
+          </a>
+        </div>
       </div>
     </header>
   );
 }
 
-/** 页脚的访问量。数字来自服务器的汇总,取不到就不显示这一行(静态页面里也没有,接管后才出现)。 */
-function VisitCount() {
-  const stats = useVisitStats();
-  if (!stats) return null;
-  return (
-    <div className="footer-visits">
-      累计访问 {formatCount(stats.total)} 次 · 今日 {formatCount(stats.today)} 次
-    </div>
-  );
-}
 
 function NotFound() {
   useEffect(() => {
@@ -166,7 +170,6 @@ export function App() {
             <a href="https://github.com/cnzotero/zotero-community" target="_blank" rel="noopener noreferrer">GitHub</a>
           </nav>
           Zotero 中文社区 · 社区自发运营 · 本站与 Zotero 官方无隶属关系
-          <VisitCount />
           <SkinSwitch />
         </div>
       </footer>
