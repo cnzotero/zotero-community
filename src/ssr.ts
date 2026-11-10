@@ -58,3 +58,23 @@ export function useImageOk(): [boolean, RefObject<HTMLImageElement | null>, () =
   }, []);
   return [ok, ref, () => setOk(false)];
 }
+
+// ---------- 接管前输入的内容 ----------
+// 网速慢时,静态页面先显示出来,脚本还在下载;这时在搜索框里输入的文字会在接管时被重置。
+// 接管前先记下带 data-early 的输入框里已有的内容,页面组件挂载后取回并应用,用户输入不会丢。
+const early = new Map<string, string>();
+
+/** 浏览器接管静态页面之前调用:记下各输入框里用户已经输入的内容。 */
+export function captureEarlyInputs(root: ParentNode): void {
+  for (const el of Array.from(root.querySelectorAll<HTMLInputElement>("input[data-early]"))) {
+    const key = el.dataset.early;
+    if (key && el.value) early.set(key, el.value);
+  }
+}
+
+/** 取回(并清除)某个输入框在接管前的内容;没有返回空串。 */
+export function takeEarlyInput(key: string): string {
+  const v = early.get(key) ?? "";
+  early.delete(key);
+  return v;
+}

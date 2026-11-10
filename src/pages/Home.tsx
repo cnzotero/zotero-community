@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import boardsData from "virtual:home-boards";
 import compatData from "virtual:compat-index";
 import { Link } from "../link.tsx";
@@ -8,11 +8,12 @@ import { serverCompatIndex, serverHomeBoards } from "../plugins/data.ts";
 import { PluginCard } from "../plugins/PluginsPage.tsx";
 import { CATEGORIES, type HomeBoardKey } from "../plugins/lib.ts";
 import { COMPAT_SCOPE, categoryPath, compatPath, pageMeta } from "../seo/pages.ts";
-import { useNow } from "../ssr.ts";
+import { takeEarlyInput, useNow } from "../ssr.ts";
+import { OfficialBox } from "../official/OfficialBox.tsx";
 
 /** 首页榜单:全部复用插件广场的同一套排序,不另设算法,说明文字与规则页第 4 条一致。 */
 const BOARDS: { key: HomeBoardKey; label: string; note: string }[] = [
-  { key: "stars", label: "星标最多", note: "按 GitHub 星标排序,与插件广场使用同一套规则,没有置顶或推荐位。" },
+  { key: "stars", label: "星标最多", note: "按 GitHub 星标排序,与插件广场的目录使用同一套规则,目录内的插件没有置顶或推荐位。" },
   { key: "cadence", label: "更新最勤", note: "按近一年有发布的天数排序,同一天发布多次只算一天;与插件广场「更新频率」同一套规则。" },
   { key: "downloads", label: "下载最多", note: "按发布页公开的安装包累计下载量排序;没有公开下载数据的插件不参与。" },
 ];
@@ -31,6 +32,11 @@ export function Home() {
   const top = (serverHomeBoards() ?? boardsData)[board];
   const compat = serverCompatIndex() ?? compatData;
   const boardNote = BOARDS.find((b) => b.key === board)?.note ?? "";
+  // 接管前已经在搜索框里输入的文字:挂载后补上,不丢
+  useEffect(() => {
+    const early = takeEarlyInput("home-q");
+    if (early) setQ(early);
+  }, []);
   const submit = (e: FormEvent) => {
     e.preventDefault();
     navigate(q.trim() ? `/plugins?q=${encodeURIComponent(q.trim())}` : "/plugins");
@@ -41,13 +47,15 @@ export function Home() {
         <h1>{pageMeta("/").h1}</h1>
         <p>查找适合自己的插件,核对 Zotero 版本与更新记录;阅读中文教程,查询期刊与引用样式,按研究需要选择工具。</p>
         <form onSubmit={submit} role="search" className="hero-search">
-          <input className="search" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="搜索插件,例如:翻译、Word、标签" aria-label="搜索插件" />
+          <input className="search" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="搜索插件,例如:翻译、Word、标签" aria-label="搜索插件" data-early="home-q" />
         </form>
         <p className="hero-cta">
           <Link to="/plugins" className="btn">查找插件</Link>
           <Link to="/guides" className="btn btn-ghost">阅读教程</Link>
         </p>
       </section>
+
+      <OfficialBox compact />
 
       <section className="section">
         <div className="section-head">

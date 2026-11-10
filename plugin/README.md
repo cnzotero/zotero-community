@@ -8,9 +8,11 @@ Zotero 中文社区(<https://zoterocn.org>)的官方 Zotero 插件:在 Zotero �
 
 ## 安装
 
-1. 在本仓库的 Releases 页下载 `zotero-community.xpi`(标签形如 `plugin-v0.1.0`)。
+1. 在本仓库的 Releases 页下载 `zotero-community.xpi`(标签形如 `plugin-v1.0.0`)。
 2. 打开 Zotero,菜单「工具 → 插件」,点右上角齿轮,选「从文件安装附加组件…」,选择下载的文件。
-3. 安装后,「工具」菜单里会出现「Zotero中文社区 · 插件市场」。
+3. 安装后,文库工具栏里搜索框左侧会出现「插件市场」按钮(提示文字为「Zotero 中文社区 · 插件市场」),点它打开。
+
+「工具」菜单里默认不放入口。需要的话,在 Zotero 设置的「高级 → 设置编辑器」里把 `extensions.zotero-community.showToolsMenuItem` 改为 `true`,重启 Zotero 后「工具」菜单里也会出现这一项。
 
 之后的版本更新由 Zotero 按本仓库 GitHub 上的更新清单自动检查:`https://github.com/cnzotero/zotero-community/releases/download/release/update.json`。更新清单与安装包都放在 GitHub 上,不放在 zoterocn.org:即使站点出了问题,也不能借自动更新给你推送别的代码;清单里还带有安装包的 SHA-256,Zotero 下载更新后会核对。
 
@@ -34,7 +36,7 @@ Zotero 中文社区(<https://zoterocn.org>)的官方 Zotero 插件:在 Zotero �
 
 ## 一视同仁
 
-所有插件使用同一套筛选、排序与安装规则,没有推荐位、没有置顶、没有按插件或作者区分的特殊处理。插件市场的代码里有测试检查这一点。
+插件市场里的所有插件使用同一套筛选、排序与安装规则,没有推荐位、没有置顶、没有按插件或作者区分的特殊处理(本插件自己不在插件市场的列表里)。插件市场的代码里有测试检查这一点。
 
 ## 安全
 
@@ -75,7 +77,7 @@ npm run build   # 生成 dist/zotero-community.xpi 并校验包结构
 - 本地试用时,请用全新的临时配置目录启动 Zotero,不要动日常使用的配置与数据目录,例如:
   `zotero -profile <临时目录>/profile -no-remote -datadir <临时目录>/data -ZoteroDebugText`,
   并把 xpi 复制为 `<临时目录>/profile/extensions/zotero-community@zoterocn.org.xpi`。
-- 开发自检:在临时配置里设置 `extensions.zotero-community.selfTest` 为 `true`,启动后插件会经「工具」菜单打开插件市场,检查列表、筛选、排序、确认框(打开后点取消,不安装任何插件),再停用、启用一次插件检查清理,结果写在调试输出里(以 `[zotero-community] selftest:` 开头)。日常使用不会有这个设置。
+- 开发自检:在临时配置里设置 `extensions.zotero-community.selfTest` 为 `true`,启动后插件会检查工具栏按钮的位置与尺寸、经按钮打开插件市场、新开一个主窗口检查按钮,再检查列表、筛选、排序、确认框(打开后点取消,不安装任何插件),再停用、启用一次插件检查清理,结果写在调试输出里(以 `[zotero-community] selftest:` 开头)。日常使用不会有这个设置。
 
 发布流程见 [RELEASING.md](RELEASING.md)。
 

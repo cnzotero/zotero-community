@@ -31,15 +31,15 @@
    ```
 5. **发布该版本的 Release**(只上传安装包):
    ```bash
-   git tag plugin-v0.1.0 && git push origin plugin-v0.1.0
-   gh release create plugin-v0.1.0 dist/zotero-community.xpi \
-     --title "Zotero中文社区 插件 0.1.0" \
-     --notes "首个版本:在 Zotero 里浏览、搜索、安装与更新 zoterocn.org 收录的插件。"
+   git tag plugin-v1.0.0 && git push origin plugin-v1.0.0
+   gh release create plugin-v1.0.0 dist/zotero-community.xpi \
+     --title "Zotero中文社区 插件 1.0.0" \
+     --notes "文库工具栏搜索框左侧新增「插件市场」按钮,一键打开;再次打开插件市场时立即显示上次的目录,同时在后台检查更新。"
    ```
    上传的文件名必须是 `zotero-community.xpi`。说明只写用户能感知到的变化。
 6. **核对安装包**(此时还没动更新清单):
    ```bash
-   node scripts/verify-release.mjs 0.1.0 --xpi-only
+   node scripts/verify-release.mjs 1.0.0 --xpi-only
    ```
    检查该版本的下载地址返回 200、文件大小与 SHA-256 与本地构建一致、包里的版本号与插件标识正确。不通过就删除这个附件,查明原因后重新上传,**不要**进行下一步。
 7. **更新 `release` 条目里的 update.json**:
@@ -52,7 +52,7 @@
    ```
 8. **再核对一次**:
    ```bash
-   node scripts/verify-release.mjs 0.1.0
+   node scripts/verify-release.mjs 1.0.0
    ```
    检查固定地址的 update.json 能下载、里面有这个版本、`update_link` 正是该版本的 Release 地址、`update_hash` 与本地构建一致,并再下载一次它指向的安装包核对大小、哈希与版本号。任何一项不通过都以非零状态退出并写明原因;此时把 `release` 条目里的 update.json 换回上一个版本的,再排查。
 

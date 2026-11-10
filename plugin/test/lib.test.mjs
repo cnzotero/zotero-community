@@ -518,3 +518,25 @@ test("安装监听器:下载完成后核对包内插件标识,不符就取消安
   f.l.onInstallEnded(f.install, {});
   assert.deepEqual(f.results, [{ ok: false, code: -1 }]);
 });
+
+test("安装按钮:后台检查未完成时不可点并提示「正在检查更新…」,完成后恢复;安装中不可点", () => {
+  assert.deepEqual(L.installButtonState("not-installed", false, true), { label: "安装", disabled: true, title: "正在检查更新…" });
+  assert.deepEqual(L.installButtonState("update", false, true), { label: "更新", disabled: true, title: "正在检查更新…" });
+  assert.deepEqual(L.installButtonState("not-installed", false, false), { label: "安装", disabled: false, title: "" });
+  assert.deepEqual(L.installButtonState("update", false, false), { label: "更新", disabled: false, title: "" });
+  assert.deepEqual(L.installButtonState("unknown", true, false), { label: "正在安装…", disabled: true, title: "" });
+  assert.deepEqual(L.installButtonState("unknown", true, true), { label: "正在安装…", disabled: true, title: "" });
+});
+
+test("缓存大小上限:超过上限或大小未知时不读,读回的文本超长也当作没有", () => {
+  assert.equal(L.CACHE_MAX_BYTES, 8 * 1024 * 1024);
+  assert.ok(L.CACHE_MAX_BYTES >= 2 * L.MAX_CATALOG_BYTES); // 能放下任何被接受的目录(转义后)
+  assert.equal(L.cacheSizeOk(1024), true);
+  assert.equal(L.cacheSizeOk(L.CACHE_MAX_BYTES), true);
+  assert.equal(L.cacheSizeOk(L.CACHE_MAX_BYTES + 1), false);
+  for (const v of [undefined, null, -1, NaN, Infinity, "10"]) assert.equal(L.cacheSizeOk(v), false, String(v));
+  const now = new Date("2026-11-11T00:00:00Z");
+  const huge = L.makeCacheEntry(catalog([plugin()], { pad: "x".repeat(L.CACHE_MAX_BYTES) }), now);
+  assert.equal(L.readCacheEntry(huge, now), null);
+  assert.ok(L.readCacheEntry(L.makeCacheEntry(catalog([plugin()]), now), now));
+});

@@ -482,3 +482,22 @@ body { background: var(--bg); }
 
 /* 引用样式页每段末尾的来源 */
 .source-line { font-size: 13px; color: var(--muted); margin-top: -4px; }
+
+/* 社区官方插件:单独的展示位,与目录卡片明显区分(实线强调色边框、浅色底、徽标) */
+.official-box { display: grid; grid-template-columns: auto 1fr auto; gap: 14px 18px; align-items: center; margin: 16px 0 20px; padding: 16px 18px; border: 2px solid var(--accent); border-radius: 14px; background: var(--accent-soft); }
+.official-icon img { display: block; width: 48px; height: 48px; }
+.official-body { min-width: 0; }
+.official-badge { margin: 0 0 2px; font-size: 12px; font-weight: 600; color: var(--accent); letter-spacing: .02em; }
+.official-name { margin: 0; font-size: 18px; }
+.official-summary { margin: 4px 0; color: var(--ink-soft); }
+.official-facts { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0; }
+.official-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+.official-compact { margin-top: 0; }
+@media (max-width: 720px) {
+  .official-box { grid-template-columns: auto 1fr; }
+  .official-actions { grid-column: 1 / -1; justify-content: flex-start; }
+}
+/* 社区官方插件介绍页 */
+.official-page .flow-img { width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--line); background: var(--paper); }
+.official-page .flow-caption { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 8px 0 0; padding: 0; list-style: none; text-align: center; font-size: 14px; color: var(--muted); }
+.official-page .steps li { margin: 6px 0; }

@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Zotero中文社区",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "在 Zotero 里浏览、搜索、安装与更新 Zotero 中文社区(zoterocn.org)收录的插件。",
   "homepage_url": "https://zoterocn.org",
   "author": "Zotero 中文社区",

@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot, hydrateRoot } from "react-dom/client";
 import { App, preloadRoute } from "./App.tsx";
 import { routeFromPath } from "./router.ts";
+import { captureEarlyInputs } from "./ssr.ts";
 import "./styles.css";
 
 const el = document.getElementById("root")!;
@@ -17,6 +18,7 @@ const app = (
 preloadRoute(routeFromPath(path))
   .catch(() => {})
   .finally(() => {
+    captureEarlyInputs(el);
     if (el.dataset.ssr === path && !location.search) hydrateRoot(el, app);
     else createRoot(el).render(app);
   });

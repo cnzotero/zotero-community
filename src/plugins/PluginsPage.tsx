@@ -5,8 +5,9 @@ import { downloadsPerDay } from "./charts-lib.ts";
 import { cachedPluginData, loadPluginData, type PluginData } from "./data.ts";
 import { applyMeta } from "../seo/head.ts";
 import { categoryPath, compatPath, duplicateNames, pageMeta, pluginMeta } from "../seo/pages.ts";
-import { currentPath, currentSearch, useImageOk, useNow } from "../ssr.ts";
+import { currentPath, currentSearch, takeEarlyInput, useImageOk, useNow } from "../ssr.ts";
 import { DownloadIcon, ExternalIcon, GithubIcon, ShareIcon, StarIcon } from "../icons.tsx";
+import { OfficialBox } from "../official/OfficialBox.tsx";
 import {
   CATEGORIES, DEFAULT_FILTERS, ZOTERO_VERSIONS as ZV, ZOTERO_VERSIONS, applyFilters, authorOf, authorStats, barHeights, byNameStable, cadenceText,
   cardTags, compatIndex, compatSummary, computeStats, downloadFilename, downloadHost, formatCount, formatStars, isAllowedXpiUrl, parseFilters, pickDownload,
@@ -297,6 +298,12 @@ export function PluginsList() {
     setShown(PAGE);
   }, []);
 
+  // 接管前已经在搜索框里输入的文字:挂载后补上,不丢
+  useEffect(() => {
+    const q = takeEarlyInput("plugins-q");
+    if (q) set({ query: q });
+  }, [set]);
+
   const all = loaded.state === "ready" ? loaded.data.plugins : [];
   const stats = useMemo(() => computeStats(all, now), [all, now]);
   const list = useMemo(() => applyFilters(all, f, now), [all, f, now]);
@@ -311,12 +318,15 @@ export function PluginsList() {
         <span className="hero-sep"> · </span>
         <Link to="/rules" className="inline-link hero-link">收录规则</Link>
       </PageHero>
+      {/* 社区官方插件单独展示,不在下面的目录里,不参与筛选、排序与计数 */}
+      <OfficialBox />
       <input
         className="search"
         type="search"
         value={f.query}
         placeholder="搜索插件名称、作者或用途"
         aria-label="搜索插件名称、作者或用途"
+        data-early="plugins-q"
         onChange={(e) => set({ query: e.target.value })}
       />
       {loaded.state === "ready" && (

@@ -48,20 +48,31 @@ test("引导脚本:导出 Zotero 需要的生命周期函数;启动时注册的�
   const shutdown = /function shutdown\(\) \{([\s\S]*?)\n\}/.exec(src)[1];
   assert.match(shutdown, /clearTimeout\(selfTestTimer\)/); // 定时器
   assert.match(shutdown, /getEnumerator\(WINDOW_TYPE\)[\s\S]*\.close\(\)/); // 已打开的窗口
-  assert.match(shutdown, /removeMenu\(win\)/); // 菜单项
+  assert.match(shutdown, /undecorate\(win\)/); // 工具栏按钮与菜单项
+  assert.match(shutdown, /decorated\.clear\(\)/);
+  assert.match(src, /function onMainWindowUnload\(\{ window \}\) \{\s*undecorate\(window\);/); // 关闭主窗口时清理
+  // 「工具」菜单项默认不显示,由设置开启
+  assert.match(src, /showMenuItem: boolPref\(SHOW_MENU_PREF\)/);
+  assert.match(src, /const SHOW_MENU_PREF = "extensions\.zotero-community\.showToolsMenuItem";/);
   assert.match(shutdown, /chromeHandle\.destruct\(\)/); // chrome 注册
   assert.match(read("addon/content/market.html"), /windowtype="zotero-community:market"/);
   // 窗口关闭时撤销附加组件监听、中止请求、清掉定时器
   const market = read("addon/content/market.js");
   assert.match(market, /removeAddonListener/);
+  // 缓存先查大小再读;后台检查完成前不安装,完成后恢复按钮
+  assert.ok(market.indexOf("IOUtils.stat(cachePath())") < market.indexOf("IOUtils.readUTF8(cachePath())"));
+  assert.match(market, /if \(!L\.cacheSizeOk\(info\.size\)\) return null;/);
+  assert.match(market, /if \(!p \|\| state\.busy\.has\(id\) \|\| state\.checking\) return;/);
+  assert.match(market, /renderStatus\(\);\s*refreshInstallButtons\(\);/);
+  assert.match(market, /L\.installButtonState\(st\.kind, state\.busy\.has\(p\.id\), state\.checking\)/);
   assert.match(market, /fetchController\.abort\(\)/);
   assert.match(market, /for \(const t of state\.timers\) clearTimeout\(t\)/);
 });
 
 test("界面:文案为中文,菜单名与窗口标题正确;不用 innerHTML 拼接内容", () => {
-  assert.match(read("addon/bootstrap.js"), /Zotero中文社区 · 插件市场/);
+  assert.match(read("addon/content/mainwindow.js"), /const LABEL = "Zotero 中文社区 · 插件市场";/);
   assert.match(read("addon/content/market.html"), /<title>Zotero中文社区 · 插件市场<\/title>/);
-  for (const f of ["addon/content/market.js", "addon/content/lib.js", "addon/bootstrap.js"]) {
+  for (const f of ["addon/content/market.js", "addon/content/lib.js", "addon/content/mainwindow.js", "addon/bootstrap.js"]) {
     const src = read(f);
     assert.ok(!/innerHTML|outerHTML|insertAdjacentHTML|document\.write|\beval\(|new Function/.test(src), f);
   }
@@ -99,7 +110,7 @@ test("公开仓库红线:不含本机路径、令牌、IP 地址;规则对所有
     assert.ok(!/gh[pousr]_[A-Za-z0-9]{20,}|github_pat_|x-access-token/.test(src), `${f} 含令牌`);
     assert.ok(!/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/.test(src.replace(/\d+\.\d+\.\d+\.\d+(?=\s*\))|version|v\d/gi, "")), `${f} 含 IP 地址`);
   }
-  for (const f of ["addon/content/lib.js", "addon/content/market.js", "addon/bootstrap.js"]) {
+  for (const f of ["addon/content/lib.js", "addon/content/market.js", "addon/content/mainwindow.js", "addon/bootstrap.js"]) {
     const src = read(f);
     // 不得出现「某个插件 id / 作者」的字面量比较,也没有推荐、置顶字样
     assert.ok(!/(?<!typeof\s+)\b[\w$]+\.(id|author|name|homepage)\s*[!=]==?\s*["'`]/.test(src), `${f} 有按插件区分的分支`);

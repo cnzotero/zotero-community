@@ -39,6 +39,15 @@
     }
   }
 
+  /** 读布尔设置;设置不存在或类型不对(例如被手动改成文字)时当作 false,不让窗口出错。 */
+  function boolPref(name) {
+    try {
+      return Services.prefs.getBoolPref(name, false);
+    } catch (e) {
+      return false;
+    }
+  }
+
   function later(fn, ms) {
     const t = setTimeout(() => {
       state.timers.delete(t);
@@ -71,9 +80,11 @@
     return PathUtils.join(PathUtils.profileDir, CACHE_DIR, CACHE_FILE);
   }
 
-  /** 读回缓存并重新校验(格式、30 天保存期、目录解析);不合格当作没有。 */
+  /** 读回缓存并重新校验(大小上限、格式、30 天保存期、目录解析);不合格当作没有。 */
   async function readCache() {
     try {
+      const info = await IOUtils.stat(cachePath());
+      if (!L.cacheSizeOk(info.size)) return null; // 超过大小上限:不读,当作没有缓存
       return L.readCacheEntry(await IOUtils.readUTF8(cachePath()), new Date());
     } catch (e) {
       return null; // 没有缓存
@@ -100,9 +111,24 @@
 
   async function load() {
     $("reload").disabled = true;
-    setStatus("正在读取插件目录…");
     hideNotice();
     const cache = await readCache();
+    // 先用本机保存的目录把列表画出来,打开就能浏览;同时在后台检查目录有没有更新
+    if (cache && !state.catalog) {
+      state.catalog = cache.catalog;
+      state.source = "cache";
+      state.savedAt = cache.savedAt;
+      state.checking = true;
+      await refreshInstalled();
+      fillCategories();
+      render();
+      state.firstRenderAt = performance.now();
+    } else if (state.catalog) {
+      state.checking = true;
+      renderStatus();
+    } else {
+      setStatus("正在读取插件目录…");
+    }
     let fetched;
     try {
       fetched = { text: await fetchCatalogText() };
@@ -110,17 +136,32 @@
       fetched = { error: (e && e.message) || String(e) };
     }
     if (state.closing) return;
+    state.checking = false;
     // 用哪份目录由 lib.js 决定:格式不对、日期在未来、比已保存的旧都不采用,回退到缓存
     const d = L.decideCatalog(fetched, cache, new Date());
-    state.catalog = d.catalog;
+    // 线上目录与已画出的缓存完全相同:只更新状态行,不重画列表(不打断正在浏览的位置)
+    const unchanged = d.source === "network" && cache && state.source === "cache" && fetched.text === cache.text && state.catalog === cache.catalog;
+    if (!unchanged) state.catalog = d.catalog;
     state.source = d.source;
     state.savedAt = d.source === "cache" ? cache.savedAt : null;
     if (d.save) await writeCache(fetched.text);
     if (d.notice) showNotice(d.notice, d.retry);
-    await refreshInstalled();
-    fillCategories();
-    render();
+    if (unchanged) {
+      renderStatus();
+      refreshInstallButtons();
+    } else {
+      await refreshInstalled();
+      fillCategories();
+      render();
+    }
+    await renderIdle();
+    if (!state.firstRenderAt) state.firstRenderAt = performance.now();
     $("reload").disabled = false;
+  }
+
+  /** 列表全部画完时兑现(目前同步画完,直接兑现)。 */
+  function renderIdle() {
+    return state.renderPending || Promise.resolve();
   }
 
   async function refreshInstalled() {
@@ -173,6 +214,18 @@
     return L.sortPlugins(L.filterPlugins(state.catalog.plugins, filters()), $("sort").value);
   }
 
+  /** 状态行:数据日期、来源、显示条数、当前 Zotero 版本。shownCount 省略时按当前筛选重新计算。 */
+  function renderStatus(shownCount) {
+    if (!state.catalog) return;
+    const n = shownCount === undefined ? visiblePlugins().length : shownCount;
+    const parts = [];
+    const from = state.checking ? "(本机保存的目录,正在检查更新…)" : state.source === "cache" ? "(离线缓存)" : "";
+    if (state.catalog.generatedAt) parts.push("数据更新于 " + state.catalog.generatedAt + from);
+    parts.push("显示 " + n + " / " + state.catalog.plugins.length + " 款");
+    if (state.zoteroVersion) parts.push("当前 Zotero " + state.zoteroVersion);
+    setStatus(parts.join(" · "));
+  }
+
   function render() {
     const list = $("list");
     list.textContent = "";
@@ -181,11 +234,7 @@
       return;
     }
     const shown = visiblePlugins();
-    const parts = [];
-    if (state.catalog.generatedAt) parts.push("数据更新于 " + state.catalog.generatedAt + (state.source === "cache" ? "(离线缓存)" : ""));
-    parts.push("显示 " + shown.length + " / " + state.catalog.plugins.length + " 款");
-    if (state.zoteroVersion) parts.push("当前 Zotero " + state.zoteroVersion);
-    setStatus(parts.join(" · "));
+    renderStatus(shown.length);
     if (shown.length === 0) {
       const tip = $("compat").checked ? "没有符合条件的插件。可以取消勾选「只显示适配当前 Zotero 的插件」查看全部。" : "没有符合条件的插件。";
       list.appendChild(el("p", { class: "empty" }, tip));
@@ -221,10 +270,11 @@
 
     const actions = el("div", { class: "actions" });
     actions.appendChild(el("span", { class: "state " + st.kind }, stateText(st)));
-    const busy = state.busy.has(p.id);
     if (release && (st.kind === "not-installed" || st.kind === "unknown" || st.kind === "update")) {
-      const b = el("button", { type: "button", class: "install" }, busy ? "正在安装…" : st.kind === "update" ? "更新" : "安装");
-      b.disabled = busy;
+      const bs = L.installButtonState(st.kind, state.busy.has(p.id), state.checking);
+      const b = el("button", { type: "button", class: "install", "data-kind": st.kind }, bs.label);
+      b.disabled = bs.disabled;
+      if (bs.title) b.title = bs.title;
       b.addEventListener("click", () => onInstallClick(p.id));
       actions.appendChild(b);
     }
@@ -301,9 +351,21 @@
     });
   }
 
+  /** 后台检查完成后,把卡片上的安装按钮恢复为可点(不重画列表)。 */
+  function refreshInstallButtons() {
+    for (const b of $("list").querySelectorAll("button.install")) {
+      const id = b.closest(".card").getAttribute("data-id");
+      const bs = L.installButtonState(b.getAttribute("data-kind"), state.busy.has(id), state.checking);
+      b.textContent = bs.label;
+      b.disabled = bs.disabled;
+      if (bs.title) b.title = bs.title;
+      else b.removeAttribute("title");
+    }
+  }
+
   async function onInstallClick(id) {
     const p = findPlugin(id);
-    if (!p || state.busy.has(id)) return;
+    if (!p || state.busy.has(id) || state.checking) return; // 后台检查完成前不安装
     // 安装地址只取自目录里这个插件适配当前版本的那条发布记录,并再次校验主机与 .xpi 后缀
     const target = L.installTarget(p, state.zoteroVersion);
     if (!target.ok) {
@@ -386,7 +448,7 @@
     AddonManager.addAddonListener(state.addonListener);
     window.addEventListener("unload", cleanup, { once: true });
     load().then(() => {
-      if (Services.prefs.getBoolPref(SELF_TEST_PREF, false)) selfTest();
+      if (boolPref(SELF_TEST_PREF)) selfTest();
     });
   }
 
@@ -430,6 +492,33 @@
       check(!!state.catalog && state.catalog.plugins.length > 0, "catalog loaded, plugins=" + (state.catalog ? state.catalog.plugins.length : 0));
       if (!state.catalog) return;
       const cards = () => $("list").querySelectorAll(".card");
+      // 性能:每项量 5 次取中位数;计时包含样式与布局(强制读一次尺寸),等全部卡片画完为止
+      const perf = {};
+      const timed = async (label, prep) => {
+        const xs = [];
+        for (let i = 0; i < 5; i++) {
+          if (prep) prep(i);
+          const t0 = performance.now();
+          render();
+          await renderIdle();
+          void $("list").getBoundingClientRect().height;
+          xs.push(performance.now() - t0);
+        }
+        xs.sort((a, b) => a - b);
+        perf[label] = Math.round(xs[2] * 10) / 10;
+      };
+      log("perf: first list shown at " + Math.round(state.firstRenderAt || -1) + "ms after window load start (cards " + cards().length + ")");
+      await timed("render-compatible");
+      $("compat").checked = false;
+      await timed("render-all");
+      for (const s of L.SORTS) await timed("sort-" + s.key, () => ($("sort").value = s.key));
+      $("sort").value = "stars";
+      await timed("search-narrow", (i) => ($("q").value = i % 2 ? "翻译" : "pdf"));
+      await timed("search-clear", () => ($("q").value = ""));
+      $("compat").checked = true;
+      render();
+      await renderIdle();
+      log("perf " + JSON.stringify(perf));
       const compatCount = state.catalog.plugins.filter((p) => L.supportsMajor(p, state.major)).length;
       check(cards().length === compatCount, "only-compatible cards=" + cards().length + " expected=" + compatCount);
       $("compat").checked = false;
@@ -442,6 +531,14 @@
         check(cards()[0].getAttribute("data-id") === expected.id, "sort " + s.key + " first=" + expected.id);
       }
       $("sort").value = "stars";
+      // 后台检查未完成时安装按钮不可点,完成后恢复(不重画列表)
+      state.checking = true;
+      render();
+      const installs = [...$("list").querySelectorAll("button.install")];
+      check(installs.length > 0 && installs.every((b) => b.disabled && b.title === "正在检查更新…"), "install buttons disabled while checking (" + installs.length + ")");
+      state.checking = false;
+      refreshInstallButtons();
+      check(installs.every((b) => !b.disabled && !b.title), "install buttons re-enabled after the check");
       $("q").value = state.catalog.plugins[0].name;
       $("q").dispatchEvent(new Event("input"));
       await wait(400);

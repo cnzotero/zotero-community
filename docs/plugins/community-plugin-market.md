@@ -14,13 +14,13 @@
 
 ### 1. 先安装社区插件本身
 
-到[插件发布页](https://github.com/cnzotero/zotero-community/releases/tag/plugin-v0.1.0)下载 `zotero-community.xpi`，并按[插件安装教程](../getting-started/install-plugins.md)完成安装；不要下载源码压缩包替代。安装后根据 Zotero 提示决定是否重启，再检查工具菜单中的入口。
+到[插件发布页](https://github.com/cnzotero/zotero-community/releases/tag/plugin-v1.0.0)下载 `zotero-community.xpi`，并按[插件安装教程](../getting-started/install-plugins.md)完成安装；不要下载源码压缩包替代。安装后根据 Zotero 提示决定是否重启，再检查文库工具栏搜索框左侧的入口按钮。
 
 <!-- 截图:社区插件正式发布页与安装后的工具菜单 -->
 
 ### 2. 打开市场并确认目录状态
 
-从「工具」菜单打开「Zotero中文社区 · 插件市场」，先看目录是否加载完成以及显示的说明。读取失败时按窗口提供的提示重试，不要把旧目录当成最新发布情况。若看到离线内容或日期较早，重要的适配与版本信息应再到作者发布页核对。
+点文库工具栏里搜索框左侧的「插件市场」按钮（提示文字为「Zotero 中文社区 · 插件市场」）打开插件市场，先看目录是否加载完成以及显示的说明。读取失败时按窗口提供的提示重试，不要把旧目录当成最新发布情况。若看到离线内容或日期较早，重要的适配与版本信息应再到作者发布页核对。
 
 <!-- 截图:市场列表与目录日期或状态提示 -->
 

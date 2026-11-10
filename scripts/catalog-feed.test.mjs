@@ -188,7 +188,7 @@ test("一视同仁:目录源脚本与社区插件的源码里不出现任何具�
   const needles = new Set();
   for (const p of plugins) needles.add(p.id);
   for (const v of Object.values(ADDON_IDS)) for (const id of typeof v === "string" ? [v] : Object.values(v)) needles.add(id.toLowerCase());
-  const files = ["scripts/catalog-feed.mjs", "scripts/import-addon-ids.mjs", "plugin/addon/bootstrap.js", "plugin/addon/content/lib.js", "plugin/addon/content/market.js", "plugin/addon/content/market.html"];
+  const files = ["scripts/catalog-feed.mjs", "scripts/import-addon-ids.mjs", "plugin/addon/bootstrap.js", "plugin/addon/content/lib.js", "plugin/addon/content/mainwindow.js", "plugin/addon/content/market.js", "plugin/addon/content/market.html"];
   for (const f of files) {
     const src = readFileSync(join(root, f), "utf8").toLowerCase();
     for (const n of needles) assert.ok(!src.includes(n), `${f} 出现了 ${n}`);

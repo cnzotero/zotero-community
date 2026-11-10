@@ -24,6 +24,7 @@ const About = lazyRoute(() => import("./pages/StaticPages.tsx").then((m) => m.Ab
 const StylesPage = lazyRoute(() => import("./pages/StylesPage.tsx").then((m) => m.StylesPage));
 const Submission = lazyRoute(() => import("./pages/StaticPages.tsx").then((m) => m.Submission));
 const DelistedPage = lazyRoute(() => import("./pages/DelistedPage.tsx").then((m) => m.DelistedPage));
+const OfficialPluginPage = lazyRoute(() => import("./official/OfficialPluginPage.tsx").then((m) => m.OfficialPluginPage));
 
 const SKINS = [
   { key: "indigo", label: "靛蓝", color: "#3451b2" },
@@ -133,6 +134,7 @@ const VIEWS: Record<Route, ComponentType & { preload?: () => Promise<void> }> = 
   rules: Rules,
   about: About,
   delisted: DelistedPage,
+  official: OfficialPluginPage,
 };
 
 const NEEDS_PLUGIN_DATA = new Set<Route>(["plugins", "plugin", "category", "compat", "charts"]);

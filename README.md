@@ -24,15 +24,15 @@
 
 ## 在 Zotero 中使用「Zotero中文社区」插件
 
-插件把社区插件广场带进 Zotero，支持搜索、分类筛选、查看适配范围，以及在确认后安装或更新插件。所有插件遵守同一套规则，没有付费置顶、推荐位或按作者区别对待的安排。
+插件把社区插件广场带进 Zotero，支持搜索、分类筛选、查看适配范围，以及在确认后安装或更新插件。目录内的插件遵守同一套规则，没有推荐位、付费置顶或按作者区别对待的安排；唯一例外是本社区自己维护的「Zotero中文社区」插件，它在插件广场顶部单独展示，不参与排序和计数，不接受其他插件申请这一位置。
 
 ![安装四步示意](docs/assets/install-flow.png)
 
 安装步骤：
 
-1. 到[插件 0.1.0 发布页](https://github.com/cnzotero/zotero-community/releases/tag/plugin-v0.1.0)下载 `zotero-community.xpi`（不要下载网页源码压缩包代替）。
+1. 到[插件 1.0.0 发布页](https://github.com/cnzotero/zotero-community/releases/tag/plugin-v1.0.0)下载 `zotero-community.xpi`（不要下载网页源码压缩包代替）。
 2. 打开 Zotero「工具 → 插件」，按当前版本的提示从文件安装该安装包；如提示重启，请先完成重启。
-3. 从「工具」菜单打开「Zotero中文社区 · 插件市场」，先核对适配范围与来源，再确认安装所需插件。
+3. 点文库工具栏里搜索框左侧的「插件市场」按钮打开插件市场，先核对适配范围与来源，再确认安装所需插件。
 
 适用范围以[社区插件说明](plugin/README.md)与发布页为准。详细步骤见[插件市场教程](docs/plugins/community-plugin-market.md)。
 

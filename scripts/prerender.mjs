@@ -18,6 +18,7 @@ import { STYLE_SOURCE_LIST } from "../src/content/styles.ts";
 import { ZOTERO_VERSIONS, compatIndex, compatList, pickDownload } from "../src/plugins/lib.ts";
 import { BUILD_DATE_ENV, DELISTED_FILE, buildDay, loadCatalog, readBuildDateMeta, stripBuildDateMeta } from "./catalog.ts";
 import { delistedLedgerJson } from "../src/plugins/delisted.ts";
+import { OFFICIAL } from "../src/official/official.ts";
 import { FEED_FILE, buildFeed, droppedSummary, validateFeed } from "./catalog-feed.mjs";
 import { ADDON_IDS_FILE } from "./import-addon-ids.mjs";
 
@@ -166,6 +167,30 @@ function stylesLd(meta) {
   ].join("\n    ");
 }
 
+/** 社区官方插件介绍页:SoftwareApplication(版本号与下载地址取自插件 manifest)+ 面包屑。 */
+export function officialLd(meta) {
+  return [
+    ld({
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      name: OFFICIAL.name,
+      description: OFFICIAL.summary,
+      applicationCategory: "ReferenceApplication",
+      applicationSubCategory: "Zotero 插件",
+      operatingSystem: "Windows, macOS, Linux",
+      url: pageUrl(meta.path),
+      softwareVersion: OFFICIAL.version,
+      downloadUrl: `https://github.com/cnzotero/zotero-community/releases/download/plugin-v${OFFICIAL.version}/zotero-community.xpi`,
+      installUrl: OFFICIAL.releaseUrl,
+      license: "https://opensource.org/licenses/MIT",
+      isAccessibleForFree: true,
+      author: { "@type": "Organization", name: SITE_NAME, url: `${SITE}/` },
+      sameAs: [OFFICIAL.sourceUrl],
+    }),
+    crumbs([["首页", "/"], [meta.h1, meta.path]]),
+  ].join("\n    ");
+}
+
 /** 读取教程文稿目录(含原文,用于内容指纹);不存在时返回空数组。 */
 export function loadArticleSources(dir) {
   try {
@@ -291,6 +316,7 @@ const PAGE_SOURCES = {
   "/rules": "src/pages/StaticPages.tsx",
   "/about": "src/pages/StaticPages.tsx",
   "/submission": "src/pages/StaticPages.tsx",
+  "/plugin": "src/official/OfficialPluginPage.tsx",
 };
 
 /** 插件页指纹只算有意义的内容:名称、简介、分类、兼容范围、最新版本号与发布日期(不算每天都在变的星标、下载数)。 */
@@ -384,7 +410,7 @@ export async function build(distDir, plugins, today = new Date().toISOString().s
   });
   const orgLd = ld({ "@context": "https://schema.org", "@type": "Organization", name: SITE_NAME, url: `${SITE}/`, logo: `${SITE}/brand/icon-512.png` });
   for (const meta of STATIC_PAGES) {
-    page(meta, meta.path === "/" ? `${websiteLd}\n    ${orgLd}` : meta.path === "/styles" ? stylesLd(meta) : crumbs([["首页", "/"], [meta.h1, meta.path]]));
+    page(meta, meta.path === "/" ? `${websiteLd}\n    ${orgLd}` : meta.path === "/styles" ? stylesLd(meta) : meta.path === OFFICIAL.pagePath ? officialLd(meta) : crumbs([["首页", "/"], [meta.h1, meta.path]]));
     listed(meta);
   }
   const dups = duplicateNames(plugins);

@@ -19,7 +19,9 @@
   /** 插件 id:owner/repo,两段各 1–100 个字母、数字或 . _ -;任一段不能是 . 或 ..(见 isValidPluginId)。 */
   const ID_RE = /^[A-Za-z0-9._-]{1,100}\/[A-Za-z0-9._-]{1,100}$/;
   /** 读取目录时最多接受这么多字节(目录实际约 0.5MB)。 */
-  const MAX_CATALOG_BYTES = 8 * 1024 * 1024;
+  const MAX_CATALOG_BYTES = 4 * 1024 * 1024;
+  /** 缓存文件最多读这么多字节(目录文本存进缓存时会被转义,留出一倍余量);超过当作没有缓存。 */
+  const CACHE_MAX_BYTES = 8 * 1024 * 1024;
   const FETCH_TIMEOUT_MS = 10000;
   /** 缓存最长保存 30 天,超过当作没有。 */
   const CACHE_MAX_AGE_MS = 30 * 86400000;
@@ -450,7 +452,13 @@
   /**
    * 读回缓存:{ savedAt, text } 格式正确、保存时间在 30 天内(且不在未来)、目录重新解析校验通过,才返回解析结果;否则 null。
    */
+  /** 缓存文件大小是否在上限内(读文件之前先查;大小未知时不读)。 */
+  function cacheSizeOk(size) {
+    return typeof size === "number" && Number.isFinite(size) && size >= 0 && size <= CACHE_MAX_BYTES;
+  }
+
   function readCacheEntry(raw, now) {
+    if (typeof raw === "string" && raw.length > CACHE_MAX_BYTES) return null;
     let c;
     try {
       c = typeof raw === "string" ? JSON.parse(raw) : raw;
@@ -540,6 +548,17 @@
     return { catalog: null, source: null, save: false, notice: "无法读取插件目录:" + problem + "。请检查网络后重试。", retry: true };
   }
 
+  /**
+   * 卡片上「安装 / 更新」按钮的状态。checking:先显示了本机保存的目录、后台检查还没完成;
+   * 这期间一律不可点,等检查完成(成功或失败)后恢复,避免按可能已过时的目录安装。
+   */
+  function installButtonState(kind, busy, checking) {
+    if (busy) return { label: "正在安装…", disabled: true, title: "" };
+    const label = kind === "update" ? "更新" : "安装";
+    if (checking) return { label, disabled: true, title: "正在检查更新…" };
+    return { label, disabled: false, title: "" };
+  }
+
   /** 安装失败原因(按 Zotero 返回的错误码)。 */
   const INSTALL_ERRORS = {
     "-1": "下载失败,请检查网络后重试",
@@ -584,6 +603,9 @@
     zoteroMajor,
     MAX_CATALOG_BYTES,
     CACHE_MAX_AGE_MS,
+    CACHE_MAX_BYTES,
+    cacheSizeOk,
+    installButtonState,
     isAllowedXpiUrl,
     isValidPluginId,
     isReleaseUrlForPlugin,

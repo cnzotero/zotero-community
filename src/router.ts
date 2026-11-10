@@ -3,7 +3,7 @@ import { currentPath } from "./ssr.ts";
 
 const CATEGORY_SET = new Set(["ai", "reading", "metadata", "interface", "attachment", "integration", "notes", "utility", "writing", "visualization"]);
 
-export type Route = "home" | "guides" | "plugins" | "plugin" | "journals" | "submission" | "styles" | "forum" | "rules" | "about" | "charts" | "guide" | "category" | "compat" | "delisted" | "notfound";
+export type Route = "home" | "guides" | "plugins" | "plugin" | "official" | "journals" | "submission" | "styles" | "forum" | "rules" | "about" | "charts" | "guide" | "category" | "compat" | "delisted" | "notfound";
 
 export const ROUTES: { route: Route; path: string; label: string; footer?: boolean }[] = [
   { route: "home", path: "/", label: "首页" },
@@ -21,6 +21,7 @@ export const ROUTES: { route: Route; path: string; label: string; footer?: boole
 /** 不出现在页头与页脚导航里的页面(由其它页面链接进入)。 */
 export const UNLISTED_ROUTES: { route: Route; path: string }[] = [
   { route: "delisted", path: "/delisted" },
+  { route: "official", path: "/plugin" },
 ];
 
 /** 栏目页的路径(用来取页面标题等元信息);详情类页面返回 null。 */

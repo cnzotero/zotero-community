@@ -83,7 +83,7 @@ export function buildXpi(out = OUT) {
 }
 
 /** 包里必须有的文件。 */
-export const REQUIRED = ["manifest.json", "bootstrap.js", "LICENSE", "content/market.html", "content/market.js", "content/market.css", "content/lib.js", "content/icons/icon-32.png", "content/icons/icon-64.png"];
+export const REQUIRED = ["manifest.json", "bootstrap.js", "LICENSE", "content/market.html", "content/market.js", "content/market.css", "content/lib.js", "content/mainwindow.js", "content/icons/icon-32.png", "content/icons/icon-64.png", "content/icons/market.svg"];
 
 /** 读 zip 的中央目录,列出全部条目名。 */
 export function zipEntries(buf) {
