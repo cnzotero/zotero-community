@@ -11,16 +11,17 @@ const SHOWN = 24;
 
 export function CategoryPage() {
   const key = /^\/categories\/([a-z]+)/.exec(currentPath())?.[1] ?? "";
-  const meta = categoryMeta(key);
   const cat = CATEGORIES.find((c) => c.key === key);
   const loaded = usePluginData();
   const now = useNow();
   const all = loaded.state === "ready" ? loaded.data.plugins : [];
+  const meta = useMemo(() => categoryMeta(key, all), [key, all]);
   const list = useMemo(() => sortPlugins(all.filter((p) => p.category === key), "stars"), [all, key]);
 
+  // 标题里的数量要等数据到了才算得准
   useEffect(() => {
-    if (meta) applyMeta(meta);
-  }, [meta, key]);
+    if (meta && loaded.state === "ready") applyMeta(meta);
+  }, [meta, loaded.state]);
 
   if (!meta || !cat) return null;
   return (

@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   DEFAULT_FILTERS, activityTag, authorOf, authorStats, barHeights, cadenceText, speedText, topAuthors, compareVersions, downloadFilename, downloadHost, isAllowedXpiUrl, pickDownload, applyFilters, cardTags, popularityTag, compatSummary, computeStats, filterPlugins, formatStars, freshness,
-  parseFilters, pluginIdFromPath, relatedPlugins, relativeTime, serializeFilters, sortPlugins, supportsZotero,
+  compatIndex, compatList, declaredMajors, parseFilters, pluginIdFromPath, relatedPlugins, relativeTime, serializeFilters, sortPlugins, supportsZotero,
   type Plugin,
 } from "./lib.ts";
 
@@ -209,4 +209,24 @@ test("更新速度:次数文案、平均间隔文案、柱高与按更新频率�
   const many = mk({ id: "m/m", stars: 1, cadence: { r12: 2000, days12: 20, monthly: [], medianDays: 1, last: "" } });
   const steady = mk({ id: "s/s", stars: 1, cadence: { r12: 60, days12: 50, monthly: [], medianDays: 1, last: "" } });
   assert.deepEqual(sortPlugins([many, steady], "cadence").map((p) => p.id), ["s/s", "m/m"]);
+});
+
+test("版本兼容页目录:只列有插件声明的大版本,成员只含声明支持的插件,排序与分类页相同", () => {
+  assert.deepEqual(declaredMajors(ALL), [7, 8, 9, 10]);
+  assert.deepEqual(compatIndex(ALL), [{ major: 10, count: 2 }, { major: 9, count: 2 }, { major: 8, count: 3 }, { major: 7, count: 3 }]);
+  assert.deepEqual(compatList(ALL, 8).map((p) => p.id), ["x/b", "x/a", "x/d"]); // 星标排序;未声明的 x/c 不计入
+  assert.deepEqual(compatIndex([C]), []); // 全部未声明:不生成任何版本页
+});
+
+test("真实数据:每个版本页的插件数等于声明支持该版本的插件数,没有空页", async () => {
+  const data = (await import("../data/plugins.json", { with: { type: "json" } })).default as unknown as { plugins: Plugin[] };
+  const idx = compatIndex(data.plugins);
+  assert.ok(idx.length > 0);
+  const majorsInData = new Set(data.plugins.filter((p) => p.zotero.declared).flatMap((p) => p.zotero.majors));
+  assert.deepEqual(idx.map((x) => x.major).sort((a, b) => a - b), [...majorsInData].sort((a, b) => a - b));
+  for (const { major, count } of idx) {
+    assert.ok(count > 0, `Zotero ${major} 是空页`);
+    assert.equal(count, data.plugins.filter((p) => p.zotero.declared && p.zotero.majors.includes(major)).length);
+    assert.equal(compatList(data.plugins, major).length, count);
+  }
 });

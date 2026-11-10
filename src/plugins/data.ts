@@ -1,7 +1,7 @@
 // 插件数据的加载与缓存。浏览器里按需加载(数据较大,只有用到的页面才加载);
 // 预渲染时由入口直接注入,保证静态页面与前端接管时用的是同一份数据。
 import type { History } from "./charts-lib.ts";
-import { homeBoards, type HomeBoards, type Plugin } from "./lib.ts";
+import { compatIndex, homeBoards, type HomeBoards, type Plugin } from "./lib.ts";
 
 export interface PluginData {
   generatedAt: string;
@@ -11,6 +11,7 @@ export interface PluginData {
 let plugins: PluginData | null = null;
 let history: History | null = null;
 let boards: HomeBoards | null = null;
+let compat: { major: number; count: number }[] | null = null;
 let pending: Promise<PluginData> | null = null;
 let pendingHistory: Promise<History> | null = null;
 
@@ -19,12 +20,15 @@ export function setServerData(d: { generatedAt: string; plugins: Plugin[]; histo
   plugins = { generatedAt: d.generatedAt, plugins: d.plugins };
   history = d.history;
   boards = homeBoards(d.plugins);
+  compat = compatIndex(d.plugins);
 }
 
 export const cachedPluginData = (): PluginData | null => plugins;
 export const cachedHistory = (): History | null => history;
 /** 预渲染时由注入数据算出的首页榜单;浏览器里为 null,改用构建期产出的小份数据。 */
 export const serverHomeBoards = (): HomeBoards | null => boards;
+/** 预渲染时由注入数据算出的版本兼容页目录;浏览器里为 null,改用构建期产出的小份数据。 */
+export const serverCompatIndex = (): { major: number; count: number }[] | null => compat;
 
 export function loadPluginData(): Promise<PluginData> {
   if (plugins) return Promise.resolve(plugins);

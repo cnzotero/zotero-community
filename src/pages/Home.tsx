@@ -1,12 +1,13 @@
 import { useState, type FormEvent } from "react";
 import boardsData from "virtual:home-boards";
+import compatData from "virtual:compat-index";
 import { Link } from "../link.tsx";
 import { navigate } from "../router.ts";
 import { ARTICLES, articlePath } from "../guides/content.ts";
-import { serverHomeBoards } from "../plugins/data.ts";
+import { serverCompatIndex, serverHomeBoards } from "../plugins/data.ts";
 import { PluginCard } from "../plugins/PluginsPage.tsx";
 import { CATEGORIES, type HomeBoardKey } from "../plugins/lib.ts";
-import { categoryPath, pageMeta } from "../seo/pages.ts";
+import { COMPAT_SCOPE, categoryPath, compatPath, pageMeta } from "../seo/pages.ts";
 import { useNow } from "../ssr.ts";
 
 /** 首页榜单:全部复用插件广场的同一套排序,不另设算法,说明文字与规则页第 4 条一致。 */
@@ -28,6 +29,7 @@ export function Home() {
   const [board, setBoard] = useState<HomeBoardKey>("stars");
   // 榜单数据构建时已按同一套排序算好(预渲染时用注入的数据),首页不加载整份插件数据
   const top = (serverHomeBoards() ?? boardsData)[board];
+  const compat = serverCompatIndex() ?? compatData;
   const boardNote = BOARDS.find((b) => b.key === board)?.note ?? "";
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -70,6 +72,18 @@ export function Home() {
           {CATEGORIES.map((c) => <Link key={c.key} to={categoryPath(c.key)} className="chip">{c.label}</Link>)}
         </nav>
       </section>
+
+      {compat.length > 0 && (
+        <section className="section">
+          <div className="section-head">
+            <h2>按 Zotero 版本找插件</h2>
+          </div>
+          <nav className="chips" aria-label="按 Zotero 版本">
+            {compat.map((c) => <Link key={c.major} to={compatPath(c.major)} className="chip">Zotero {c.major}({c.count} 款)</Link>)}
+          </nav>
+          <p className="meta home-note">{COMPAT_SCOPE}</p>
+        </section>
+      )}
 
       <section className="section">
         <div className="section-head">

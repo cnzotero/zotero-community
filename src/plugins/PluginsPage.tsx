@@ -4,12 +4,12 @@ import { PageHero } from "../pageHero.tsx";
 import { downloadsPerDay } from "./charts-lib.ts";
 import { cachedPluginData, loadPluginData, type PluginData } from "./data.ts";
 import { applyMeta } from "../seo/head.ts";
-import { categoryPath, duplicateNames, pageMeta, pluginMeta } from "../seo/pages.ts";
+import { categoryPath, compatPath, duplicateNames, pageMeta, pluginMeta } from "../seo/pages.ts";
 import { currentPath, currentSearch, useImageOk, useNow } from "../ssr.ts";
 import { DownloadIcon, ExternalIcon, GithubIcon, ShareIcon, StarIcon } from "../icons.tsx";
 import {
   CATEGORIES, DEFAULT_FILTERS, ZOTERO_VERSIONS as ZV, ZOTERO_VERSIONS, applyFilters, authorOf, authorStats, barHeights, byNameStable, cadenceText,
-  cardTags, compatSummary, computeStats, downloadFilename, downloadHost, formatCount, formatStars, isAllowedXpiUrl, parseFilters, pickDownload,
+  cardTags, compatIndex, compatSummary, computeStats, downloadFilename, downloadHost, formatCount, formatStars, isAllowedXpiUrl, parseFilters, pickDownload,
   pluginIdFromPath, pluginPath, relatedPlugins, relativeTime, serializeFilters, speedText, topAuthors,
   type CategoryKey, type Filters, type Plugin, type SortKey, type UpdatedWithin,
 } from "./lib.ts";
@@ -118,6 +118,18 @@ function ShareButton({ p, label = false }: { p: Plugin; label?: boolean }) {
 function CompatBadge({ p }: { p: Plugin }) {
   const c = compatSummary(p);
   return <span className={`compat compat-${c.kind}`}>{c.text}</span>;
+}
+
+/** 详情页「适配 Zotero」一行:作者声明支持的每个大版本链到对应的版本兼容页;没声明的不链。 */
+function CompatLinks({ p }: { p: Plugin }) {
+  const majors = p.zotero.declared ? [...p.zotero.majors].sort((a, b) => b - a) : [];
+  if (majors.length === 0) return null;
+  return (
+    <span className="compat-links">
+      <span className="meta">同版本插件:</span>
+      {majors.map((m) => <Link key={m} to={compatPath(m)} className="inline-link">Zotero {m}</Link>)}
+    </span>
+  );
 }
 
 function CardTags({ p, now }: { p: Plugin; now: Date }) {
@@ -289,6 +301,7 @@ export function PluginsList() {
   const stats = useMemo(() => computeStats(all, now), [all, now]);
   const list = useMemo(() => applyFilters(all, f, now), [all, f, now]);
   const authors = useMemo(() => topAuthors(all), [all]);
+  const compat = useMemo(() => compatIndex(all), [all]);
   const active = f.category !== "all" || f.zotero !== null || f.within !== "any" || f.query.trim() !== "" || f.author !== "";
 
   return (
@@ -316,6 +329,12 @@ export function PluginsList() {
         {mobileOpen ? "收起筛选" : "筛选与排序"}
       </button>
       <Filters_ f={f} set={set} openMobile={mobileOpen} authors={authors} />
+      {compat.length > 0 && (
+        <nav className="cat-link compat-nav" aria-label="按 Zotero 版本">
+          <span className="meta">按 Zotero 版本:</span>
+          {compat.map((c) => <Link key={c.major} to={compatPath(c.major)} className="inline-link">Zotero {c.major} 兼容的插件({c.count})</Link>)}
+        </nav>
+      )}
       {f.category !== "all" && (
         <p className="cat-link"><Link to={categoryPath(f.category)} className="inline-link">了解{CATEGORY_LABEL[f.category]}类插件 →</Link></p>
       )}
@@ -484,7 +503,7 @@ export function PluginDetail() {
           <dl className="facts">
             <div><dt>最新版本</dt><dd>{p.latest ? `v${p.latest.version}` : "未获取到"}</dd></div>
             <div><dt>发布日期</dt><dd title={p.updated}>{p.updated ? `${p.updated}(${relativeTime(p.updated, now)})` : "未知"}</dd></div>
-            <div><dt>适配 Zotero</dt><dd><CompatBadge p={p} /></dd></div>
+            <div><dt>适配 Zotero</dt><dd><CompatBadge p={p} /><CompatLinks p={p} /></dd></div>
             <div><dt>GitHub 星标</dt><dd><StarIcon size={14} /> {p.stars.toLocaleString("zh-CN")}</dd></div>
             <div><dt>累计下载(GitHub)</dt><dd>{p.dl ? formatCount(p.dl.total) : "暂无"}{downloadsPerDay(p) ? <small className="dd-sub"> +{Math.round(downloadsPerDay(p) as number).toLocaleString("zh-CN")}/天</small> : null}</dd></div>
             <div><dt>更新速度</dt><dd>{speedText(p) ?? "暂无"}</dd></div>

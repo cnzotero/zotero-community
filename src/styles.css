@@ -466,3 +466,10 @@ body { background: var(--bg); }
 .tool-card { gap: 6px; padding: 16px; }
 .tool-card h3 { margin: 0; font-size: 16px; }
 .tool-card p { margin: 0; }
+
+/* 版本兼容页的内链:详情页「适配 Zotero」一行与插件广场的版本入口 */
+.compat-links { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; margin-top: 6px; font-size: 13px; }
+.compat-nav { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; }
+
+/* 引用样式页每段末尾的来源 */
+.source-line { font-size: 13px; color: var(--muted); margin-top: -4px; }

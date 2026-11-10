@@ -21,6 +21,13 @@ export const isServer = (): boolean => server !== null;
 export const currentPath = (): string => (server ? server.path : location.pathname);
 export const currentSearch = (): string => (server ? server.search : location.search);
 
+/** 构建日期 YYYY-MM-DD:预渲染时由入口注入,浏览器里从静态页面读取(不随访问时间变化);取不到返回空串。 */
+export function buildDate(): string {
+  if (server) return server.now;
+  if (typeof document === "undefined") return "";
+  return document.getElementById("root")?.dataset.now ?? "";
+}
+
 function initialNow(): Date {
   if (server) return new Date(server.now);
   if (live) return new Date();

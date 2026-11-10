@@ -97,7 +97,8 @@ export function About() {
         <li><b>插件广场:</b>按公开数据整理的 Zotero 插件,可以搜索、筛选并下载,见<Link to="/rules" className="inline-link">收录规则</Link>。</li>
         <li><b>期刊查询:</b>按名称、缩写或 ISSN 查询期刊的收录、分区、影响因子与核心榜单,规则见<Link to="/rules" className="inline-link">收录规则</Link>第 7 条。</li>
         <li><b>投稿建议:</b>筹备中,上线前会写清内容来源与使用规则。</li>
-        <li><b>引用样式、问答讨论:</b>筹备中。</li>
+        <li><b>引用样式:</b>按 Zotero 官方文档整理的样式添加与切换说明,以及中文样式的查找入口,见<Link to="/styles" className="inline-link">引用样式</Link>。</li>
+        <li><b>问答讨论:</b>筹备中。</li>
       </ul>
 
       <h2>我们的原则</h2>

@@ -8,6 +8,7 @@ import {
 } from "./prerender.mjs";
 import { CATEGORIES } from "../src/plugins/lib.ts";
 import { STATIC_PAGES } from "../src/seo/pages.ts";
+import { STYLE_LINKS, STYLE_SOURCE_LIST } from "../src/content/styles.ts";
 
 const TEMPLATE = `<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8" /><meta name="description" content="旧描述" /><meta property="og:title" content="旧" /><title>旧标题</title></head><body><div id="root"></div><script type="module" src="/x.js"></script></body></html>`;
 const PLUGINS = [
@@ -65,7 +66,7 @@ test("每页都有唯一的标题、描述、规范链接,且旧标签被替换�
 
 test("静态页面就是真正渲染的完整页面:页头导航、页脚、唯一且与页面一致的 h1,脚本标签保留", async () => {
   const { dir } = await run(PLUGINS, ARTICLES);
-  const pages = [...STATIC_PAGES.map((m) => [m.path, m.h1]), ["/plugins/a/evil", PLUGINS[0].name], ["/categories/reading", "阅读类 Zotero 插件"], [`/guides/${ARTICLES[0].slug}`, ARTICLES[0].title]];
+  const pages = [...STATIC_PAGES.map((m) => [m.path, m.h1]), ["/plugins/a/evil", PLUGINS[0].name], ["/categories/reading", "Zotero 阅读插件"], ["/compat/zotero-7", "Zotero 7 兼容的插件"], [`/guides/${ARTICLES[0].slug}`, ARTICLES[0].title]];
   for (const [path, h1] of pages) {
     const html = read(dir, path);
     assert.match(html, new RegExp(`<div id="root" data-ssr="${path.replace(/\//g, "\\/")}" data-now="2026-11-10"><header class="topbar">`), path);
@@ -211,7 +212,13 @@ test("分类落地页:每个有插件的分类一页、进 sitemap;404 页面禁
   assert.ok(entries.some((e) => e.path === "/categories/ai"));
   assert.ok(!entries.some((e) => e.path === "/categories/notes")); // 没有插件的分类不生成空页
   const html = read(dir, "/categories/reading");
-  assert.match(html, /<h1 class="page-title">阅读类 Zotero 插件<\/h1>/);
+  assert.match(html, /<h1 class="page-title">Zotero 阅读插件<\/h1>/);
+  // 标题里的数量来自数据;只有 2 款不叫「大全」;结构化数据的名称与 h1 一致
+  assert.match(html, /<title>Zotero 阅读插件\(2 款\):用途、适配版本与下载<\/title>/);
+  const coll = jsonLd(html).find((j) => j["@type"] === "CollectionPage");
+  assert.equal(coll.name, "Zotero 阅读插件");
+  assert.equal(coll.mainEntity.numberOfItems, 2);
+  assert.equal(jsonLd(html).find((j) => j["@type"] === "BreadcrumbList").itemListElement[2].name, "Zotero 阅读插件");
   assert.match(html, /href="\/plugins\/a\/evil"/);
   assert.match(html, /href="\/plugins\/c\/read"/);
   assert.ok(!html.includes("b/plain")); // 别的分类的插件不会混进来
@@ -221,6 +228,72 @@ test("分类落地页:每个有插件的分类一页、进 sitemap;404 页面禁
   assert.match(nf, /noindex/);
   assert.match(nf, /页面不存在/);
   assert.ok(!readFileSync(join(dir, "sitemap.xml"), "utf8").includes("/404"));
+});
+
+test("版本兼容页:只为有插件声明的大版本生成,成员即声明支持的插件,进 sitemap、llms.txt,首页、插件广场与详情页都能链到", async () => {
+  const { dir, entries } = await run();
+  const sm = readFileSync(join(dir, "sitemap.xml"), "utf8");
+  const llms = readFileSync(join(dir, "llms.txt"), "utf8");
+  // a/evil 声明 7–10,c/read 只声明 7,b/plain 未声明:7 有两款,8–10 各一款,其它版本不生成
+  const expect = { 7: ["a/evil", "c/read"], 8: ["a/evil"], 9: ["a/evil"], 10: ["a/evil"] };
+  for (const [major, ids] of Object.entries(expect)) {
+    const path = `/compat/zotero-${major}`;
+    assert.ok(entries.some((e) => e.path === path), path);
+    assert.ok(sm.includes(`<loc>https://zoterocn.org${path}</loc>`), path);
+    assert.ok(llms.includes(`(https://zoterocn.org${path})`), path);
+    const html = read(dir, path);
+    assert.match(html, new RegExp(`<title>Zotero ${major} 兼容的插件\\(${ids.length} 款\\):适配范围与下载</title>`));
+    assert.deepEqual(h1s(html), [`Zotero ${major} 兼容的插件`]);
+    assert.match(html, /以各插件在公开发布说明中声明的适配范围为准,未声明的不计入。/);
+    for (const id of ids) assert.ok(html.includes(`href="/plugins/${id}"`), `${path} 缺 ${id}`);
+    assert.ok(!html.includes('href="/plugins/b/plain"'), "未声明的插件不计入");
+    const list = jsonLd(html).find((j) => j["@type"] === "CollectionPage").mainEntity;
+    assert.equal(list.numberOfItems, ids.length);
+    assert.deepEqual(list.itemListElement.map((x) => x.url.replace("https://zoterocn.org/plugins/", "")), ids);
+    const bc = jsonLd(html).find((j) => j["@type"] === "BreadcrumbList");
+    assert.deepEqual(bc.itemListElement.map((x) => x.name), ["首页", `Zotero ${major} 兼容的插件`]);
+    assert.match(html, /<nav aria-label="面包屑" class="crumbs"><a href="\/">首页<\/a>[\s\S]*?<span aria-current="page">Zotero \d+ 兼容的插件<\/span>/);
+  }
+  // 没有插件声明的版本不生成空页
+  assert.ok(!entries.some((e) => e.path.startsWith("/compat/") && !(e.path.replace("/compat/zotero-", "") in expect)));
+  assert.ok(!existsSync(join(dir, "compat/zotero-6/index.html")));
+  // 内链:首页、插件广场链到每个版本页;详情页只链该插件声明过的版本
+  for (const major of Object.keys(expect)) {
+    assert.ok(read(dir, "/").includes(`href="/compat/zotero-${major}"`), `首页缺 ${major}`);
+    assert.ok(read(dir, "/plugins").includes(`href="/compat/zotero-${major}"`), `插件广场缺 ${major}`);
+    assert.ok(read(dir, "/plugins/a/evil").includes(`href="/compat/zotero-${major}"`));
+  }
+  const reader = read(dir, "/plugins/c/read");
+  assert.ok(reader.includes('href="/compat/zotero-7"'));
+  assert.ok(!/href="\/compat\/zotero-(8|9|10)"/.test(reader.replace(/<footer[\s\S]*$/, "")));
+  assert.ok(!read(dir, "/plugins/b/plain").includes('href="/compat/'));
+});
+
+test("引用样式页:正文完整、每段注明来源、外链都新标签打开并带 noopener,结构化数据只引用页面上出现的来源", async () => {
+  const { dir } = await run();
+  const html = read(dir, "/styles");
+  assert.deepEqual(h1s(html), ["Zotero 引用样式"]);
+  for (const h of ["1. 引用样式是什么", "2. 在 Zotero 里添加样式", "3. 在 Word 和 LibreOffice 里选择样式", "4. 中文样式(GB/T 7714 等)", "5. 样式不对怎么办,投稿前核对什么"]) assert.ok(html.includes(`<h2>${h}</h2>`), h);
+  assert.ok(!html.includes("正在整理中"), "占位文案已移除");
+  assert.match(html, /投稿前以目标期刊的最新要求为准/);
+  assert.match(html, /核对日期:2026-11-10/); // 构建日期
+  assert.equal((html.match(/<p class="source-line">来源:/g) ?? []).length, 5, "每段末尾都有来源");
+  const main = /<main class="container">([\s\S]*)<\/main>/.exec(html)[1];
+  const ext = [...main.matchAll(/<a\b[^>]*href="(https?:\/\/[^"]*)"[^>]*>/g)];
+  assert.ok(ext.length >= STYLE_SOURCE_LIST.length);
+  for (const m of ext) {
+    assert.match(m[0], /target="_blank"/, m[0]);
+    assert.match(m[0], /rel="noopener noreferrer"/, m[0]);
+  }
+  const hrefs = new Set(ext.map((m) => m[1]));
+  for (const s of STYLE_SOURCE_LIST) assert.ok(hrefs.has(s.url), `来源未出现在页面上:${s.url}`);
+  for (const u of Object.values(STYLE_LINKS)) assert.ok(hrefs.has(u), u);
+  // 不托管、不直链任何样式文件
+  assert.ok(![...hrefs].some((u) => /\.csl($|\?)/.test(u)));
+  const art = jsonLd(html).find((j) => j["@type"] === "TechArticle");
+  assert.equal(art.headline, "Zotero 引用样式");
+  for (const c of art.citation) assert.ok(hrefs.has(c), `结构化数据引用了页面上没有的来源:${c}`);
+  assert.deepEqual(jsonLd(html).find((j) => j["@type"] === "BreadcrumbList").itemListElement.map((x) => x.name), ["首页", "Zotero 引用样式"]);
 });
 
 test("llms.txt:站点介绍、主要栏目、全部分类与教程,链接都指向可收录页面,不逐个列插件", async () => {

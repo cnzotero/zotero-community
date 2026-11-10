@@ -101,6 +101,39 @@ export function supportsZotero(p: Plugin, major: number): boolean {
   return p.zotero.declared && p.zotero.majors.includes(major);
 }
 
+/** 一组插件里有作者声明支持的 Zotero 大版本(从小到大);未声明的插件不参与。 */
+export function declaredMajors(list: Plugin[]): number[] {
+  const s = new Set<number>();
+  for (const p of list) if (p.zotero.declared) for (const m of p.zotero.majors) s.add(m);
+  return [...s].sort((a, b) => a - b);
+}
+
+/** 一组插件的事实摘要:数量、声明了适配大版本的数量、声明覆盖的最低/最高大版本、最近一次发布日期。缺的项为 null。 */
+export function groupFacts(list: Plugin[]): { count: number; declared: number; min: number | null; max: number | null; latest: string | null } {
+  const majors = declaredMajors(list);
+  const latest = list.reduce((d, p) => (p.updated > d ? p.updated : d), "");
+  return {
+    count: list.length,
+    declared: list.filter((p) => p.zotero.declared && p.zotero.majors.length > 0).length,
+    min: majors.length ? majors[0] : null,
+    max: majors.length ? majors[majors.length - 1] : null,
+    latest: latest || null,
+  };
+}
+
+/** 版本兼容页的目录:有插件声明支持的每个 Zotero 大版本及其插件数(新版本在前)。没有插件声明的版本不出现。 */
+export function compatIndex(list: Plugin[]): { major: number; count: number }[] {
+  return declaredMajors(list)
+    .map((major) => ({ major, count: list.filter((p) => supportsZotero(p, major)).length }))
+    .filter((x) => x.count > 0)
+    .reverse();
+}
+
+/** 声明支持某个 Zotero 大版本的全部插件,用与分类页相同的默认排序(GitHub 星标)。 */
+export function compatList(list: Plugin[], major: number): Plugin[] {
+  return sortPlugins(list.filter((p) => supportsZotero(p, major)), "stars");
+}
+
 export function filterPlugins(list: Plugin[], f: Filters, now: Date): Plugin[] {
   return list.filter((p) => {
     if (f.category !== "all" && p.category !== f.category) return false;

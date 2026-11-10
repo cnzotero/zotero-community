@@ -12,9 +12,10 @@ import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArticle, wordCount } from "../src/guides/markdown.ts";
 import {
-  CATEGORY_KEYS, SITE, SITE_NAME, STATIC_PAGES, categoryIntro, categoryLabel, categoryMeta, categoryPath, duplicateNames, isIndexable, ogImage, pageUrl, pluginMeta,
+  CATEGORY_KEYS, SITE, SITE_NAME, STATIC_PAGES, categoryIntro, categoryLabel, categoryMeta, categoryPath, categoryStableFacts, compatMeta, duplicateNames, isIndexable, ogImage, pageUrl, pluginMeta,
 } from "../src/seo/pages.ts";
-import { ZOTERO_VERSIONS, pickDownload } from "../src/plugins/lib.ts";
+import { STYLE_SOURCE_LIST } from "../src/content/styles.ts";
+import { ZOTERO_VERSIONS, compatIndex, compatList, pickDownload } from "../src/plugins/lib.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 export const LEDGER_FILE = join(root, "src/data/lastmod.json");
@@ -96,7 +97,8 @@ function pluginLd(p, meta) {
   ].join("\n    ");
 }
 
-function categoryLd(meta, list) {
+/** 插件列表页(分类页、版本兼容页)的结构化数据:CollectionPage + ItemList(前 50 个)+ 面包屑。 */
+function collectionLd(meta, list, trail) {
   return [
     ld({
       "@context": "https://schema.org",
@@ -111,9 +113,13 @@ function categoryLd(meta, list) {
         itemListElement: list.slice(0, 50).map((p, i) => ({ "@type": "ListItem", position: i + 1, url: `${SITE}/plugins/${p.id}`, name: p.name })),
       },
     }),
-    crumbs([["首页", "/"], ["插件广场", "/plugins"], [meta.h1, meta.path]]),
+    crumbs(trail),
   ].join("\n    ");
 }
+
+const categoryLd = (meta, list) => collectionLd(meta, list, [["首页", "/"], ["插件广场", "/plugins"], [meta.h1, meta.path]]);
+// 与页面上的面包屑一致:首页 › 本页(「版本兼容」没有独立页面,不单列一级)
+const compatLd = (meta, list) => collectionLd(meta, list, [["首页", "/"], [meta.h1, meta.path]]);
 
 function articleLd(a, path) {
   return [
@@ -134,6 +140,25 @@ function articleLd(a, path) {
       citation: a.sources,
     }),
     crumbs([["首页", "/"], ["教程", "/guides"], [a.title, path]]),
+  ].join("\n    ");
+}
+
+/** 引用样式页:说明性文章,citation 列出页面上每段「来源」里的官方页面。 */
+function stylesLd(meta) {
+  return [
+    ld({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      headline: meta.h1,
+      description: meta.description,
+      inLanguage: "zh-CN",
+      url: pageUrl(meta.path),
+      mainEntityOfPage: pageUrl(meta.path),
+      author: { "@type": "Organization", name: SITE_NAME, url: `${SITE}/` },
+      publisher: { "@type": "Organization", name: SITE_NAME, logo: { "@type": "ImageObject", url: `${SITE}/brand/icon-512.png` } },
+      citation: STYLE_SOURCE_LIST.map((s) => s.url),
+    }),
+    crumbs([["首页", "/"], [meta.h1, meta.path]]),
   ].join("\n    ");
 }
 
@@ -160,7 +185,7 @@ export function sitemapXml(entries) {
 export const robotsTxt = () => `User-agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: ${SITE}/sitemap.xml\n`;
 
 /** 给大模型等自动读取工具的站点说明:只列事实与可收录页面的链接,不列单个插件。 */
-export function llmsTxt({ pages, categories, articles }) {
+export function llmsTxt({ pages, categories, compat = [], articles }) {
   const line = (title, path, desc) => `- [${title}](${pageUrl(path)})${desc ? `: ${desc}` : ""}`;
   return [
     `# ${SITE_NAME}`,
@@ -173,8 +198,9 @@ export function llmsTxt({ pages, categories, articles }) {
     "",
     "## 插件分类",
     "",
-    ...categories.map(({ meta, count }) => line(meta.h1, meta.path, `收录 ${count} 款`)),
+    ...categories.map(({ meta, count }) => line(meta.h1, meta.path, `收录 ${count} 款,列出用途、适配版本与下载入口`)),
     "",
+    ...(compat.length ? ["## 按 Zotero 版本", "", ...compat.map(({ meta, count }) => line(meta.h1, meta.path, `${count} 款插件声明适配;未声明适配范围的不计入`)), ""] : []),
     "## 教程",
     "",
     ...articles.map((a) => line(a.title, `/guides/${a.slug}`, a.description)),
@@ -254,7 +280,7 @@ const PAGE_SOURCES = {
   "/plugins/charts": "src/plugins/ChartsPage.tsx",
   "/journals": "src/journals/JournalsPage.tsx",
   "/guides": "src/guides/GuidesPages.tsx",
-  "/styles": "src/App.tsx",
+  "/styles": "src/pages/StylesPage.tsx",
   "/forum": "src/App.tsx",
   "/rules": "src/pages/StaticPages.tsx",
   "/about": "src/pages/StaticPages.tsx",
@@ -297,10 +323,17 @@ export async function computeLedger({ plugins, articleSources, today, prepare, o
   for (const p of plugins) add(`/plugins/${p.id}`, pluginPrint(p), p.updated || null);
   const copyDate = dateOf(join(root, "src/content/category-copy.json"));
   for (const key of CATEGORY_KEYS) {
-    const meta = categoryMeta(key);
+    const meta = categoryMeta(key, plugins);
     const list = categoryList(plugins, key);
     if (!meta || list.length === 0) continue;
-    add(meta.path, fingerprint({ meta: [meta.title, meta.description, meta.h1], copy: categoryIntro(key), members: list.map((p) => p.id).sort() }), copyDate);
+    // 描述里的「最近一次发布」日期几乎天天变,不算进指纹;数量与适配范围变了才算变化
+    add(meta.path, fingerprint({ meta: [meta.title, meta.h1], facts: categoryStableFacts(key, plugins), copy: categoryIntro(key), members: list.map((p) => p.id).sort() }), copyDate);
+  }
+  // 版本兼容页:成员名单变了才算变化
+  for (const { major } of compatIndex(plugins)) {
+    const list = compatList(plugins, major);
+    const meta = compatMeta(major, list.length);
+    add(meta.path, fingerprint({ meta: [meta.title, meta.description, meta.h1], members: list.map((p) => p.id).sort() }), null);
   }
   for (const s of articleSources) add(`/guides/${s.article.slug}`, fingerprint(s.raw), s.file ? dateOf(s.file) : null);
   return { prints, ledger: updateLedger(old, prints, today) };
@@ -344,7 +377,7 @@ export async function build(distDir, plugins, today = new Date().toISOString().s
   });
   const orgLd = ld({ "@context": "https://schema.org", "@type": "Organization", name: SITE_NAME, url: `${SITE}/`, logo: `${SITE}/brand/icon-512.png` });
   for (const meta of STATIC_PAGES) {
-    page(meta, meta.path === "/" ? `${websiteLd}\n    ${orgLd}` : crumbs([["首页", "/"], [meta.h1, meta.path]]));
+    page(meta, meta.path === "/" ? `${websiteLd}\n    ${orgLd}` : meta.path === "/styles" ? stylesLd(meta) : crumbs([["首页", "/"], [meta.h1, meta.path]]));
     listed(meta);
   }
   const dups = duplicateNames(plugins);
@@ -355,12 +388,20 @@ export async function build(distDir, plugins, today = new Date().toISOString().s
   }
   const categories = [];
   for (const key of CATEGORY_KEYS) {
-    const meta = categoryMeta(key);
+    const meta = categoryMeta(key, plugins);
     const list = categoryList(plugins, key);
     if (!meta || list.length === 0) continue;
     page(meta, categoryLd(meta, list));
     listed(meta);
     categories.push({ meta, count: list.length });
+  }
+  const compat = [];
+  for (const { major } of compatIndex(plugins)) {
+    const list = compatList(plugins, major);
+    const meta = compatMeta(major, list.length);
+    page(meta, compatLd(meta, list));
+    listed(meta);
+    compat.push({ meta, count: list.length });
   }
   for (const a of articles) {
     const meta = { path: `/guides/${a.slug}`, title: `${a.title}｜${SITE_NAME}`, description: a.description, h1: a.title, kind: "guide" };
@@ -375,7 +416,7 @@ export async function build(distDir, plugins, today = new Date().toISOString().s
   if (missing.length) throw new Error(`内容指纹台账漏算了这些页面:${missing.join(", ")}`);
   writeFileSync(join(distDir, "sitemap.xml"), sitemapXml(entries));
   writeFileSync(join(distDir, "robots.txt"), robotsTxt());
-  writeFileSync(join(distDir, "llms.txt"), llmsTxt({ pages: STATIC_PAGES.filter(isIndexable), categories, articles }));
+  writeFileSync(join(distDir, "llms.txt"), llmsTxt({ pages: STATIC_PAGES.filter(isIndexable), categories, compat, articles }));
   return entries;
 }
 

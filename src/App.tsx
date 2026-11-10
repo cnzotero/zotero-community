@@ -14,12 +14,14 @@ const Home = lazyRoute(() => import("./pages/Home.tsx").then((m) => m.Home));
 const PluginsList = lazyRoute(() => import("./plugins/PluginsPage.tsx").then((m) => m.PluginsList));
 const PluginDetail = lazyRoute(() => import("./plugins/PluginsPage.tsx").then((m) => m.PluginDetail));
 const CategoryPage = lazyRoute(() => import("./plugins/CategoryPage.tsx").then((m) => m.CategoryPage));
+const CompatPage = lazyRoute(() => import("./plugins/CompatPage.tsx").then((m) => m.CompatPage));
 const ChartsPage = lazyRoute(() => import("./plugins/ChartsPage.tsx").then((m) => m.ChartsPage));
 const JournalsPage = lazyRoute(() => import("./journals/JournalsPage.tsx").then((m) => m.JournalsPage));
 const Guides = lazyRoute(() => import("./guides/GuidesPages.tsx").then((m) => m.Guides));
 const GuideArticle = lazyRoute(() => import("./guides/GuidesPages.tsx").then((m) => m.GuideArticle));
 const Rules = lazyRoute(() => import("./pages/StaticPages.tsx").then((m) => m.Rules));
 const About = lazyRoute(() => import("./pages/StaticPages.tsx").then((m) => m.About));
+const StylesPage = lazyRoute(() => import("./pages/StylesPage.tsx").then((m) => m.StylesPage));
 const Submission = lazyRoute(() => import("./pages/StaticPages.tsx").then((m) => m.Submission));
 
 const SKINS = [
@@ -86,16 +88,6 @@ function VisitCount() {
   );
 }
 
-function Styles() {
-  return (
-    <section className="section">
-      <h1 className="page-title">{pageMeta("/styles").h1}</h1>
-      <p className="lead">常用期刊与学位论文的引用格式整理。</p>
-      <div className="notice">样式库正在整理中,会按学科与期刊分类上线,届时可直接下载使用。</div>
-    </section>
-  );
-}
-
 function NotFound() {
   useEffect(() => {
     document.title = "页面不存在｜Zotero 中文社区";
@@ -124,19 +116,20 @@ const VIEWS: Record<Route, ComponentType & { preload?: () => Promise<void> }> = 
   guides: Guides,
   plugins: PluginsList,
   plugin: PluginDetail,
-  styles: Styles,
+  styles: StylesPage,
   forum: Forum,
   journals: JournalsPage,
   charts: ChartsPage,
   guide: GuideArticle,
   category: CategoryPage,
+  compat: CompatPage,
   notfound: NotFound,
   submission: Submission,
   rules: Rules,
   about: About,
 };
 
-const NEEDS_PLUGIN_DATA = new Set<Route>(["plugins", "plugin", "category", "charts"]);
+const NEEDS_PLUGIN_DATA = new Set<Route>(["plugins", "plugin", "category", "compat", "charts"]);
 
 /** 预先加载某个页面需要的代码与数据(浏览器接管静态页面前调用,避免出现「加载中」)。 */
 export function preloadRoute(route: Route): Promise<unknown> {
@@ -154,7 +147,7 @@ export function App() {
   const route = useRoute();
   useVisitBeacon();
   useEffect(() => {
-    if (route === "plugin" || route === "guide" || route === "category" || route === "notfound") return; // 详情类页面自己设置标题
+    if (route === "plugin" || route === "guide" || route === "category" || route === "compat" || route === "notfound") return; // 详情类页面自己设置标题
     applyMeta(pageMeta(ROUTES.find((r) => r.route === route)?.path ?? "/"));
   }, [route]);
   const View = VIEWS[route];

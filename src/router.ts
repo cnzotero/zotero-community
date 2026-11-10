@@ -3,7 +3,7 @@ import { currentPath } from "./ssr.ts";
 
 const CATEGORY_SET = new Set(["ai", "reading", "metadata", "interface", "attachment", "integration", "notes", "utility", "writing", "visualization"]);
 
-export type Route = "home" | "guides" | "plugins" | "plugin" | "journals" | "submission" | "styles" | "forum" | "rules" | "about" | "charts" | "guide" | "category" | "notfound";
+export type Route = "home" | "guides" | "plugins" | "plugin" | "journals" | "submission" | "styles" | "forum" | "rules" | "about" | "charts" | "guide" | "category" | "compat" | "notfound";
 
 export const ROUTES: { route: Route; path: string; label: string; footer?: boolean }[] = [
   { route: "home", path: "/", label: "首页" },
@@ -24,6 +24,7 @@ export function routeFromPath(pathname: string): Route {
   if (/^\/guides\/[^/]+$/.test(clean)) return "guide";
   const cat = /^\/categories\/([a-z]+)$/.exec(clean);
   if (cat) return CATEGORY_SET.has(cat[1]) ? "category" : "notfound";
+  if (/^\/compat\/zotero-\d+$/.test(clean)) return "compat";
   // 站内没有的路径一律是 404;服务器对这些路径也返回真正的 404 状态码
   return ROUTES.find((r) => r.path === clean)?.route ?? "notfound";
 }
