@@ -3,8 +3,8 @@ import { FORUM_STATE } from "./content.ts";
 import { Link } from "./link.tsx";
 import { GithubIcon } from "./icons.tsx";
 import { lazyRoute } from "./lazy.ts";
-import { loadHistory, loadPluginData } from "./plugins/data.ts";
-import { ROUTES, useRoute, type Route } from "./router.ts";
+import { loadDelisted, loadHistory, loadPluginData } from "./plugins/data.ts";
+import { ROUTES, routePath, useRoute, type Route } from "./router.ts";
 import { formatCount, useVisitBeacon, useVisitStats } from "./visits.ts";
 import { applyMeta } from "./seo/head.ts";
 import { pageMeta } from "./seo/pages.ts";
@@ -23,6 +23,7 @@ const Rules = lazyRoute(() => import("./pages/StaticPages.tsx").then((m) => m.Ru
 const About = lazyRoute(() => import("./pages/StaticPages.tsx").then((m) => m.About));
 const StylesPage = lazyRoute(() => import("./pages/StylesPage.tsx").then((m) => m.StylesPage));
 const Submission = lazyRoute(() => import("./pages/StaticPages.tsx").then((m) => m.Submission));
+const DelistedPage = lazyRoute(() => import("./pages/DelistedPage.tsx").then((m) => m.DelistedPage));
 
 const SKINS = [
   { key: "indigo", label: "靛蓝", color: "#3451b2" },
@@ -131,6 +132,7 @@ const VIEWS: Record<Route, ComponentType & { preload?: () => Promise<void> }> = 
   submission: Submission,
   rules: Rules,
   about: About,
+  delisted: DelistedPage,
 };
 
 const NEEDS_PLUGIN_DATA = new Set<Route>(["plugins", "plugin", "category", "compat", "charts"]);
@@ -141,6 +143,7 @@ export function preloadRoute(route: Route): Promise<unknown> {
     VIEWS[route].preload?.(),
     NEEDS_PLUGIN_DATA.has(route) ? loadPluginData() : null,
     route === "charts" ? loadHistory() : null,
+    route === "delisted" || route === "rules" ? loadDelisted() : null,
   ]);
 }
 
@@ -152,7 +155,7 @@ export function App() {
   useVisitBeacon();
   useEffect(() => {
     if (route === "plugin" || route === "guide" || route === "category" || route === "compat" || route === "notfound") return; // 详情类页面自己设置标题
-    applyMeta(pageMeta(ROUTES.find((r) => r.route === route)?.path ?? "/"));
+    applyMeta(pageMeta(routePath(route) ?? "/"));
   }, [route]);
   const View = VIEWS[route];
   return (

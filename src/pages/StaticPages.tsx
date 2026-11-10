@@ -1,5 +1,6 @@
 import { Link } from "../link.tsx";
 import { PageHero } from "../pageHero.tsx";
+import { useDelisted } from "./DelistedPage.tsx";
 import { pageMeta } from "../seo/pages.ts";
 
 const REPO = "https://github.com/cnzotero/zotero-community";
@@ -9,6 +10,7 @@ function Ext({ href, children }: { href: string; children: React.ReactNode }) {
 }
 
 export function Rules() {
+  const delisted = useDelisted(); // 在架数、下架数与当前 Zotero 大版本都由数据算出
   return (
     <article className="section prose">
       <h1 className="page-title">{pageMeta("/rules").h1}</h1>
@@ -25,9 +27,21 @@ export function Rules() {
         <li><b>没有已知的恶意行为:</b>不得窃取数据、静默上传用户内容、植入广告或捆绑与功能无关的软件。</li>
         <li><b>遵守法律法规:</b>不含违法违规内容,不侵犯他人知识产权。</li>
       </ul>
-      <p>维护活跃度不是收录条件。长期未更新的插件仍会收录,但会在卡片上标注「久未更新」,让你自己判断。</p>
+      <p>卡片上的维护状态标签只是提示。插件是否展示,只看第 3 章写明的下架条件。</p>
 
       <h2>3. 不收录与下架的情形</h2>
+      <p><b>自动下架。</b>每次更新数据时,本站按同一套条件把所有插件重新判断一遍,满足下面任意一条就会下架:</p>
+      <ol>
+        <li><b>超过 1 年未发布,且没有可下载的安装包:</b>最近一次发布距今超过 1 年(365 天),或者没有任何发布记录,并且在作者的发布页上找不到可以下载安装的 <code>.xpi</code> 安装包。近 1 年内有发布的插件不会因为这一条下架;本站暂时没有收录到安装包的,详情页只提供仓库链接。</li>
+        <li><b>最近一次发布超过 2 年:</b>最近一次发布距今超过 2 年(730 天)。</li>
+        <li><b>超过 1 年未发布,且未声明适配当前 Zotero 版本:</b>最近一次发布距今超过 1 年(365 天),并且作者没有声明适配的 Zotero 版本,或声明适配的最高版本低于目前最新的 Zotero 大版本{delisted?.current ? <>(目前是 Zotero {delisted.current})</> : null}。</li>
+      </ol>
+      <ul>
+        <li><b>恢复是自动的:</b>作者发布新版本、不再符合上面任何一条后,本站下一次更新数据时会自动重新上架,不需要申请。</li>
+        <li><b>下架记录公开:</b>每个下架插件的原因、最近一次发布日期与下架日期列在<Link to="/delisted" className="inline-link">已下架插件与原因</Link>里。{delisted ? <>目前在架 {delisted.listed} 款,已下架 {delisted.records.length} 款。</> : null}</li>
+        <li>「距今」按本站更新数据、重新生成页面的日期计算;仓库已归档本身不是下架理由。</li>
+      </ul>
+      <p><b>人工下架。</b>以下情形经核实后下架:</p>
       <ul>
         <li>存在恶意行为,或经核实有严重的安全问题且作者长期未处理。</li>
         <li>侵犯他人权利,且权利人提出有效的投诉。</li>
@@ -48,7 +62,7 @@ export function Rules() {
             <li>人气档位:按 GitHub 星标分档——3000 及以上「热门」、500 及以上「常用」、100 及以上「成长中」、其余「小众」。<b>人气只代表热度,不代表质量。</b></li>
           </ol>
         </li>
-        <li>标签只是提示,不会让任何插件被隐藏。</li>
+        <li>标签只是提示;是否下架只看第 3 章写明的条件。</li>
       </ul>
 
       <h2>5. 数据来源与更新</h2>

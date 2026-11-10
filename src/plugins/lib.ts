@@ -235,7 +235,7 @@ export function relativeTime(date: string, now: Date): string {
 
 export type Freshness = "fresh" | "normal" | "stale";
 
-/** 30 天内「新近更新」;超过 2 年「久未更新」;其余不标。只提示,不隐藏。 */
+/** 30 天内「新近更新」;超过 2 年「久未更新」;其余不标。只是提示;是否下架由 lifecycle.ts 按收录规则判断。 */
 export function freshness(date: string, now: Date): Freshness {
   const d = daysSince(date, now);
   if (d === null) return "normal";
@@ -310,7 +310,7 @@ export function pickDownload(p: Plugin, major: number): Download | null {
 
 export type ActivityKind = "recent" | "active" | "slow" | "stale" | "unknown";
 
-/** 维护状态:按最近一次发布距今的天数分档。只提示,不隐藏。 */
+/** 维护状态:按最近一次发布距今的天数分档。只是提示;是否下架由 lifecycle.ts 按收录规则判断。 */
 export function activityTag(date: string, now: Date): { kind: ActivityKind; text: string } {
   const d = daysSince(date, now);
   if (d === null) return { kind: "unknown", text: "更新未知" };

@@ -402,6 +402,15 @@ function DownloadBox({ p }: { p: Plugin }) {
   const [major, setMajor] = useState<number>(() => (majors.length ? Math.max(...majors) : 10));
   const d = pickDownload(p, major);
   const fallback = (p.downloads ?? []).filter((r) => isAllowedXpiUrl(r.u));
+  if (fallback.length === 0) {
+    // 本站没有收录到任何安装包:不显示版本选择和下载按钮,只引导到项目主页
+    return (
+      <section className="download" aria-labelledby="dl-title">
+        <h2 id="dl-title">下载安装包</h2>
+        <p className="empty">本站暂未收录这个插件的安装包,请到 <a href={p.homepage} target="_blank" rel="noopener noreferrer" className="inline-link">项目主页</a> 查看发布与安装方法。</p>
+      </section>
+    );
+  }
   return (
     <section className="download" aria-labelledby="dl-title">
       <h2 id="dl-title">下载安装包</h2>
@@ -427,9 +436,7 @@ function DownloadBox({ p }: { p: Plugin }) {
         </p>
       ) : (
         <p className="empty">
-          {fallback.length === 0
-            ? "作者没有提供可直接下载的安装包,请到项目主页查看安装方法。"
-            : `没有找到明确适配 Zotero ${major} 的安装包,请换一个版本,或到项目主页确认。`}
+          {`没有找到明确适配 Zotero ${major} 的安装包,请换一个版本,或到项目主页确认。`}
         </p>
       )}
       <details className="how">

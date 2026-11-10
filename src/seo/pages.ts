@@ -45,7 +45,8 @@ export const STATIC_PAGES: PageMeta[] = ([
   { path: "/guides", title: "Zotero 教程｜从入门使用到插件开发", description: "阅读 Zotero 中文教程，了解插件开发准备、首个插件、调试与发布流程。每篇附参考来源，便于继续查证和实践。", h1: "Zotero 中文教程" },
   { path: "/styles", title: "Zotero 引用样式｜添加、切换与中文样式查找", description: "依据 Zotero 官方文档，说明引用样式（CSL）从哪里来、如何从官方样式库或本地文件添加、如何在 Word 与 LibreOffice 中切换，以及到哪里查找 GB/T 7714 等中文样式。投稿前以目标期刊最新要求为准。", h1: "Zotero 引用样式" },
   { path: "/forum", title: "Zotero 问答讨论｜使用问题与交流入口", description: "查找 Zotero 使用问题的交流入口，了解如何描述问题、提供版本与复现步骤，便于与其他使用者共同排查。", h1: "Zotero 问答讨论", indexable: false },
-  { path: "/rules", title: "收录与数据规则｜Zotero 中文社区", description: "了解插件收录、兼容范围、公开数据和排序规则。所有插件一视同仁，不设付费置顶或推荐位，未声明的兼容范围不作推定。", h1: "收录与数据规则" },
+  { path: "/rules", title: "收录与数据规则｜Zotero 中文社区", description: "了解插件收录与自动下架条件、兼容范围、公开数据和排序规则。所有插件一视同仁，不设付费置顶或推荐位，未声明的兼容范围不作推定。", h1: "收录与数据规则" },
+  { path: "/delisted", title: "已下架插件与原因｜Zotero 中文社区", description: "按收录规则自动判断的已下架插件名单,列出每个插件的下架原因、最近一次发布日期与下架日期。作者发布新版本后会自动恢复上架。", h1: "已下架插件与原因", indexable: false },
   { path: "/about", title: "关于本站｜Zotero 中文社区", description: "了解 Zotero 中文社区的用途与参与方式。本站由社区自发运营，提供插件信息、中文教程及期刊查询，与 Zotero 官方无隶属关系。", h1: "关于 Zotero 中文社区" },
 ] as PageMeta[]).map((m): PageMeta => ({ kind: "section", ...m }));
 

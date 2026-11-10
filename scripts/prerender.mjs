@@ -4,7 +4,7 @@
 // 同时生成 sitemap.xml、robots.txt、llms.txt、404.html,并维护「内容指纹台账」(sitemap 的 lastmod 只在内容真正变化时更新)。
 // 用法:
 //   node --experimental-strip-types scripts/prerender.mjs [dist目录]   构建后预渲染
-//   node --experimental-strip-types scripts/prerender.mjs --ledger-only 只更新内容指纹台账(每日数据刷新后、提交数据前运行)
+//   node --experimental-strip-types scripts/prerender.mjs --ledger-only 只更新内容指纹台账与下架台账(每日数据刷新后、提交数据前运行)
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -16,6 +16,8 @@ import {
 } from "../src/seo/pages.ts";
 import { STYLE_SOURCE_LIST } from "../src/content/styles.ts";
 import { ZOTERO_VERSIONS, compatIndex, compatList, pickDownload } from "../src/plugins/lib.ts";
+import { BUILD_DATE_ENV, DELISTED_FILE, buildDay, loadCatalog, readBuildDateMeta, stripBuildDateMeta } from "./catalog.ts";
+import { delistedLedgerJson } from "../src/plugins/delisted.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 export const LEDGER_FILE = join(root, "src/data/lastmod.json");
@@ -58,7 +60,7 @@ export function head(meta, extra = "") {
  * data-ssr 记下这是哪个地址的预渲染结果,浏览器只在地址一致时接管;data-now 是渲染时用的日期。
  */
 export function applyTemplate(template, meta, headExtra, bodyHtml, now = "") {
-  let html = template
+  let html = stripBuildDateMeta(template)
     .replace(/<title>[\s\S]*?<\/title>\s*/i, "")
     .replace(/<meta\s+name="description"[^>]*>\s*/gi, "")
     .replace(/<meta\s+property="og:[^"]*"[^>]*>\s*/gi, "")
@@ -191,6 +193,8 @@ export function llmsTxt({ pages, categories, compat = [], articles }) {
     `# ${SITE_NAME}`,
     "",
     "> 社区自发运营的非官方站点,整理 Zotero 插件的公开信息、中文教程与期刊查询。本站与 Zotero 官方无隶属关系。",
+    "",
+    "插件广场只列出在架的插件:超过 1 年未发布且没有可下载的安装包、最近一次发布超过 2 年、或超过 1 年未发布且未声明适配当前 Zotero 版本的插件按收录规则自动下架,作者发布新版本后自动恢复。下面的数量只计在架插件。",
     "",
     "## 主要栏目",
     "",
@@ -342,6 +346,7 @@ export async function computeLedger({ plugins, articleSources, today, prepare, o
 /**
  * 预渲染全部页面。opts:
  *   generatedAt / history:页面上显示的数据日期与历史快照
+ *   delisted:下架记录页用的数据(在架数与下架记录);plugins 只传在架的插件
  *   prepare:服务端渲染入口(默认用 Vite 现场打包 src/entry-server.tsx)
  *   ledgerFile:内容指纹台账文件(传 null 则只在内存里算,不写文件)
  */
@@ -352,7 +357,7 @@ export async function build(distDir, plugins, today = new Date().toISOString().s
   const { prints, ledger } = await computeLedger({ plugins, articleSources, today, prepare, old: ledgerFile ? readLedger(ledgerFile) : opts.ledger ?? {}, dateOf: opts.dateOf });
   if (ledgerFile) writeFileSync(ledgerFile, ledgerJson(ledger));
 
-  const render = await prepare({ generatedAt: opts.generatedAt ?? today, plugins, history: opts.history ?? {}, now: today });
+  const render = await prepare({ generatedAt: opts.generatedAt ?? today, plugins, history: opts.history ?? {}, delisted: opts.delisted, now: today });
   const template = readFileSync(join(distDir, "index.html"), "utf8");
   const page = (meta, extra, file) => {
     const html = applyTemplate(template, meta, extra, render(meta.path), today);
@@ -422,20 +427,26 @@ export async function build(distDir, plugins, today = new Date().toISOString().s
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const ledgerOnly = process.argv.includes("--ledger-only");
-  const data = JSON.parse(readFileSync(join(root, "src/data/plugins.json"), "utf8"));
+  const dist = resolve(process.argv.slice(2).find((a) => !a.startsWith("--")) ?? join(root, "dist"));
+  // 构建日期:优先用浏览器数据模块打包时记下的那一天,保证静态页面与前端接管时的在架名单一致
+  const template = !ledgerOnly && existsSync(join(dist, "index.html")) ? readFileSync(join(dist, "index.html"), "utf8") : "";
+  const today = readBuildDateMeta(template) ?? buildDay();
+  process.env[BUILD_DATE_ENV] = today; // 随后打包的服务端渲染包也用同一天
+  // 唯一的数据入口:之后的页面、sitemap、llms.txt、台账都只看在架的插件
+  const catalog = loadCatalog(today);
+  // 下架台账:仍在下架的沿用旧日期、新下架的记今天、恢复上架的删除;与数据一起提交回仓库
+  writeFileSync(DELISTED_FILE, delistedLedgerJson(catalog.ledger));
   const historyFile = join(root, "src/data/history.json");
   const history = existsSync(historyFile) ? JSON.parse(readFileSync(historyFile, "utf8")) : {};
   const articleSources = loadArticleSources(join(root, "src/content/guides"));
-  const today = new Date().toISOString().slice(0, 10);
   if (ledgerOnly) {
     const { prepare } = await ssrModule();
-    const { ledger } = await computeLedger({ plugins: data.plugins, articleSources, today, prepare, old: readLedger(LEDGER_FILE) });
+    const { ledger } = await computeLedger({ plugins: catalog.listed, articleSources, today, prepare, old: readLedger(LEDGER_FILE) });
     writeFileSync(LEDGER_FILE, ledgerJson(ledger));
-    console.log(`内容指纹台账已更新:${Object.keys(ledger).length} 个页面`);
+    console.log(`内容指纹台账已更新:${Object.keys(ledger).length} 个页面(在架插件 ${catalog.listed.length} 个,下架 ${catalog.delisted.length} 个)`);
   } else {
-    const dist = resolve(process.argv.slice(2).find((a) => !a.startsWith("--")) ?? join(root, "dist"));
     const articles = articleSources.map((s) => s.article);
-    const entries = await build(dist, data.plugins, today, articles, { generatedAt: data.generatedAt, history, articleSources, ledgerFile: LEDGER_FILE });
-    console.log(`预渲染完成:${entries.length} 个可收录页面(含 ${data.plugins.length} 个插件详情页、${articles.length} 篇教程),已生成 sitemap.xml、robots.txt、llms.txt 与 404.html`);
+    const entries = await build(dist, catalog.listed, today, articles, { generatedAt: catalog.generatedAt, history, articleSources, ledgerFile: LEDGER_FILE, delisted: catalog.delistedData });
+    console.log(`预渲染完成:${entries.length} 个可收录页面(含 ${catalog.listed.length} 个在架插件详情页、${articles.length} 篇教程;下架 ${catalog.delisted.length} 个),已生成 sitemap.xml、robots.txt、llms.txt 与 404.html`);
   }
 }

@@ -38,8 +38,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # 内容指纹台账:按页面的有意义内容算指纹,内容没变就沿用旧日期(sitemap 的 lastmod 不再每天变)。
+      # 同一步还更新下架台账 src/data/delisted.json(按收录规则自动下架的插件从哪天起下架;恢复上架的删除),
+      # 它也在 src/data 下,下一步的 git add src/data 会一并提交,所以不需要另加步骤。
       # 每次运行都要做(代码推送也可能改了教程或文案),并在下一步与数据一起提交回仓库。
-      - name: 更新内容指纹台账
+      - name: 更新内容指纹台账与下架台账
         run: node --experimental-strip-types scripts/prerender.mjs --ledger-only
 
       - name: 提交刷新后的数据
