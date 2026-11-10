@@ -77,6 +77,8 @@ test("静态页面就是真正渲染的完整页面:页头导航、页脚、唯�
   }
   // 栏目页正文是完整内容,不是一句话
   assert.match(read(dir, "/rules"), /<h2>8\. 免责声明<\/h2>/);
+  // 数据来源一节说明目录数据以 JSON 公开(不是页面,不进 sitemap)
+  assert.match(read(dir, "/rules"), /目录数据也以 JSON 公开:<a href="\/data\/catalog\.json" target="_blank" rel="noopener noreferrer"[^>]*>\/data\/catalog\.json<\/a>,欢迎自由引用,请注明来源/);
   assert.match(read(dir, "/about"), /<h2>参与和反馈<\/h2>/);
   // 期刊查询不在构建时请求数据:只输出搜索框外壳与说明文字
   const journals = read(dir, "/journals");

@@ -1,0 +1,13 @@
+{
+  "name": "zotero-community-plugin",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Zotero中文社区 · 插件市场:在 Zotero 里浏览、安装与更新 zoterocn.org 收录的插件。",
+  "license": "MIT",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node --test \"test/*.test.mjs\"",
+    "build": "node scripts/build.mjs",
+    "verify-release": "node scripts/verify-release.mjs"
+  }
+}

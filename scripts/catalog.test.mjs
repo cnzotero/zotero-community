@@ -154,6 +154,10 @@ test("只有一个数据入口:页面代码与预渲染都不直接读取插件�
   walk(join(root, "scripts"));
   files.push(join(root, "vite.config.ts"));
   const readers = files.filter((f) => readFileSync(f, "utf8").includes("plugins.json")).map((f) => f.slice(root.length));
-  // 刷新脚本负责写数据;catalog.ts 是唯一的读取入口
-  assert.deepEqual(readers.sort(), ["scripts/catalog.ts", "scripts/refresh-plugins.mjs"]);
+  // 刷新脚本负责写数据;catalog.ts 是唯一的读取入口。
+  // import-addon-ids.mjs 只在上游目录的地址里出现这个文件名(上游的文件也叫 plugins.json),本站数据仍经 catalog.ts 读取
+  assert.deepEqual(readers.sort(), ["scripts/catalog.ts", "scripts/import-addon-ids.mjs", "scripts/refresh-plugins.mjs"]);
+  const importer = readFileSync(join(root, "scripts/import-addon-ids.mjs"), "utf8");
+  assert.deepEqual(importer.match(/[^\s"'`]*plugins\.json/g), ["https://raw.githubusercontent.com/zotero-chinese/zotero-plugins/gh-pages/plugins.json"]);
+  assert.match(importer, /import \{ PLUGINS_FILE \} from "\.\/catalog\.ts"/);
 });

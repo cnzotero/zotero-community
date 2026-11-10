@@ -1,0 +1,190 @@
+/* 跟随 Zotero 的深浅色主题:优先用 Zotero 自己的配色变量,没有时退回系统配色。 */
+:root {
+  color-scheme: light dark;
+  --zc-bg: var(--material-background, Canvas);
+  --zc-fg: var(--fill-primary, CanvasText);
+  --zc-muted: var(--fill-secondary, GrayText);
+  --zc-border: var(--fill-quinary, rgba(127, 127, 127, 0.3));
+  --zc-card: var(--material-sidepane, var(--zc-bg));
+  --zc-accent: var(--color-accent, AccentColor);
+  --zc-ok: #2e7d32;
+  --zc-warn: #b26a00;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --zc-ok: #7cc47f;
+    --zc-warn: #f0b35a;
+  }
+}
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--zc-bg);
+  color: var(--zc-fg);
+  font: message-box;
+  font-size: 13px;
+}
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+.bar {
+  padding: 10px 14px 6px;
+  border-bottom: 1px solid var(--zc-border);
+}
+.bar-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.status-row {
+  margin-top: 6px;
+  justify-content: space-between;
+  color: var(--zc-muted);
+}
+#q {
+  flex: 1 1 220px;
+  min-width: 160px;
+}
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.notice {
+  margin: 8px 14px 0;
+  padding: 8px 10px;
+  border: 1px solid var(--zc-border);
+  border-radius: 6px;
+}
+.notice.error {
+  border-color: var(--zc-warn);
+}
+.notice button {
+  margin-inline-start: 8px;
+}
+
+#list {
+  flex: 1;
+  overflow: auto;
+  padding: 10px 14px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 10px;
+  align-content: start;
+}
+.empty {
+  grid-column: 1 / -1;
+  color: var(--zc-muted);
+  padding: 24px 0;
+  text-align: center;
+}
+
+.card {
+  border: 1px solid var(--zc-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: var(--zc-card);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.card h2 {
+  margin: 0;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.card .author {
+  color: var(--zc-muted);
+  font-size: 12px;
+}
+.card .summary {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.card .meta {
+  color: var(--zc-muted);
+  font-size: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+.card .actions {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.card .state {
+  flex: 1;
+  font-size: 12px;
+  color: var(--zc-muted);
+}
+.card .state.installed {
+  color: var(--zc-ok);
+}
+.card .state.update {
+  color: var(--zc-warn);
+}
+.card .result {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.card .result.error {
+  color: var(--zc-warn);
+}
+
+.foot {
+  padding: 6px 14px 10px;
+  color: var(--zc-muted);
+  font-size: 11px;
+  border-top: 1px solid var(--zc-border);
+}
+
+dialog {
+  max-width: 560px;
+  border: 1px solid var(--zc-border);
+  border-radius: 8px;
+  background: var(--zc-bg);
+  color: var(--zc-fg);
+  padding: 14px 16px;
+}
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.35);
+}
+dialog h2 {
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+.confirm-facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 12px;
+  margin: 0;
+}
+.confirm-facts dt {
+  color: var(--zc-muted);
+}
+.confirm-facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.confirm-facts .url {
+  font-family: monospace;
+  font-size: 12px;
+}
+.confirm-note {
+  color: var(--zc-muted);
+  font-size: 12px;
+}
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

@@ -2,7 +2,7 @@
 
 ## 插件目录数据
 
-插件广场的初始收录名单与中文摘要整理自 zotero-chinese/zotero-plugins 项目的公开插件目录,该项目以 MIT 协议发布。其许可证声明如下:
+插件广场的初始收录名单与中文摘要整理自 zotero-chinese/zotero-plugins 项目的公开插件目录,该项目以 MIT 协议发布。目录数据(/data/catalog.json)里安装包的插件标识也主要取自该目录;该目录没有的,读取自作者发布的安装包本身。其许可证声明如下:
 
 ```
 MIT License

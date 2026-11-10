@@ -71,6 +71,7 @@ export function Rules() {
         <li>星标数、版本号、发布日期、安装包地址来自各项目在 GitHub 上的公开页面。</li>
         <li>数据由维护者定期更新,页面上方会显示「数据更新于」的日期。两次更新之间,星标和版本可能与项目主页略有出入,以项目主页为准。</li>
         <li><b>本站不托管任何安装包。</b>下载按钮是指向作者发布页的直链,下载时请留意域名是 github.com 或 gitee.com。</li>
+        <li>目录数据也以 JSON 公开:<a href="/data/catalog.json" target="_blank" rel="noopener noreferrer" className="inline-link">/data/catalog.json</a>,欢迎自由引用,请注明来源。</li>
       </ul>
 
       <h2>6. 如何申请收录、更正或下架</h2>

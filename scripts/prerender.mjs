@@ -18,6 +18,8 @@ import { STYLE_SOURCE_LIST } from "../src/content/styles.ts";
 import { ZOTERO_VERSIONS, compatIndex, compatList, pickDownload } from "../src/plugins/lib.ts";
 import { BUILD_DATE_ENV, DELISTED_FILE, buildDay, loadCatalog, readBuildDateMeta, stripBuildDateMeta } from "./catalog.ts";
 import { delistedLedgerJson } from "../src/plugins/delisted.ts";
+import { FEED_FILE, buildFeed, droppedSummary, validateFeed } from "./catalog-feed.mjs";
+import { ADDON_IDS_FILE } from "./import-addon-ids.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 export const LEDGER_FILE = join(root, "src/data/lastmod.json");
@@ -425,6 +427,26 @@ export async function build(distDir, plugins, today = new Date().toISOString().s
   return entries;
 }
 
+/**
+ * 写出机器可读的目录源 data/catalog.json(不是页面,不进 sitemap)。
+ * 社区插件的更新清单不在站点上发布(放在 GitHub 的固定 release 条目里),站点被入侵也不能借插件自动更新推送代码。
+ * 目录源只含在架插件;写出前校验格式,并核对条数与 sitemap 里的插件详情页数一致,不一致就让构建失败。
+ */
+export function writeFeeds(distDir, { listed, delistedIds = [], today, history = {}, addonIds = {}, entries = null }) {
+  const dropped = [];
+  const feed = buildFeed({ listed, day: today, addonIds, history, dropped });
+  const errs = validateFeed(feed, { excludedIds: delistedIds });
+  if (errs.length) throw new Error(`目录源校验失败:\n${errs.slice(0, 20).join("\n")}`);
+  if (entries) {
+    const pages = entries.filter((e) => /^\/plugins\/[^/]+\/[^/]+$/.test(e.path)).length;
+    if (pages !== feed.count) throw new Error(`目录源条数 ${feed.count} 与 sitemap 里的插件详情页数 ${pages} 不一致`);
+  }
+  const feedOut = join(distDir, FEED_FILE);
+  mkdirSync(dirname(feedOut), { recursive: true });
+  writeFileSync(feedOut, JSON.stringify(feed));
+  return { feed, dropped: droppedSummary(dropped, feed) };
+}
+
 if (import.meta.url === `file://${process.argv[1]}`) {
   const ledgerOnly = process.argv.includes("--ledger-only");
   const dist = resolve(process.argv.slice(2).find((a) => !a.startsWith("--")) ?? join(root, "dist"));
@@ -447,6 +469,13 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   } else {
     const articles = articleSources.map((s) => s.article);
     const entries = await build(dist, catalog.listed, today, articles, { generatedAt: catalog.generatedAt, history, articleSources, ledgerFile: LEDGER_FILE, delisted: catalog.delistedData });
+    const addonIds = existsSync(ADDON_IDS_FILE) ? JSON.parse(readFileSync(ADDON_IDS_FILE, "utf8")) : {};
+    const { feed, dropped } = writeFeeds(dist, { listed: catalog.listed, delistedIds: catalog.delisted.map((d) => d.plugin.id), today, history, addonIds, entries });
+    console.log(`目录源已生成:/${FEED_FILE}(${feed.count} 个在架插件)`);
+    if (dropped.releases) {
+      console.log(`  未进目录的安装包 ${dropped.releases} 个(涉及 ${dropped.plugins} 个插件;因此没有任何安装包的 ${dropped.lostAll.length} 个),按原因:${JSON.stringify(dropped.byReason)}`);
+      for (const d of dropped.examples) console.log(`    ${d.reason} ${d.id} ${d.u}`);
+    }
     console.log(`预渲染完成:${entries.length} 个可收录页面(含 ${catalog.listed.length} 个在架插件详情页、${articles.length} 篇教程;下架 ${catalog.delisted.length} 个),已生成 sitemap.xml、robots.txt、llms.txt 与 404.html`);
   }
 }

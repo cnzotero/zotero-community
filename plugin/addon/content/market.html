@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html windowtype="zotero-community:market" lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <!-- 只允许加载 Zotero 与本插件自带的脚本和样式;网络请求只允许到 zoterocn.org(读取目录) -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src chrome:; style-src chrome: resource:; img-src chrome: resource: data: moz-icon:; font-src chrome: resource:; connect-src https://zoterocn.org" />
+  <title>Zotero中文社区 · 插件市场</title>
+  <link rel="stylesheet" href="chrome://zotero-platform/content/zotero.css" />
+  <link rel="stylesheet" href="market.css" />
+</head>
+<body>
+  <header class="bar">
+    <div class="bar-row">
+      <input id="q" type="search" placeholder="搜索名称、简介或作者" aria-label="搜索插件" />
+      <select id="cat" aria-label="分类"><option value="all">全部分类</option></select>
+      <select id="sort" aria-label="排序"></select>
+      <label class="check"><input id="compat" type="checkbox" checked="checked" /> <span id="compat-label">只显示适配当前 Zotero 的插件</span></label>
+    </div>
+    <div class="bar-row status-row">
+      <span id="status" role="status"></span>
+      <button id="reload" type="button">刷新目录</button>
+    </div>
+  </header>
+
+  <div id="notice" class="notice" hidden="hidden"></div>
+  <main id="list" aria-live="polite"></main>
+
+  <footer class="foot">
+    插件信息来自 Zotero 中文社区(zoterocn.org)公开的插件目录,所有插件按同一套规则排序,没有推荐位。安装包来自作者在 github.com 的发布页。
+  </footer>
+
+  <dialog id="confirm" aria-labelledby="confirm-title">
+    <h2 id="confirm-title">确认安装</h2>
+    <dl class="confirm-facts">
+      <dt>插件</dt><dd id="confirm-name"></dd>
+      <dt>版本</dt><dd id="confirm-version"></dd>
+      <dt>来源</dt><dd id="confirm-host"></dd>
+      <dt>安装包地址</dt><dd id="confirm-url" class="url"></dd>
+    </dl>
+    <p class="confirm-note">安装包只会从上面这个仓库下载。插件由第三方作者开发,本社区不托管安装包,安装前请确认来源可信。</p>
+    <div class="confirm-actions">
+      <button id="confirm-cancel" type="button">取消</button>
+      <button id="confirm-ok" type="button" class="primary">安装</button>
+    </div>
+  </dialog>
+
+  <script src="chrome://zotero/content/include.js"></script>
+  <script src="lib.js"></script>
+  <script src="market.js"></script>
+</body>
+</html>
