@@ -1,5 +1,6 @@
 import { Link } from "../link.tsx";
 import { PageHero } from "../pageHero.tsx";
+import { pageMeta } from "../seo/pages.ts";
 
 const REPO = "https://github.com/cnzotero/zotero-community";
 
@@ -10,7 +11,7 @@ function Ext({ href, children }: { href: string; children: React.ReactNode }) {
 export function Rules() {
   return (
     <article className="section prose">
-      <h1 className="page-title">收录规则</h1>
+      <h1 className="page-title">{pageMeta("/rules").h1}</h1>
       <p className="lead">插件广场收录什么、不收录什么、怎么排序、怎么申请收录或下架。规则对所有插件一视同仁。</p>
 
       <h2>1. 收录范围</h2>
@@ -87,7 +88,7 @@ export function Rules() {
 export function About() {
   return (
     <article className="section prose">
-      <h1 className="page-title">关于本站</h1>
+      <h1 className="page-title">{pageMeta("/about").h1}</h1>
       <p className="lead">Zotero 中文社区是一个由社区自发运营的非官方站点,把 Zotero 用顺手所需要的东西放在一起。</p>
 
       <h2>这里有什么</h2>
@@ -133,7 +134,7 @@ function Planned({ title, lead, items, rules }: { title: string; lead: string; i
 export function Submission() {
   return (
     <Planned
-      title="投稿建议"
+      title={pageMeta("/submission").h1}
       lead="从选刊、改稿到回复审稿意见,把投稿前后的经验整理成清单。"
       items={[
         "选刊清单:怎么按研究内容、周期、版面费与录用率缩小候选范围。",

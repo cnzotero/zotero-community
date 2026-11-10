@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { currentPath } from "./ssr.ts";
 
 const CATEGORY_SET = new Set(["ai", "reading", "metadata", "interface", "attachment", "integration", "notes", "utility", "writing", "visualization"]);
 
@@ -35,7 +36,7 @@ export function navigate(path: string): void {
 }
 
 export function useRoute(): Route {
-  const [route, setRoute] = useState<Route>(() => routeFromPath(location.pathname));
+  const [route, setRoute] = useState<Route>(() => routeFromPath(currentPath()));
   useEffect(() => {
     const on = () => setRoute(routeFromPath(location.pathname));
     window.addEventListener("popstate", on);

@@ -1,16 +1,23 @@
 #!/usr/bin/env node
-// 构建后预渲染:为每个页面生成带标题、描述、规范链接、Open Graph、结构化数据和正文摘要的静态 HTML,
-// 并生成 sitemap.xml 与 robots.txt。搜索引擎抓到的就是完整内容;浏览器加载后由前端接管。
-// 用法:node --experimental-strip-types scripts/prerender.mjs [dist目录]
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-import { readdirSync } from "node:fs";
-import { blocksToHtml, parseArticle, wordCount } from "../src/guides/markdown.ts";
-import { CATEGORY_KEYS, OG_IMAGE, SITE, SITE_NAME, STATIC_PAGES, categoryIntro, categoryMeta, duplicateNames, pluginFacts, pluginMeta } from "../src/seo/pages.ts";
+// 构建后预渲染:把每个页面的 React 组件真正渲染成 HTML(与浏览器里看到的是同一套组件、同一份内容),
+// 再写上每页自己的标题、描述、规范链接、Open Graph 与结构化数据;浏览器加载后由前端直接接管。
+// 同时生成 sitemap.xml、robots.txt、llms.txt、404.html,并维护「内容指纹台账」(sitemap 的 lastmod 只在内容真正变化时更新)。
+// 用法:
+//   node --experimental-strip-types scripts/prerender.mjs [dist目录]   构建后预渲染
+//   node --experimental-strip-types scripts/prerender.mjs --ledger-only 只更新内容指纹台账(每日数据刷新后、提交数据前运行)
+import { createHash } from "node:crypto";
+import { execFileSync } from "node:child_process";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join, relative, resolve } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { parseArticle, wordCount } from "../src/guides/markdown.ts";
+import {
+  CATEGORY_KEYS, SITE, SITE_NAME, STATIC_PAGES, categoryIntro, categoryLabel, categoryMeta, categoryPath, duplicateNames, isIndexable, ogImage, pageUrl, pluginMeta,
+} from "../src/seo/pages.ts";
 import { ZOTERO_VERSIONS, pickDownload } from "../src/plugins/lib.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+export const LEDGER_FILE = join(root, "src/data/lastmod.json");
 
 export const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
@@ -27,60 +34,44 @@ export function bestDownload(p) {
 export const ld = (obj) => `<script type="application/ld+json">${JSON.stringify(obj).replace(/</g, "\\u003c")}</script>`;
 
 export function head(meta, extra = "") {
-  const url = `${SITE}${meta.path === "/" ? "/" : meta.path}`;
+  const url = pageUrl(meta.path);
   return [
     `<title>${esc(meta.title)}</title>`,
     `<meta name="description" content="${esc(meta.description)}" />`,
     `<link rel="canonical" href="${esc(url)}" />`,
-    meta.noindex ? `<meta name="robots" content="noindex,follow" />` : `<meta name="robots" content="index,follow,max-image-preview:large" />`,
+    isIndexable(meta) ? `<meta name="robots" content="index,follow,max-image-preview:large" />` : `<meta name="robots" content="noindex,follow" />`,
     `<meta property="og:type" content="website" />`,
     `<meta property="og:site_name" content="${esc(SITE_NAME)}" />`,
     `<meta property="og:locale" content="zh_CN" />`,
     `<meta property="og:title" content="${esc(meta.title)}" />`,
     `<meta property="og:description" content="${esc(meta.description)}" />`,
     `<meta property="og:url" content="${esc(url)}" />`,
-    `<meta property="og:image" content="${OG_IMAGE}" />`,
+    `<meta property="og:image" content="${esc(ogImage(meta.kind))}" />`,
     `<meta name="twitter:card" content="summary_large_image" />`,
     extra,
   ].filter(Boolean).join("\n    ");
 }
 
-/** 把模板里已有的 title / description / OG 标签去掉,换成每页自己的。 */
-export function applyTemplate(template, meta, headExtra, bodyHtml) {
+/**
+ * 把模板里已有的 title / description / OG 标签去掉,换成每页自己的;正文放进 #root。
+ * data-ssr 记下这是哪个地址的预渲染结果,浏览器只在地址一致时接管;data-now 是渲染时用的日期。
+ */
+export function applyTemplate(template, meta, headExtra, bodyHtml, now = "") {
   let html = template
     .replace(/<title>[\s\S]*?<\/title>\s*/i, "")
     .replace(/<meta\s+name="description"[^>]*>\s*/gi, "")
     .replace(/<meta\s+property="og:[^"]*"[^>]*>\s*/gi, "")
     .replace(/<meta\s+name="twitter:card"[^>]*>\s*/gi, "");
-  html = html.replace("</head>", `    ${head(meta, headExtra)}\n  </head>`);
-  html = html.replace(/<div id="root"><\/div>/, `<div id="root">${bodyHtml}</div>`);
+  html = html.replace("</head>", () => `    ${head(meta, headExtra)}\n  </head>`);
+  html = html.replace(/<div id="root"><\/div>/, () => `<div id="root" data-ssr="${esc(meta.path)}" data-now="${esc(now)}">${bodyHtml}</div>`);
   return html;
 }
 
 const crumbs = (items) => ld({
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
-  itemListElement: items.map(([name, path], i) => ({ "@type": "ListItem", position: i + 1, name, item: `${SITE}${path}` })),
+  itemListElement: items.map(([name, path], i) => ({ "@type": "ListItem", position: i + 1, name, item: pageUrl(path) })),
 });
-
-const HOME_LINKS = [["/plugins", "插件广场"], ["/guides", "教程"], ["/journals", "期刊查询"], ["/plugins/charts", "插件数据看板"], ["/rules", "收录规则"], ["/about", "关于本站"]];
-
-function staticBody(meta, articles = []) {
-  const list = meta.path === "/guides" && articles.length
-    ? `<h2>插件开发系列</h2><ol>${articles.map((a) => `<li><a href="/guides/${esc(a.slug)}">${esc(a.title)}</a> - ${esc(a.description)}</li>`).join("")}</ol>`
-    : "";
-  const home = meta.path === "/" ? `<ul>${HOME_LINKS.map(([h, t]) => `<li><a href="${h}">${esc(t)}</a></li>`).join("")}</ul>` : "";
-  return `<main class="container"><section class="section prerender"><h1 class="page-title">${esc(meta.h1)}</h1><p class="lead">${esc(meta.description)}</p>${home}${list}</section></main>`;
-}
-
-function pluginBody(p, meta) {
-  const rows = pluginFacts(p).map(([k, v]) => `<tr><th scope="row">${esc(k)}</th><td>${esc(v)}</td></tr>`).join("");
-  const dl = bestDownload(p);
-  return `<main class="container"><article class="section prerender"><nav aria-label="面包屑"><a href="/plugins">插件广场</a></nav>` +
-    `<h1 class="page-title">${esc(p.name)}</h1><p class="lead">${esc(p.summary)}</p>` +
-    `<table><tbody>${rows}</tbody></table>` +
-    `<p><a href="${esc(p.homepage)}" target="_blank" rel="noopener noreferrer">GitHub 仓库</a>${dl ? ` · <a href="${esc(dl.u)}" target="_blank" rel="noopener noreferrer">下载 v${esc(dl.v)} 安装包(适配 Zotero ${dl.major})</a>` : ""}</p></article></main>`;
-}
 
 function pluginLd(p, meta) {
   const dl = bestDownload(p);
@@ -90,7 +81,9 @@ function pluginLd(p, meta) {
       "@type": "SoftwareApplication",
       name: p.name,
       description: p.summary,
-      applicationCategory: "BrowserApplication",
+      // 文献管理软件的扩展;不写价格(并非所有插件都免费)
+      applicationCategory: "ReferenceApplication",
+      applicationSubCategory: "Zotero 插件",
       operatingSystem: "Windows, macOS, Linux",
       url: `${SITE}${meta.path}`,
       author: { "@type": "Person", name: p.id.split("/")[0] },
@@ -98,15 +91,9 @@ function pluginLd(p, meta) {
       ...(dl ? { downloadUrl: dl.u } : {}),
       sameAs: [p.homepage],
     }),
-    crumbs([["首页", "/"], ["插件广场", "/plugins"], [p.name, meta.path]]),
+    // 与页面上的面包屑一致:首页 › 分类 › 插件名
+    crumbs([["首页", "/"], [`${categoryLabel(p.category) || "插件"}类插件`, categoryPath(p.category)], [p.name, meta.path]]),
   ].join("\n    ");
-}
-
-function categoryBody(meta, key, list) {
-  const items = list.map((p) => `<li><a href="/plugins/${esc(p.id)}">${esc(p.name)}</a> - ${esc(p.summary)}</li>`).join("");
-  return `<main class="container"><section class="section prerender"><nav aria-label="面包屑"><a href="/plugins">插件广场</a></nav>` +
-    `<h1 class="page-title">${esc(meta.h1)}</h1><p class="lead">${esc(categoryIntro(key))}</p>` +
-    `<h2>收录的${esc(meta.h1.replace(/ Zotero.*/, ""))}(共 ${list.length} 款,按 GitHub 星标排序)</h2><ol>${items}</ol></section></main>`;
 }
 
 function categoryLd(meta, list) {
@@ -128,12 +115,6 @@ function categoryLd(meta, list) {
   ].join("\n    ");
 }
 
-function articleBody(a) {
-  return `<main class="container"><article class="section prose article prerender"><nav aria-label="面包屑"><a href="/guides">教程</a></nav>` +
-    `<h1 class="page-title">${esc(a.title)}</h1>${blocksToHtml(a.blocks)}` +
-    `<section class="sources"><h2>参考来源</h2><ul>${a.sources.map((u) => `<li><a href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(u)}</a></li>`).join("")}</ul></section></article></main>`;
-}
-
 function articleLd(a, path) {
   return [
     ld({
@@ -145,7 +126,10 @@ function articleLd(a, path) {
       url: `${SITE}${path}`,
       mainEntityOfPage: `${SITE}${path}`,
       wordCount: wordCount(a.blocks),
+      ...(a.published ? { datePublished: a.published } : {}),
+      ...(a.updated ? { dateModified: a.updated } : {}),
       isPartOf: { "@type": "CreativeWorkSeries", name: "Zotero 插件开发系列" },
+      author: { "@type": "Organization", name: SITE_NAME, url: `${SITE}/` },
       publisher: { "@type": "Organization", name: SITE_NAME, logo: { "@type": "ImageObject", url: `${SITE}/brand/icon-512.png` } },
       citation: a.sources,
     }),
@@ -153,14 +137,20 @@ function articleLd(a, path) {
   ].join("\n    ");
 }
 
-/** 读取教程文稿目录;不存在时返回空数组。 */
-export function loadArticles(dir) {
+/** 读取教程文稿目录(含原文,用于内容指纹);不存在时返回空数组。 */
+export function loadArticleSources(dir) {
   try {
-    return readdirSync(dir).filter((f) => f.endsWith(".md")).map((f) => parseArticle(readFileSync(join(dir, f), "utf8"))).sort((a, b) => a.order - b.order);
+    return readdirSync(dir).filter((f) => f.endsWith(".md")).map((f) => {
+      const raw = readFileSync(join(dir, f), "utf8");
+      return { file: join(dir, f), raw, article: parseArticle(raw) };
+    }).sort((a, b) => a.article.order - b.article.order);
   } catch {
     return [];
   }
 }
+
+/** 读取教程文稿目录;不存在时返回空数组。 */
+export const loadArticles = (dir) => loadArticleSources(dir).map((s) => s.article);
 
 export function sitemapXml(entries) {
   const rows = entries.map((e) => `  <url><loc>${esc(SITE + e.path)}</loc>${e.lastmod ? `<lastmod>${e.lastmod}</lastmod>` : ""}</url>`).join("\n");
@@ -169,6 +159,29 @@ export function sitemapXml(entries) {
 
 export const robotsTxt = () => `User-agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: ${SITE}/sitemap.xml\n`;
 
+/** 给大模型等自动读取工具的站点说明:只列事实与可收录页面的链接,不列单个插件。 */
+export function llmsTxt({ pages, categories, articles }) {
+  const line = (title, path, desc) => `- [${title}](${pageUrl(path)})${desc ? `: ${desc}` : ""}`;
+  return [
+    `# ${SITE_NAME}`,
+    "",
+    "> 社区自发运营的非官方站点,整理 Zotero 插件的公开信息、中文教程与期刊查询。本站与 Zotero 官方无隶属关系。",
+    "",
+    "## 主要栏目",
+    "",
+    ...pages.map((m) => line(m.path === "/" ? "首页" : m.h1, m.path, m.description)),
+    "",
+    "## 插件分类",
+    "",
+    ...categories.map(({ meta, count }) => line(meta.h1, meta.path, `收录 ${count} 款`)),
+    "",
+    "## 教程",
+    "",
+    ...articles.map((a) => line(a.title, `/guides/${a.slug}`, a.description)),
+    "",
+  ].join("\n");
+}
+
 /** 构建期保险:预渲染页面里任何外链(http/https)都必须新标签打开并带 noopener,否则构建失败。 */
 export function assertExternalLinks(html, where) {
   for (const m of html.matchAll(/<a\b[^>]*href="https?:\/\/[^"]*"[^>]*>/g)) {
@@ -176,15 +189,150 @@ export function assertExternalLinks(html, where) {
   }
 }
 
-export function build(distDir, plugins, today = new Date().toISOString().slice(0, 10), articles = []) {
+// ---------- 服务端渲染 ----------
+
+let renderer = null;
+
+/** 用 Vite 把预渲染入口打成 Node 可直接运行的包(放在 node_modules 下,不进仓库与发布产物)。 */
+export function ssrModule(outDir = join(root, "node_modules/.ssr")) {
+  return (renderer ??= (async () => {
+    const { build: viteBuild } = await import("vite");
+    await viteBuild({
+      root,
+      configFile: join(root, "vite.config.ts"),
+      logLevel: "warn",
+      build: { ssr: "src/entry-server.tsx", outDir, emptyOutDir: true, copyPublicDir: false, minify: false },
+    });
+    return import(pathToFileURL(join(outDir, "entry-server.js")).href);
+  })());
+}
+
+// ---------- 内容指纹台账:sitemap 的 lastmod 只在内容真正变化时更新 ----------
+
+export const fingerprint = (value) => createHash("sha256").update(typeof value === "string" ? value : JSON.stringify(value)).digest("hex").slice(0, 16);
+
+/**
+ * 按新指纹更新台账。指纹没变沿用旧日期;变了写 today;台账里没有的页面用 initial(首次生成时的日期);
+ * 已不存在的页面从台账移除。纯函数,不读写文件。
+ */
+export function updateLedger(old, prints, today) {
+  const next = {};
+  for (const [path, { hash, initial }] of prints) {
+    const prev = old?.[path];
+    next[path] = { hash, lastmod: prev ? (prev.hash === hash ? prev.lastmod : today) : initial || today };
+  }
+  return next;
+}
+
+export function ledgerJson(ledger) {
+  const keys = Object.keys(ledger).sort();
+  return `{\n${keys.map((k) => `  ${JSON.stringify(k)}: ${JSON.stringify(ledger[k])}`).join(",\n")}\n}\n`;
+}
+
+export function readLedger(file) {
+  try {
+    return JSON.parse(readFileSync(file, "utf8"));
+  } catch {
+    return {};
+  }
+}
+
+/** 文件在 git 里最后一次提交的日期;拿不到返回 null。 */
+export function gitDate(file) {
+  try {
+    const out = execFileSync("git", ["log", "-1", "--format=%cs", "--", relative(root, file)], { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+    return /^\d{4}-\d{2}-\d{2}$/.test(out) ? out : null;
+  } catch {
+    return null;
+  }
+}
+
+/** 栏目页的文案在哪个源文件里:首次生成台账时用该文件在 git 里的最后修改日期。 */
+const PAGE_SOURCES = {
+  "/": "src/pages/Home.tsx",
+  "/plugins": "src/plugins/PluginsPage.tsx",
+  "/plugins/charts": "src/plugins/ChartsPage.tsx",
+  "/journals": "src/journals/JournalsPage.tsx",
+  "/guides": "src/guides/GuidesPages.tsx",
+  "/styles": "src/App.tsx",
+  "/forum": "src/App.tsx",
+  "/rules": "src/pages/StaticPages.tsx",
+  "/about": "src/pages/StaticPages.tsx",
+  "/submission": "src/pages/StaticPages.tsx",
+};
+
+/** 插件页指纹只算有意义的内容:名称、简介、分类、兼容范围、最新版本号与发布日期(不算每天都在变的星标、下载数)。 */
+export const pluginPrint = (p) => fingerprint({ name: p.name, summary: p.summary, category: p.category, zotero: p.zotero, version: p.latest?.version ?? null, date: p.latest?.date ?? null });
+
+/** 栏目页正文里的可见文字与链接(不含页头页脚),用来算栏目页的内容指纹。 */
+export function mainContent(html) {
+  const m = /<main class="container">([\s\S]*)<\/main>/.exec(html);
+  const body = m ? m[1] : html;
+  const hrefs = [...body.matchAll(/href="([^"]*)"/g)].map((x) => x[1]);
+  const text = body.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  return JSON.stringify({ text, hrefs });
+}
+
+/** 去掉每天都在变的数字(星标、下载、发布节奏等),只留下「有意义的内容」,用来渲染栏目页算指纹。 */
+const stablePlugin = (p) => ({ id: p.id, name: p.name, summary: p.summary, category: p.category, tags: p.tags, author: p.author, homepage: p.homepage, stars: 0, latest: p.latest, updated: p.updated, zotero: p.zotero, downloads: p.downloads });
+const STABLE_NOW = "2000-01-01";
+
+function categoryList(plugins, key) {
+  return plugins.filter((p) => p.category === key).sort((a, b) => b.stars - a.stars || a.name.localeCompare(b.name, "zh-Hans-CN"));
+}
+
+/**
+ * 算出每个可收录页面的指纹与「首次生成日期」,并按台账给出 lastmod。
+ * 返回 { ledger, prints }:prints 是 Map<path, {hash, initial}>,顺序即 sitemap 顺序。
+ */
+export async function computeLedger({ plugins, articleSources, today, prepare, old, dateOf = gitDate }) {
+  const prints = new Map();
+  const add = (path, hash, initial) => prints.set(path, { hash, initial });
+  // 栏目页:用去掉日常波动数据后的渲染结果算指纹,文案、链接或收录名单变了才算变化
+  const renderStable = await prepare({ generatedAt: "", plugins: plugins.map(stablePlugin), history: {}, now: STABLE_NOW });
+  for (const meta of STATIC_PAGES.filter(isIndexable)) {
+    const src = PAGE_SOURCES[meta.path];
+    add(meta.path, fingerprint({ meta: [meta.title, meta.description, meta.h1], main: mainContent(renderStable(meta.path)) }), src ? dateOf(join(root, src)) : null);
+  }
+  for (const p of plugins) add(`/plugins/${p.id}`, pluginPrint(p), p.updated || null);
+  const copyDate = dateOf(join(root, "src/content/category-copy.json"));
+  for (const key of CATEGORY_KEYS) {
+    const meta = categoryMeta(key);
+    const list = categoryList(plugins, key);
+    if (!meta || list.length === 0) continue;
+    add(meta.path, fingerprint({ meta: [meta.title, meta.description, meta.h1], copy: categoryIntro(key), members: list.map((p) => p.id).sort() }), copyDate);
+  }
+  for (const s of articleSources) add(`/guides/${s.article.slug}`, fingerprint(s.raw), s.file ? dateOf(s.file) : null);
+  return { prints, ledger: updateLedger(old, prints, today) };
+}
+
+/**
+ * 预渲染全部页面。opts:
+ *   generatedAt / history:页面上显示的数据日期与历史快照
+ *   prepare:服务端渲染入口(默认用 Vite 现场打包 src/entry-server.tsx)
+ *   ledgerFile:内容指纹台账文件(传 null 则只在内存里算,不写文件)
+ */
+export async function build(distDir, plugins, today = new Date().toISOString().slice(0, 10), articles = [], opts = {}) {
+  const prepare = opts.prepare ?? (await ssrModule()).prepare;
+  const articleSources = opts.articleSources ?? articles.map((a) => ({ file: null, raw: JSON.stringify(a), article: a }));
+  const ledgerFile = opts.ledgerFile === undefined ? null : opts.ledgerFile;
+  const { prints, ledger } = await computeLedger({ plugins, articleSources, today, prepare, old: ledgerFile ? readLedger(ledgerFile) : opts.ledger ?? {}, dateOf: opts.dateOf });
+  if (ledgerFile) writeFileSync(ledgerFile, ledgerJson(ledger));
+
+  const render = await prepare({ generatedAt: opts.generatedAt ?? today, plugins, history: opts.history ?? {}, now: today });
   const template = readFileSync(join(distDir, "index.html"), "utf8");
-  const write = (path, html) => {
-    assertExternalLinks(html, path);
-    const file = path === "/" ? join(distDir, "index.html") : join(distDir, path, "index.html");
-    mkdirSync(dirname(file), { recursive: true });
-    writeFileSync(file, html);
+  const page = (meta, extra, file) => {
+    const html = applyTemplate(template, meta, extra, render(meta.path), today);
+    assertExternalLinks(html, meta.path);
+    const out = file ?? (meta.path === "/" ? join(distDir, "index.html") : join(distDir, meta.path, "index.html"));
+    mkdirSync(dirname(out), { recursive: true });
+    writeFileSync(out, html);
   };
   const entries = [];
+  const listed = (meta) => {
+    if (isIndexable(meta)) entries.push({ path: meta.path, lastmod: ledger[meta.path]?.lastmod ?? today });
+  };
+
   const websiteLd = ld({
     "@context": "https://schema.org",
     "@type": "WebSite",
@@ -196,41 +344,57 @@ export function build(distDir, plugins, today = new Date().toISOString().slice(0
   });
   const orgLd = ld({ "@context": "https://schema.org", "@type": "Organization", name: SITE_NAME, url: `${SITE}/`, logo: `${SITE}/brand/icon-512.png` });
   for (const meta of STATIC_PAGES) {
-    const extra = meta.path === "/" ? `${websiteLd}\n    ${orgLd}` : crumbs([["首页", "/"], [meta.h1, meta.path]]);
-    write(meta.path, applyTemplate(template, meta, extra, staticBody(meta, articles)));
-    entries.push({ path: meta.path, lastmod: today });
+    page(meta, meta.path === "/" ? `${websiteLd}\n    ${orgLd}` : crumbs([["首页", "/"], [meta.h1, meta.path]]));
+    listed(meta);
   }
   const dups = duplicateNames(plugins);
   for (const p of plugins) {
     const meta = pluginMeta(p, dups.has(p.name));
-    write(meta.path, applyTemplate(template, meta, pluginLd(p, meta), pluginBody(p, meta)));
-    entries.push({ path: meta.path, lastmod: p.updated || today });
+    page(meta, pluginLd(p, meta));
+    listed(meta);
   }
+  const categories = [];
   for (const key of CATEGORY_KEYS) {
     const meta = categoryMeta(key);
-    const list = plugins.filter((p) => p.category === key).sort((a, b) => b.stars - a.stars || a.name.localeCompare(b.name, "zh-Hans-CN"));
+    const list = categoryList(plugins, key);
     if (!meta || list.length === 0) continue;
-    write(meta.path, applyTemplate(template, meta, categoryLd(meta, list), categoryBody(meta, key, list)));
-    entries.push({ path: meta.path, lastmod: today });
+    page(meta, categoryLd(meta, list));
+    listed(meta);
+    categories.push({ meta, count: list.length });
+  }
+  for (const a of articles) {
+    const meta = { path: `/guides/${a.slug}`, title: `${a.title}｜${SITE_NAME}`, description: a.description, h1: a.title, kind: "guide" };
+    page(meta, articleLd(a, meta.path));
+    listed(meta);
   }
   // 404 页面:服务器对不存在的路径返回真正的 404 状态码并展示它;不进 sitemap,禁止收录
-  const nf = { path: "/404", title: `页面不存在｜${SITE_NAME}`, description: "你访问的页面不存在,可以回到首页、插件广场或教程继续浏览。", h1: "页面不存在", noindex: true };
-  writeFileSync(join(distDir, "404.html"), applyTemplate(template, nf, "", `<main class="container"><section class="section prerender"><h1 class="page-title">页面不存在</h1><p class="lead">${esc(nf.description)}</p><p><a href="/">回到首页</a> · <a href="/plugins">插件广场</a> · <a href="/guides">教程</a></p></section></main>`));
-  for (const a of articles) {
-    const path = `/guides/${a.slug}`;
-    const meta = { path, title: `${a.title}｜${SITE_NAME}`, description: a.description, h1: a.title };
-    write(path, applyTemplate(template, meta, articleLd(a, path), articleBody(a)));
-    entries.push({ path, lastmod: today });
-  }
+  page({ path: "/404", title: `页面不存在｜${SITE_NAME}`, description: "你访问的页面不存在,可以回到首页、插件广场或教程继续浏览。", h1: "页面不存在", kind: "notfound", indexable: false }, "", join(distDir, "404.html"));
+
+  // sitemap 顺序与台账一致;防止两边漏算同一页
+  const missing = entries.filter((e) => !prints.has(e.path)).map((e) => e.path);
+  if (missing.length) throw new Error(`内容指纹台账漏算了这些页面:${missing.join(", ")}`);
   writeFileSync(join(distDir, "sitemap.xml"), sitemapXml(entries));
   writeFileSync(join(distDir, "robots.txt"), robotsTxt());
+  writeFileSync(join(distDir, "llms.txt"), llmsTxt({ pages: STATIC_PAGES.filter(isIndexable), categories, articles }));
   return entries;
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const dist = resolve(process.argv[2] ?? join(root, "dist"));
+  const ledgerOnly = process.argv.includes("--ledger-only");
   const data = JSON.parse(readFileSync(join(root, "src/data/plugins.json"), "utf8"));
-  const articles = loadArticles(join(root, "src/content/guides"));
-  const entries = build(dist, data.plugins, undefined, articles);
-  console.log(`预渲染完成:${entries.length} 个页面(含 ${data.plugins.length} 个插件详情页、${articles.length} 篇教程),已生成 sitemap.xml 与 robots.txt`);
+  const historyFile = join(root, "src/data/history.json");
+  const history = existsSync(historyFile) ? JSON.parse(readFileSync(historyFile, "utf8")) : {};
+  const articleSources = loadArticleSources(join(root, "src/content/guides"));
+  const today = new Date().toISOString().slice(0, 10);
+  if (ledgerOnly) {
+    const { prepare } = await ssrModule();
+    const { ledger } = await computeLedger({ plugins: data.plugins, articleSources, today, prepare, old: readLedger(LEDGER_FILE) });
+    writeFileSync(LEDGER_FILE, ledgerJson(ledger));
+    console.log(`内容指纹台账已更新:${Object.keys(ledger).length} 个页面`);
+  } else {
+    const dist = resolve(process.argv.slice(2).find((a) => !a.startsWith("--")) ?? join(root, "dist"));
+    const articles = articleSources.map((s) => s.article);
+    const entries = await build(dist, data.plugins, today, articles, { generatedAt: data.generatedAt, history, articleSources, ledgerFile: LEDGER_FILE });
+    console.log(`预渲染完成:${entries.length} 个可收录页面(含 ${data.plugins.length} 个插件详情页、${articles.length} 篇教程),已生成 sitemap.xml、robots.txt、llms.txt 与 404.html`);
+  }
 }

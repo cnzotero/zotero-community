@@ -2,34 +2,36 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "../link.tsx";
 import { PageHero } from "../pageHero.tsx";
 import { downloadsPerDay } from "./charts-lib.ts";
-import { categoryPath, duplicateNames, pluginMeta } from "../seo/pages.ts";
+import { cachedPluginData, loadPluginData, type PluginData } from "./data.ts";
+import { applyMeta } from "../seo/head.ts";
+import { categoryPath, duplicateNames, pageMeta, pluginMeta } from "../seo/pages.ts";
+import { currentPath, currentSearch, useImageOk, useNow } from "../ssr.ts";
 import { DownloadIcon, ExternalIcon, GithubIcon, ShareIcon, StarIcon } from "../icons.tsx";
 import {
-  CATEGORIES, DEFAULT_FILTERS, ZOTERO_VERSIONS as ZV, ZOTERO_VERSIONS, applyFilters, authorOf, authorStats, barHeights, cadenceText,
+  CATEGORIES, DEFAULT_FILTERS, ZOTERO_VERSIONS as ZV, ZOTERO_VERSIONS, applyFilters, authorOf, authorStats, barHeights, byNameStable, cadenceText,
   cardTags, compatSummary, computeStats, downloadFilename, downloadHost, formatCount, formatStars, isAllowedXpiUrl, parseFilters, pickDownload,
   pluginIdFromPath, pluginPath, relatedPlugins, relativeTime, serializeFilters, speedText, topAuthors,
   type CategoryKey, type Filters, type Plugin, type SortKey, type UpdatedWithin,
 } from "./lib.ts";
-
-interface PluginData {
-  generatedAt: string;
-  plugins: Plugin[];
-}
 
 const PAGE = 24;
 const CATEGORY_LABEL = Object.fromEntries(CATEGORIES.map((c) => [c.key, c.label])) as Record<CategoryKey, string>;
 
 type Loaded = { state: "loading" } | { state: "error" } | { state: "ready"; data: PluginData };
 
-/** 插件数据较大,只在进入插件广场时才加载。 */
+/** 插件数据较大,只在用到的页面才加载;已加载(或预渲染时已注入)就直接可用。 */
 export function usePluginData(): Loaded & { retry: () => void } {
-  const [s, setS] = useState<Loaded>({ state: "loading" });
+  const [s, setS] = useState<Loaded>(() => {
+    const d = cachedPluginData();
+    return d ? { state: "ready", data: d } : { state: "loading" };
+  });
   const [tick, setTick] = useState(0);
   useEffect(() => {
+    if (cachedPluginData()) return;
     let alive = true;
     setS({ state: "loading" });
-    import("../data/plugins.json")
-      .then((m) => alive && setS({ state: "ready", data: (m.default ?? m) as unknown as PluginData }))
+    loadPluginData()
+      .then((data) => alive && setS({ state: "ready", data }))
       .catch(() => alive && setS({ state: "error" }));
     return () => {
       alive = false;
@@ -39,7 +41,7 @@ export function usePluginData(): Loaded & { retry: () => void } {
 }
 
 function usePopstateKey(): string {
-  const [k, setK] = useState(() => location.pathname + location.search);
+  const [k, setK] = useState(() => currentPath() + currentSearch());
   useEffect(() => {
     const on = () => setK(location.pathname + location.search);
     window.addEventListener("popstate", on);
@@ -49,21 +51,22 @@ function usePopstateKey(): string {
 }
 
 const IMG = "/images/plugins/";
+const EMPTY_ART = { w: 960, h: 640 };
 
 /** 图片还没上线或加载失败时整体隐藏,不留破图。 */
 function SafeImg({ src, className, alt = "" }: { src: string; className?: string; alt?: string }) {
-  const [ok, setOk] = useState(true);
+  const [ok, ref, fail] = useImageOk();
   if (!ok) return null;
-  return <img src={src} className={className} alt={alt} loading="lazy" decoding="async" onError={() => setOk(false)} />;
+  return <img ref={ref} src={src} className={className} alt={alt} width={18} height={18} loading="lazy" decoding="async" onError={fail} />;
 }
 
 function EmptyArt() {
-  const [ok, setOk] = useState(true);
+  const [ok, ref, fail] = useImageOk();
   if (!ok) return null;
   return (
     <picture className="empty-art" aria-hidden>
-      <source media="(prefers-color-scheme: dark)" srcSet={`${IMG}empty-dark.png`} />
-      <img src={`${IMG}empty-light.png`} alt="" decoding="async" onError={() => setOk(false)} />
+      <source media="(prefers-color-scheme: dark)" srcSet={`${IMG}empty-dark.webp`} />
+      <img ref={ref} src={`${IMG}empty-light.webp`} alt="" width={EMPTY_ART.w} height={EMPTY_ART.h} decoding="async" onError={fail} />
     </picture>
   );
 }
@@ -71,19 +74,20 @@ function EmptyArt() {
 /** 作者头像:来自 GitHub 公开头像地址;加载失败(例如网络无法访问)时退回首字母方块。 */
 function Avatar({ p, big = false }: { p: Plugin; big?: boolean }) {
   const ch = (p.name.match(/[A-Za-z0-9\u4e00-\u9fa5]/)?.[0] ?? "插").toUpperCase();
-  const [ok, setOk] = useState(true);
+  const [ok, ref, fail] = useImageOk();
   const owner = authorOf(p.id);
   return (
     <span className={big ? "avatar avatar-lg" : "avatar"} aria-hidden>
       {ch}
       {ok && owner && (
         <img
+          ref={ref}
           src={`https://avatars.githubusercontent.com/${encodeURIComponent(owner)}?s=${big ? 160 : 96}&v=4`}
           alt=""
           loading="lazy"
           decoding="async"
           referrerPolicy="no-referrer"
-          onError={() => setOk(false)}
+          onError={fail}
         />
       )}
     </span>
@@ -244,6 +248,17 @@ function AuthorStrip({ author, all, onClear }: { author: string; all: Plugin[]; 
   );
 }
 
+/** 按名称列出全部插件的链接(收起显示),方便按名字查找,也让每个详情页都能从列表页直接到达。 */
+export function PluginIndex({ list, label }: { list: Plugin[]; label: string }) {
+  if (list.length === 0) return null;
+  return (
+    <details className="plugin-index">
+      <summary>{label}</summary>
+      <ul>{byNameStable(list).map((p) => <li key={p.id}><Link to={pluginPath(p.id)}>{p.name}</Link></li>)}</ul>
+    </details>
+  );
+}
+
 function DataNote() {
   return <p className="data-note">数据整理自各项目公开信息,收录不代表对其安全性或质量的背书。</p>;
 }
@@ -251,10 +266,10 @@ function DataNote() {
 export function PluginsList() {
   const loaded = usePluginData();
   const key = usePopstateKey();
-  const [f, setF] = useState<Filters>(() => parseFilters(location.search));
+  const [f, setF] = useState<Filters>(() => parseFilters(currentSearch()));
   const [shown, setShown] = useState(PAGE);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const now = useMemo(() => new Date(), []);
+  const now = useNow();
 
   // 浏览器前进/后退时,按网址重新读取筛选条件
   useEffect(() => {
@@ -278,7 +293,7 @@ export function PluginsList() {
 
   return (
     <section className="section">
-      <PageHero kind="hero" title="插件广场" lead="收录常用的 Zotero 插件,按公开数据整理,点击查看详情。">
+      <PageHero kind="hero" title={pageMeta("/plugins").h1} lead="收录常用的 Zotero 插件,按公开数据整理,点击查看详情。">
         <Link to="/plugins/charts" className="inline-link hero-link">数据看板</Link>
         <span className="hero-sep"> · </span>
         <Link to="/rules" className="inline-link hero-link">收录规则</Link>
@@ -332,6 +347,7 @@ export function PluginsList() {
           )}
         </>
       )}
+      {loaded.state === "ready" && <PluginIndex list={all} label={`按名称浏览全部 ${all.length} 款插件`} />}
       <DataNote />
     </section>
   );
@@ -414,8 +430,8 @@ function DownloadBox({ p }: { p: Plugin }) {
 export function PluginDetail() {
   const loaded = usePluginData();
   const key = usePopstateKey();
-  const id = useMemo(() => pluginIdFromPath(location.pathname), [key]);
-  const now = useMemo(() => new Date(), []);
+  const id = useMemo(() => pluginIdFromPath(currentPath()), [key]);
+  const now = useNow();
   const all = loaded.state === "ready" ? loaded.data.plugins : [];
   const p = useMemo(() => (id ? all.find((x) => x.id === id) ?? null : null), [all, id]);
   const related = useMemo(() => (p ? relatedPlugins(all, p) : []), [all, p]);
@@ -423,15 +439,22 @@ export function PluginDetail() {
 
   useEffect(() => {
     if (!p) { document.title = "插件广场 · Zotero 中文社区"; return; }
-    const meta = pluginMeta(p, duplicateNames(all).has(p.name));
-    document.title = meta.title;
-    document.querySelector('meta[name="description"]')?.setAttribute("content", meta.description);
-    document.querySelector('link[rel="canonical"]')?.setAttribute("href", `https://zoterocn.org${meta.path}`);
+    applyMeta(pluginMeta(p, duplicateNames(all).has(p.name)));
   }, [p, all]);
 
   return (
     <section className="section">
-      <Link to="/plugins" className="more">← 返回插件广场</Link>
+      {p ? (
+        <nav aria-label="面包屑" className="crumbs">
+          <Link to="/">首页</Link>
+          <span aria-hidden> › </span>
+          <Link to={categoryPath(p.category)}>{CATEGORY_LABEL[p.category]}类插件</Link>
+          <span aria-hidden> › </span>
+          <span aria-current="page">{p.name}</span>
+        </nav>
+      ) : (
+        <Link to="/plugins" className="more">← 返回插件广场</Link>
+      )}
       {loaded.state === "loading" && <p className="empty" role="status">正在加载…</p>}
       {loaded.state === "error" && (
         <div className="empty" role="alert">加载失败。<button className="linklike" onClick={loaded.retry}>重试</button></div>

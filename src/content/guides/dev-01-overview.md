@@ -3,6 +3,8 @@ title: "Zotero 插件开发入门：先理解结构与开发环境"
 description: "理解 Zotero 7 起的插件结构、当前模板的版本要求，以及独立开发环境的准备。"
 slug: "dev-01-overview"
 order: 1
+published: "2026-11-10"
+updated: "2026-11-10"
 sources:
   - "https://www.zotero.org/support/dev/zotero_7_for_developers"
   - "https://www.zotero.org/support/dev/zotero_8_for_developers"

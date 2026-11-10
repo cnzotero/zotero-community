@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "../link.tsx";
 import { PageHero } from "../pageHero.tsx";
+import { pageMeta } from "../seo/pages.ts";
+import { currentSearch } from "../ssr.ts";
 import {
   casLabel, chineseLabel, formatIssn, hasAnyData, metric, queryOk, summaryBadges, versionLabel,
   type JournalRecord, type SearchResponse,
@@ -57,7 +59,7 @@ function Detail({ r, version }: { r: JournalRecord; version: string }) {
 }
 
 export function JournalsPage() {
-  const initial = new URLSearchParams(location.search);
+  const initial = new URLSearchParams(currentSearch());
   const [q, setQ] = useState(initial.get("q") ?? "");
   const [sel, setSel] = useState<string | null>(initial.get("k"));
   const [state, setState] = useState<State>({ s: "idle" });
@@ -97,7 +99,7 @@ export function JournalsPage() {
 
   return (
     <section className="section">
-      <PageHero kind="hero-journals" title="期刊查询" lead="输入期刊名称、缩写或 ISSN,一页看清它的收录、分区与影响力。">
+      <PageHero kind="hero-journals" title={pageMeta("/journals").h1} lead="输入期刊名称、缩写或 ISSN,一页看清它的收录、分区与影响力。">
         <Link to="/rules" className="inline-link hero-link">数据与使用规则</Link>
       </PageHero>
       <input

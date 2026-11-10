@@ -1,26 +1,25 @@
 import { useEffect, useMemo } from "react";
 import { Link } from "../link.tsx";
 import { PageHero } from "../pageHero.tsx";
-import { PluginCard, usePluginData } from "./PluginsPage.tsx";
+import { PluginCard, PluginIndex, usePluginData } from "./PluginsPage.tsx";
 import { CATEGORIES, sortPlugins } from "./lib.ts";
-import { categoryIntro, categoryMeta, categoryPath } from "../seo/pages.ts";
+import { applyMeta } from "../seo/head.ts";
+import { categoryIntro, categoryMeta } from "../seo/pages.ts";
+import { currentPath, useNow } from "../ssr.ts";
 
 const SHOWN = 24;
 
 export function CategoryPage() {
-  const key = /^\/categories\/([a-z]+)/.exec(location.pathname)?.[1] ?? "";
+  const key = /^\/categories\/([a-z]+)/.exec(currentPath())?.[1] ?? "";
   const meta = categoryMeta(key);
   const cat = CATEGORIES.find((c) => c.key === key);
   const loaded = usePluginData();
-  const now = useMemo(() => new Date(), []);
+  const now = useNow();
   const all = loaded.state === "ready" ? loaded.data.plugins : [];
   const list = useMemo(() => sortPlugins(all.filter((p) => p.category === key), "stars"), [all, key]);
 
   useEffect(() => {
-    if (!meta) return;
-    document.title = meta.title;
-    document.querySelector('meta[name="description"]')?.setAttribute("content", meta.description);
-    document.querySelector('link[rel="canonical"]')?.setAttribute("href", `https://zoterocn.org${categoryPath(key)}`);
+    if (meta) applyMeta(meta);
   }, [meta, key]);
 
   if (!meta || !cat) return null;
@@ -38,6 +37,7 @@ export function CategoryPage() {
           {list.length > SHOWN && (
             <p className="more-wrap"><Link to={`/plugins?cat=${key}`} className="btn btn-ghost">查看全部 {list.length} 款并筛选</Link></p>
           )}
+          <PluginIndex list={list.slice(SHOWN)} label={`按名称浏览本分类其余 ${list.length - SHOWN} 款插件`} />
           <p className="data-note">分类仅按主要用途归类,一个插件只归一个主分类。数据整理自各项目公开信息,收录不代表安全性或质量背书,详见<Link to="/rules" className="inline-link">收录规则</Link>。</p>
         </>
       )}

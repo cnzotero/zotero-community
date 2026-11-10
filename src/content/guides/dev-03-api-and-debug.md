@@ -3,6 +3,8 @@ title: "Zotero 插件 API 与调试：从只读到可控修改"
 description: "学习读取条目、安排写入、监听事件、添加界面与偏好设置，并建立调试步骤。"
 slug: "dev-03-api-and-debug"
 order: 3
+published: "2026-11-10"
+updated: "2026-11-10"
 sources:
   - "https://www.zotero.org/support/dev/client_coding/javascript_api"
   - "https://github.com/zotero/zotero/blob/main/chrome/content/zotero/xpcom/notifier.js"

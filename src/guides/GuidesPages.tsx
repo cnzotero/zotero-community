@@ -1,5 +1,10 @@
-import { Fragment, useEffect } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
+import { GUIDES, type GuideEntry } from "../content.ts";
 import { Link } from "../link.tsx";
+import { filterGuides } from "../search.ts";
+import { applyMeta } from "../seo/head.ts";
+import { SITE_NAME, pageMeta } from "../seo/pages.ts";
+import { currentPath } from "../ssr.ts";
 import { ARTICLES, articleBySlug, articlePath, articleSlugFromPath } from "./content.ts";
 import { wordCount, type Block, type Inline } from "./markdown.ts";
 
@@ -55,14 +60,12 @@ export function GuideSeries() {
 }
 
 export function GuideArticle() {
-  const slug = articleSlugFromPath(location.pathname);
+  const slug = articleSlugFromPath(currentPath());
   const a = slug ? articleBySlug(slug) : undefined;
   const i = a ? ARTICLES.findIndex((x) => x.slug === a.slug) : -1;
   useEffect(() => {
     if (!a) return;
-    document.title = `${a.title}｜Zotero 中文社区`;
-    document.querySelector('meta[name="description"]')?.setAttribute("content", a.description);
-    document.querySelector('link[rel="canonical"]')?.setAttribute("href", `https://zoterocn.org${articlePath(a.slug)}`);
+    applyMeta({ path: articlePath(a.slug), title: `${a.title}｜${SITE_NAME}`, description: a.description, h1: a.title, kind: "guide" });
   }, [a]);
   if (!a) {
     return (
@@ -79,6 +82,13 @@ export function GuideArticle() {
       <Link to="/guides" className="more">← 返回教程</Link>
       <h1 className="page-title">{a.title}</h1>
       <p className="meta">插件开发系列 第 {a.order} 篇 / 共 {ARTICLES.length} 篇 · 约 {Math.max(1, Math.round(wordCount(a.blocks) / 400))} 分钟读完</p>
+      {(a.published || a.updated) && (
+        <p className="meta">
+          {a.published && <>发布于 <time dateTime={a.published}>{a.published}</time></>}
+          {a.published && a.updated && " · "}
+          {a.updated && <>更新于 <time dateTime={a.updated}>{a.updated}</time></>}
+        </p>
+      )}
       {a.blocks.map((b, k) => <BlockView key={k} b={b} />)}
       <section className="sources" aria-labelledby="src-title">
         <h2 id="src-title">参考来源</h2>
@@ -90,5 +100,58 @@ export function GuideArticle() {
         {next ? <Link to={articlePath(next.slug)} className="btn btn-ghost btn-sm">{next.title} →</Link> : <span />}
       </nav>
     </article>
+  );
+}
+
+function SearchBox({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) {
+  return (
+    <input
+      className="search"
+      type="search"
+      value={value}
+      placeholder={placeholder}
+      aria-label={placeholder}
+      onChange={(e) => onChange(e.target.value)}
+    />
+  );
+}
+
+function GuideCard({ g }: { g: GuideEntry }) {
+  return (
+    <a className="card" href={g.href} target="_blank" rel="noopener noreferrer">
+      <div className="card-tags">
+        <span className="tag">{g.topic}</span>
+        <span className="tag tag-soft">{g.level}</span>
+      </div>
+      <h3>{g.title}</h3>
+      <p>{g.summary}</p>
+    </a>
+  );
+}
+
+function Empty({ text }: { text: string }) {
+  return <p className="empty">{text}</p>;
+}
+
+/** 教程栏目页:插件开发系列 + 更多使用教程(外链到官方文档)。 */
+export function Guides() {
+  const [q, setQ] = useState("");
+  const [topic, setTopic] = useState<GuideEntry["topic"] | "all">("all");
+  const topics = useMemo(() => Array.from(new Set(GUIDES.map((g) => g.topic))), []);
+  const list = filterGuides(GUIDES, { query: q, topic });
+  return (
+    <section className="section">
+      <h1 className="page-title">{pageMeta("/guides").h1}</h1>
+      <GuideSeries />
+      <h2 className="more-guides">更多使用教程</h2>
+      <SearchBox value={q} onChange={setQ} placeholder="搜索教程" />
+      <div className="chips" role="group" aria-label="主题">
+        <button className={topic === "all" ? "chip on" : "chip"} onClick={() => setTopic("all")}>全部</button>
+        {topics.map((t) => (
+          <button key={t} className={topic === t ? "chip on" : "chip"} onClick={() => setTopic(t)}>{t}</button>
+        ))}
+      </div>
+      {list.length === 0 ? <Empty text="没有符合条件的教程。" /> : <div className="grid">{list.map((g) => <GuideCard key={g.id} g={g} />)}</div>}
+    </section>
   );
 }

@@ -1,24 +1,25 @@
-import { useEffect, useMemo, useState } from "react";
-import {
-  FORUM_STATE,
-  GUIDES,
-  PLUGINS,
-  PLUGIN_CATEGORIES,
-  type GuideEntry,
-  type PluginCategory,
-} from "./content.ts";
+import { Suspense, useEffect, useState, type ComponentType } from "react";
+import { FORUM_STATE } from "./content.ts";
 import { Link } from "./link.tsx";
 import { GithubIcon } from "./icons.tsx";
-import { PluginDetail, PluginsList } from "./plugins/PluginsPage.tsx";
-import { GuideArticle, GuideSeries } from "./guides/GuidesPages.tsx";
-import { Home } from "./pages/Home.tsx";
-import { CategoryPage } from "./plugins/CategoryPage.tsx";
-import { ChartsPage } from "./plugins/ChartsPage.tsx";
-import { JournalsPage } from "./journals/JournalsPage.tsx";
-import { About, Rules, Submission } from "./pages/StaticPages.tsx";
+import { lazyRoute } from "./lazy.ts";
+import { loadHistory, loadPluginData } from "./plugins/data.ts";
 import { ROUTES, useRoute, type Route } from "./router.ts";
-import { STATIC_PAGES } from "./seo/pages.ts";
-import { filterGuides, filterPlugins, searchAll } from "./search.ts";
+import { applyMeta } from "./seo/head.ts";
+import { pageMeta } from "./seo/pages.ts";
+
+// 路由组件按需加载:每个页面只下载自己用到的代码。
+const Home = lazyRoute(() => import("./pages/Home.tsx").then((m) => m.Home));
+const PluginsList = lazyRoute(() => import("./plugins/PluginsPage.tsx").then((m) => m.PluginsList));
+const PluginDetail = lazyRoute(() => import("./plugins/PluginsPage.tsx").then((m) => m.PluginDetail));
+const CategoryPage = lazyRoute(() => import("./plugins/CategoryPage.tsx").then((m) => m.CategoryPage));
+const ChartsPage = lazyRoute(() => import("./plugins/ChartsPage.tsx").then((m) => m.ChartsPage));
+const JournalsPage = lazyRoute(() => import("./journals/JournalsPage.tsx").then((m) => m.JournalsPage));
+const Guides = lazyRoute(() => import("./guides/GuidesPages.tsx").then((m) => m.Guides));
+const GuideArticle = lazyRoute(() => import("./guides/GuidesPages.tsx").then((m) => m.GuideArticle));
+const Rules = lazyRoute(() => import("./pages/StaticPages.tsx").then((m) => m.Rules));
+const About = lazyRoute(() => import("./pages/StaticPages.tsx").then((m) => m.About));
+const Submission = lazyRoute(() => import("./pages/StaticPages.tsx").then((m) => m.Submission));
 
 const SKINS = [
   { key: "indigo", label: "靛蓝", color: "#3451b2" },
@@ -26,7 +27,11 @@ const SKINS = [
 ] as const;
 
 function SkinSwitch() {
-  const [skin, setSkin] = useState<string>(() => (document.documentElement.dataset.skin === "red" ? "red" : "indigo"));
+  // 先按默认配色渲染(与静态页面一致),挂载后再读取已保存的选择
+  const [skin, setSkin] = useState<string>("indigo");
+  useEffect(() => {
+    if (document.documentElement.dataset.skin === "red") setSkin("red");
+  }, []);
   const pick = (k: string) => {
     setSkin(k);
     if (k === "indigo") delete document.documentElement.dataset.skin;
@@ -69,62 +74,10 @@ function Header({ route }: { route: Route }) {
   );
 }
 
-function SearchBox({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) {
-  return (
-    <input
-      className="search"
-      type="search"
-      value={value}
-      placeholder={placeholder}
-      aria-label={placeholder}
-      onChange={(e) => onChange(e.target.value)}
-    />
-  );
-}
-
-function GuideCard({ g }: { g: GuideEntry }) {
-  return (
-    <a className="card" href={g.href} target="_blank" rel="noopener noreferrer">
-      <div className="card-tags">
-        <span className="tag">{g.topic}</span>
-        <span className="tag tag-soft">{g.level}</span>
-      </div>
-      <h3>{g.title}</h3>
-      <p>{g.summary}</p>
-    </a>
-  );
-}
-
-function Empty({ text }: { text: string }) {
-  return <p className="empty">{text}</p>;
-}
-
-function Guides() {
-  const [q, setQ] = useState("");
-  const [topic, setTopic] = useState<GuideEntry["topic"] | "all">("all");
-  const topics = useMemo(() => Array.from(new Set(GUIDES.map((g) => g.topic))), []);
-  const list = filterGuides(GUIDES, { query: q, topic });
-  return (
-    <section className="section">
-      <h1 className="page-title">教程</h1>
-      <GuideSeries />
-      <h2 className="more-guides">更多使用教程</h2>
-      <SearchBox value={q} onChange={setQ} placeholder="搜索教程" />
-      <div className="chips" role="group" aria-label="主题">
-        <button className={topic === "all" ? "chip on" : "chip"} onClick={() => setTopic("all")}>全部</button>
-        {topics.map((t) => (
-          <button key={t} className={topic === t ? "chip on" : "chip"} onClick={() => setTopic(t)}>{t}</button>
-        ))}
-      </div>
-      {list.length === 0 ? <Empty text="没有符合条件的教程。" /> : <div className="grid">{list.map((g) => <GuideCard key={g.id} g={g} />)}</div>}
-    </section>
-  );
-}
-
 function Styles() {
   return (
     <section className="section">
-      <h1 className="page-title">引用样式</h1>
+      <h1 className="page-title">{pageMeta("/styles").h1}</h1>
       <p className="lead">常用期刊与学位论文的引用格式整理。</p>
       <div className="notice">样式库正在整理中,会按学科与期刊分类上线,届时可直接下载使用。</div>
     </section>
@@ -148,42 +101,57 @@ function NotFound() {
 function Forum() {
   return (
     <section className="section">
-      <h1 className="page-title">问答讨论</h1>
+      <h1 className="page-title">{pageMeta("/forum").h1}</h1>
       <div className="notice">{FORUM_STATE.note}</div>
     </section>
   );
 }
 
+const VIEWS: Record<Route, ComponentType & { preload?: () => Promise<void> }> = {
+  home: Home,
+  guides: Guides,
+  plugins: PluginsList,
+  plugin: PluginDetail,
+  styles: Styles,
+  forum: Forum,
+  journals: JournalsPage,
+  charts: ChartsPage,
+  guide: GuideArticle,
+  category: CategoryPage,
+  notfound: NotFound,
+  submission: Submission,
+  rules: Rules,
+  about: About,
+};
+
+const NEEDS_PLUGIN_DATA = new Set<Route>(["plugins", "plugin", "category", "charts"]);
+
+/** 预先加载某个页面需要的代码与数据(浏览器接管静态页面前调用,避免出现「加载中」)。 */
+export function preloadRoute(route: Route): Promise<unknown> {
+  return Promise.all([
+    VIEWS[route].preload?.(),
+    NEEDS_PLUGIN_DATA.has(route) ? loadPluginData() : null,
+    route === "charts" ? loadHistory() : null,
+  ]);
+}
+
+/** 预渲染用:一次加载全部页面组件。 */
+export const preloadAllRoutes = (): Promise<unknown> => Promise.all(Object.values(VIEWS).map((v) => v.preload?.()));
+
 export function App() {
   const route = useRoute();
   useEffect(() => {
     if (route === "plugin" || route === "guide" || route === "category" || route === "notfound") return; // 详情类页面自己设置标题
-    const path = ROUTES.find((r) => r.route === route)?.path ?? "/";
-    const meta = STATIC_PAGES.find((m) => m.path === path);
-    document.title = meta?.title ?? "Zotero 中文社区";
-    const desc = document.querySelector('meta[name="description"]');
-    if (desc && meta) desc.setAttribute("content", meta.description);
-    const canon = document.querySelector('link[rel="canonical"]');
-    if (canon) canon.setAttribute("href", `https://zoterocn.org${path === "/" ? "/" : path}`);
+    applyMeta(pageMeta(ROUTES.find((r) => r.route === route)?.path ?? "/"));
   }, [route]);
+  const View = VIEWS[route];
   return (
     <>
       <Header route={route} />
       <main className="container">
-        {route === "home" && <Home />}
-        {route === "guides" && <Guides />}
-        {route === "plugins" && <PluginsList />}
-        {route === "plugin" && <PluginDetail />}
-        {route === "styles" && <Styles />}
-        {route === "forum" && <Forum />}
-        {route === "journals" && <JournalsPage />}
-        {route === "charts" && <ChartsPage />}
-        {route === "guide" && <GuideArticle />}
-        {route === "category" && <CategoryPage />}
-        {route === "notfound" && <NotFound />}
-        {route === "submission" && <Submission />}
-        {route === "rules" && <Rules />}
-        {route === "about" && <About />}
+        <Suspense fallback={<p className="empty" role="status">正在加载…</p>}>
+          <View />
+        </Suspense>
       </main>
       <footer className="footer">
         <div className="container">

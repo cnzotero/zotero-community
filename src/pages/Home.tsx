@@ -1,12 +1,16 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
+import boardsData from "virtual:home-boards";
 import { Link } from "../link.tsx";
 import { navigate } from "../router.ts";
 import { ARTICLES, articlePath } from "../guides/content.ts";
-import { PluginCard, usePluginData } from "../plugins/PluginsPage.tsx";
-import { sortPlugins, type SortKey } from "../plugins/lib.ts";
+import { serverHomeBoards } from "../plugins/data.ts";
+import { PluginCard } from "../plugins/PluginsPage.tsx";
+import { CATEGORIES, type HomeBoardKey } from "../plugins/lib.ts";
+import { categoryPath, pageMeta } from "../seo/pages.ts";
+import { useNow } from "../ssr.ts";
 
 /** 首页榜单:全部复用插件广场的同一套排序,不另设算法,说明文字与规则页第 4 条一致。 */
-const BOARDS: { key: SortKey; label: string; note: string }[] = [
+const BOARDS: { key: HomeBoardKey; label: string; note: string }[] = [
   { key: "stars", label: "星标最多", note: "按 GitHub 星标排序,与插件广场使用同一套规则,没有置顶或推荐位。" },
   { key: "cadence", label: "更新最勤", note: "按近一年有发布的天数排序,同一天发布多次只算一天;与插件广场「更新频率」同一套规则。" },
   { key: "downloads", label: "下载最多", note: "按发布页公开的安装包累计下载量排序;没有公开下载数据的插件不参与。" },
@@ -20,14 +24,10 @@ const TOOLS = [
 
 export function Home() {
   const [q, setQ] = useState("");
-  const loaded = usePluginData();
-  const now = useMemo(() => new Date(), []);
-  const [board, setBoard] = useState<SortKey>("stars");
-  const top = useMemo(() => {
-    if (loaded.state !== "ready") return [];
-    const pool = board === "downloads" ? loaded.data.plugins.filter((p) => p.dl?.total != null) : loaded.data.plugins;
-    return sortPlugins(pool, board).slice(0, 6);
-  }, [loaded, board]);
+  const now = useNow();
+  const [board, setBoard] = useState<HomeBoardKey>("stars");
+  // 榜单数据构建时已按同一套排序算好(预渲染时用注入的数据),首页不加载整份插件数据
+  const top = (serverHomeBoards() ?? boardsData)[board];
   const boardNote = BOARDS.find((b) => b.key === board)?.note ?? "";
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -36,7 +36,7 @@ export function Home() {
   return (
     <>
       <section className="hero">
-        <h1>让 Zotero 更顺手,让研究更有条理</h1>
+        <h1>{pageMeta("/").h1}</h1>
         <p>查找适合自己的插件,核对 Zotero 版本与更新记录;阅读中文教程,查询期刊与引用样式,按研究需要选择工具。</p>
         <form onSubmit={submit} role="search" className="hero-search">
           <input className="search" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="搜索插件,例如:翻译、Word、标签" aria-label="搜索插件" />
@@ -58,9 +58,17 @@ export function Home() {
           ))}
         </div>
         <p className="meta home-note">{boardNote}</p>
-        {loaded.state === "loading" && <p className="empty" role="status">正在加载…</p>}
-        {loaded.state === "error" && <div className="empty" role="alert">加载失败。<button className="linklike" onClick={loaded.retry}>重试</button></div>}
-        {loaded.state === "ready" && <div className="grid plugin-grid">{top.map((p) => <PluginCard key={p.id} p={p} now={now} zv={null} />)}</div>}
+        <div className="grid plugin-grid">{top.map((p) => <PluginCard key={p.id} p={p} now={now} zv={null} />)}</div>
+      </section>
+
+      <section className="section">
+        <div className="section-head">
+          <h2>按用途找插件</h2>
+          <Link to="/plugins" className="more">插件广场</Link>
+        </div>
+        <nav className="chips" aria-label="插件分类">
+          {CATEGORIES.map((c) => <Link key={c.key} to={categoryPath(c.key)} className="chip">{c.label}</Link>)}
+        </nav>
       </section>
 
       <section className="section">

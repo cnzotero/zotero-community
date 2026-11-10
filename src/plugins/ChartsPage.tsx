@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "../link.tsx";
 import { PageHero } from "../pageHero.tsx";
+import { cachedHistory, loadHistory } from "./data.ts";
 import { usePluginData } from "./PluginsPage.tsx";
+import { pageMeta } from "../seo/pages.ts";
+import { useNow } from "../ssr.ts";
 import { authorTotals, categoryCounts, compatCounts, downloadsPerDay, historyDays, kpis, monthlyTotals, topBy, trending, type History, type RankItem } from "./charts-lib.ts";
 import { formatStars, pluginPath, type Plugin } from "./lib.ts";
 
@@ -116,10 +119,11 @@ function AreaChart({ values, labels }: { values: number[]; labels: string[] }) {
 }
 
 function useHistory(): History {
-  const [h, setH] = useState<History>({});
+  const [h, setH] = useState<History>(() => cachedHistory() ?? {});
   useEffect(() => {
+    if (cachedHistory()) return;
     let alive = true;
-    import("../data/history.json").then((m) => alive && setH((m.default ?? m) as unknown as History)).catch(() => {});
+    loadHistory().then((d) => alive && setH(d)).catch(() => {});
     return () => { alive = false; };
   }, []);
   return h;
@@ -131,7 +135,7 @@ const compact = (n: number) => (n >= 100_000_000 ? `${(n / 100_000_000).toFixed(
 export function ChartsPage() {
   const loaded = usePluginData();
   const history = useHistory();
-  const now = useMemo(() => new Date(), []);
+  const now = useNow();
   const list: Plugin[] = loaded.state === "ready" ? loaded.data.plugins : [];
   const k = useMemo(() => kpis(list, now), [list, now]);
   const hDays = useMemo(() => historyDays(history), [history]);
@@ -151,7 +155,7 @@ export function ChartsPage() {
 
   return (
     <section className="section charts">
-      <PageHero kind="hero" title="插件数据看板" lead="星标、下载、更新节奏、适配版本的公开数据榜单,每天自动更新。">
+      <PageHero kind="hero" title={pageMeta("/plugins/charts").h1} lead="星标、下载、更新节奏、适配版本的公开数据榜单,每天自动更新。">
         <Link to="/plugins" className="inline-link hero-link">← 返回插件广场</Link>
       </PageHero>
       {loaded.state === "loading" && <p className="empty" role="status">正在加载数据…</p>}

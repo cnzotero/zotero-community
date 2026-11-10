@@ -390,3 +390,21 @@ export function pluginIdFromPath(pathname: string): string | null {
 export function relatedPlugins(list: Plugin[], p: Plugin, n = 4): Plugin[] {
   return sortPlugins(list.filter((x) => x.category === p.category && x.id !== p.id), "stars").slice(0, n);
 }
+
+/** 首页三个榜单(与插件广场同一套排序,不另设算法);构建期算好,首页不必加载整份插件数据。 */
+export type HomeBoardKey = "stars" | "cadence" | "downloads";
+export type HomeBoards = Record<HomeBoardKey, Plugin[]>;
+
+export function homeBoards(list: Plugin[], n = 6): HomeBoards {
+  return {
+    stars: sortPlugins(list, "stars").slice(0, n),
+    cadence: sortPlugins(list, "cadence").slice(0, n),
+    downloads: sortPlugins(list.filter((p) => p.dl?.total != null), "downloads").slice(0, n),
+  };
+}
+
+/** 按名称排列的全部插件(只比较字符编码,保证构建时与浏览器里顺序完全一致)。 */
+export function byNameStable(list: Plugin[]): Plugin[] {
+  const key = (p: Plugin) => p.name.toLowerCase();
+  return [...list].sort((a, b) => (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+}

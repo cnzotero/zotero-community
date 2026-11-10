@@ -8,6 +8,10 @@ export interface Frontmatter {
   slug: string;
   order: number;
   sources: string[];
+  /** 首次发布日期 YYYY-MM-DD(可选,没有就不显示、不写进结构化数据) */
+  published?: string;
+  /** 最近一次内容更新日期 YYYY-MM-DD(可选) */
+  updated?: string;
 }
 
 export type Inline =
@@ -31,7 +35,9 @@ export interface Article extends Frontmatter {
 
 const unquote = (s: string) => s.trim().replace(/^"(.*)"$/s, "$1").replace(/^'(.*)'$/s, "$1");
 
-/** 解析文件头的简单 YAML:title / description / slug / order / sources(列表)。 */
+const DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+/** 解析文件头的简单 YAML:title / description / slug / order / published / updated / sources(列表)。 */
 export function parseFrontmatter(src: string): { meta: Frontmatter; body: string } {
   const m = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/.exec(src);
   if (!m) throw new Error("缺少文件头");
@@ -49,6 +55,11 @@ export function parseFrontmatter(src: string): { meta: Frontmatter; body: string
     else if (k === "description") meta.description = unquote(v);
     else if (k === "slug") meta.slug = unquote(v);
     else if (k === "order") meta.order = Number(v) || 0;
+    else if (k === "published" || k === "updated") {
+      const d = unquote(v);
+      if (!DATE.test(d)) throw new Error(`${k} 日期格式应为 YYYY-MM-DD: ${d}`);
+      meta[k] = d;
+    }
   }
   if (!meta.title || !meta.slug) throw new Error("文件头缺少 title 或 slug");
   if (!/^[a-z0-9][a-z0-9-]*$/.test(meta.slug)) throw new Error(`slug 不合法: ${meta.slug}`);
