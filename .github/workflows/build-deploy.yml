@@ -70,3 +70,7 @@ jobs:
           git add -A
           git commit -q -m "构建 ${GITHUB_SHA::7}"
           git push -q -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git" deploy
+
+      # 把今天内容有变化的页面地址通知搜索引擎(IndexNow);失败不影响发布结果
+      - name: 通知搜索引擎
+        run: node scripts/indexnow.mjs
