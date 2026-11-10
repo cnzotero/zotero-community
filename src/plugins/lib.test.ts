@@ -205,4 +205,8 @@ test("更新速度:次数文案、平均间隔文案、柱高与按更新频率�
   const b = mk({ id: "b/b", stars: 99, cadence: { r12: 3, monthly: [], medianDays: 1, last: "" } });
   const n = mk({ id: "c/c", stars: 500 });
   assert.deepEqual(sortPlugins([n, b, a], "cadence").map((p) => p.id), ["a/a", "b/b", "c/c"]);
+  // 更新频率按「有发布的天数」排:发布次数再多,天数少也排后面(防止靠大量预发布版本刷次数)
+  const many = mk({ id: "m/m", stars: 1, cadence: { r12: 2000, days12: 20, monthly: [], medianDays: 1, last: "" } });
+  const steady = mk({ id: "s/s", stars: 1, cadence: { r12: 60, days12: 50, monthly: [], medianDays: 1, last: "" } });
+  assert.deepEqual(sortPlugins([many, steady], "cadence").map((p) => p.id), ["s/s", "m/m"]);
 });

@@ -121,7 +121,8 @@ export function sortPlugins(list: Plugin[], sort: SortKey): Plugin[] {
     if (sort === "stars") return b.stars - a.stars || byName(a, b);
     if (sort === "updated") return (b.updated || "").localeCompare(a.updated || "") || byName(a, b);
     if (sort === "downloads") return (b.dl?.total ?? -1) - (a.dl?.total ?? -1) || b.stars - a.stars || byName(a, b);
-    if (sort === "cadence") return (b.cadence?.r12 ?? -1) - (a.cadence?.r12 ?? -1) || b.stars - a.stars || byName(a, b);
+    // 更新频率按「近一年有发布的天数」排:同一天发多次只算一天,避免靠大量预发布版本刷次数。
+    if (sort === "cadence") return (b.cadence?.days12 ?? -1) - (a.cadence?.days12 ?? -1) || (b.cadence?.r12 ?? -1) - (a.cadence?.r12 ?? -1) || b.stars - a.stars || byName(a, b);
     return byName(a, b);
   });
   return out;

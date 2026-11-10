@@ -449,6 +449,10 @@ body { background: var(--bg); }
 .hero-search { max-width: 560px; margin: 0 auto; }
 .hero-cta { display: flex; justify-content: center; gap: 10px; margin: 14px 0 0; flex-wrap: wrap; }
 .home-note { margin: 0 0 10px; }
+.board-tabs { display: flex; gap: 8px; margin: 0 0 10px; flex-wrap: wrap; }
+.board-tab { padding: 6px 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--paper); color: var(--ink-soft); font: inherit; font-size: 14px; cursor: pointer; }
+.board-tab:hover { background: var(--mist); color: var(--ink); }
+.board-tab.is-active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
 .tool-card { gap: 6px; padding: 16px; }
 .tool-card h3 { margin: 0; font-size: 16px; }
 .tool-card p { margin: 0; }
