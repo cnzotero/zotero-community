@@ -1,6 +1,6 @@
 {
-  "/": {"hash":"11c1b4fb62997dcf","lastmod":"2026-11-10"},
-  "/about": {"hash":"4689d8006245557b","lastmod":"2026-11-10"},
+  "/": {"hash":"782d864aab579cd3","lastmod":"2026-11-10"},
+  "/about": {"hash":"5f1fe7a0f3145f71","lastmod":"2026-11-10"},
   "/categories/ai": {"hash":"5bee7ee23a0d5e0b","lastmod":"2026-11-10"},
   "/categories/attachment": {"hash":"16ed08218bd7081e","lastmod":"2026-11-10"},
   "/categories/integration": {"hash":"65eb51b05278f91f","lastmod":"2026-11-10"},
@@ -20,9 +20,10 @@
   "/guides/dev-02-first-plugin": {"hash":"6d4bed57c709e0ad","lastmod":"2026-11-10"},
   "/guides/dev-03-api-and-debug": {"hash":"0aa997dcdd978e5d","lastmod":"2026-11-10"},
   "/guides/dev-04-build-release": {"hash":"a4b51d94ac972f33","lastmod":"2026-11-10"},
-  "/guides/dev-05-submit-and-maintain": {"hash":"7525b56d834ab32d","lastmod":"2026-11-10"},
+  "/guides/dev-05-submit-and-maintain": {"hash":"722f1375bc953851","lastmod":"2026-11-10"},
   "/journals": {"hash":"d39d0ed025cd1e27","lastmod":"2026-11-10"},
-  "/plugins": {"hash":"3a2cd09bcedad04b","lastmod":"2026-11-10"},
+  "/plugin": {"hash":"63b87fa7407089c1","lastmod":"2026-11-11"},
+  "/plugins": {"hash":"ec3a6e7f965f2e62","lastmod":"2026-11-10"},
   "/plugins/018/zotcard": {"hash":"3b244db2fe763c95","lastmod":"2026-10-12"},
   "/plugins/018/zotero-excalidraw": {"hash":"b4e0dfbfe2aa8cb1","lastmod":"2026-10-12"},
   "/plugins/1654842532/zotero-ai-assistant": {"hash":"c290a7aaca5afe57","lastmod":"2026-06-01"},
@@ -377,6 +378,6 @@
   "/plugins/zxyl1003/inthes": {"hash":"c88bf05565a02e23","lastmod":"2026-10-08"},
   "/plugins/zzlb0224/zotero-annotation-manage": {"hash":"0b5e9adda738cec9","lastmod":"2026-01-27"},
   "/plugins/zzq-02/zotero-vocab-builder": {"hash":"7d923cc610640be6","lastmod":"2026-09-23"},
-  "/rules": {"hash":"1e2bfc9e001561b1","lastmod":"2026-11-10"},
+  "/rules": {"hash":"69f3df4c43cb4995","lastmod":"2026-11-10"},
   "/styles": {"hash":"7db8eeb739b0475e","lastmod":"2026-11-10"}
 }
