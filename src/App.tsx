@@ -21,15 +21,15 @@ import { STATIC_PAGES } from "./seo/pages.ts";
 import { filterGuides, filterPlugins, searchAll } from "./search.ts";
 
 const SKINS = [
-  { key: "red", label: "洁净红", color: "#c9252f" },
   { key: "indigo", label: "靛蓝", color: "#3451b2" },
+  { key: "red", label: "洁净红", color: "#c9252f" },
 ] as const;
 
 function SkinSwitch() {
-  const [skin, setSkin] = useState<string>(() => document.documentElement.dataset.skin || "red");
+  const [skin, setSkin] = useState<string>(() => (document.documentElement.dataset.skin === "red" ? "red" : "indigo"));
   const pick = (k: string) => {
     setSkin(k);
-    if (k === "red") delete document.documentElement.dataset.skin;
+    if (k === "indigo") delete document.documentElement.dataset.skin;
     else document.documentElement.dataset.skin = k;
     try { localStorage.setItem("skin", k); } catch { /* 隐私模式下忽略 */ }
   };

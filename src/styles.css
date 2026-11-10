@@ -6,9 +6,9 @@
   --bg: #ffffff;
   --paper: #ffffff;
   --mist: #f6f7f9;
-  --accent: #b92332;
-  --accent-hover: #9f1e2b;
-  --accent-soft: #fff1f2;
+  --accent: #3451b2;
+  --accent-hover: #26408f;
+  --accent-soft: #eef2fb;
   --on-accent: #ffffff;
   --grid: #edf0f3;
 }
@@ -21,16 +21,16 @@
     --bg: #0d1117;
     --paper: #161b22;
     --mist: #1c222b;
-    --accent: #ff8a93;
-    --accent-hover: #ffa3aa;
-    --accent-soft: #341c24;
-    --on-accent: #260d13;
+    --accent: #8fb0ee;
+    --accent-hover: #b4cbf6;
+    --accent-soft: #1b2438;
+    --on-accent: #0d1626;
     --grid: #252c35;
   }
 }
-/* 皮肤:靛蓝(页脚可切换,默认是上面的洁净红) */
-html[data-skin="indigo"] { --accent: #3451b2; --accent-hover: #26408f; --accent-soft: #eef2fb; --on-accent: #ffffff; }
-@media (prefers-color-scheme: dark) { html[data-skin="indigo"] { --accent: #8fb0ee; --accent-hover: #b4cbf6; --accent-soft: #1b2438; --on-accent: #0d1626; } }
+/* 皮肤:洁净红(页脚可切换,默认是上面的靛蓝) */
+html[data-skin="red"] { --accent: #b92332; --accent-hover: #9f1e2b; --accent-soft: #fff1f2; --on-accent: #ffffff; }
+@media (prefers-color-scheme: dark) { html[data-skin="red"] { --accent: #ff8a93; --accent-hover: #ffa3aa; --accent-soft: #341c24; --on-accent: #260d13; } }
 * { box-sizing: border-box; }
 body {
   margin: 0;
