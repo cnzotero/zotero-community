@@ -1,0 +1,49 @@
+name: 报告插件问题
+description: 反馈社区目录、社区插件或第三方插件的具体问题。
+title: "[问题] 简短描述"
+body:
+  - type: markdown
+    attributes:
+      value: 第三方插件自身的问题请优先联系作者。安全问题先阅读 SECURITY.md；若需私密联系，只说明需要联系渠道，不要在此公开利用细节。
+  - type: dropdown
+    id: location
+    attributes:
+      label: 问题发生在哪里
+      options:
+        - 社区目录信息
+        - Zotero中文社区插件市场
+        - 第三方插件（请同时查看作者反馈入口）
+        - 教程与说明
+    validations:
+      required: true
+  - type: input
+    id: plugin
+    attributes:
+      label: 插件名称与版本
+      description: 如与插件无关，请写不适用。
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Zotero 版本与操作系统
+      description: 如与桌面操作无关，请写所用浏览器。
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 发生步骤
+      description: 用公开演示资料说明，不要上传私人文库或敏感内容。
+    validations:
+      required: true
+  - type: textarea
+    id: expected-and-actual
+    attributes:
+      label: 期望结果与实际结果
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 可公开的截图或依据（可选）

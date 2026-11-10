@@ -1,0 +1,31 @@
+name: 申请下架插件
+description: 说明与项目的关系及下架理由，按规则核对处理。
+title: "[下架] 插件名称"
+body:
+  - type: markdown
+    attributes:
+      value: 请先看 https://zoterocn.org/rules 。申请公开可见；涉及隐私或安全的材料不要直接上传，请先阅读本仓库 SECURITY.md。
+  - type: input
+    id: plugin-name
+    attributes:
+      label: 插件名称
+      description: 请附社区详情页或作者仓库地址，避免同名混淆。
+    validations:
+      required: true
+  - type: dropdown
+    id: relationship
+    attributes:
+      label: 你与该项目的关系
+      options:
+        - 作者
+        - 权利人
+        - 使用者
+    validations:
+      required: true
+  - type: textarea
+    id: reason
+    attributes:
+      label: 下架理由
+      description: 请说明事实与公开依据。作者可从所属仓库账号提出，不要上传身份证明或其他私人材料。
+    validations:
+      required: true

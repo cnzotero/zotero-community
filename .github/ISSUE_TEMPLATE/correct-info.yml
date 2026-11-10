@@ -1,0 +1,34 @@
+name: 更正插件信息
+description: 指出目录中不准确的信息，并提供公开依据。
+title: "[更正] 插件名称与信息项"
+body:
+  - type: markdown
+    attributes:
+      value: 按 https://zoterocn.org/rules 第六章提交；普通处理结果将在此公开回复。
+  - type: input
+    id: plugin
+    attributes:
+      label: 哪个插件
+      description: 名称与社区详情页或作者仓库地址。
+    validations:
+      required: true
+  - type: textarea
+    id: incorrect
+    attributes:
+      label: 哪一项不对
+      description: 请写出目前显示的内容和发生位置。
+    validations:
+      required: true
+  - type: textarea
+    id: correction
+    attributes:
+      label: 正确的信息
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 依据
+      description: 附作者说明、发布页等公开链接，不要填写私人信息。
+    validations:
+      required: true

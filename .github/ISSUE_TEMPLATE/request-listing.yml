@@ -1,0 +1,39 @@
+name: 申请收录插件
+description: 提供插件的公开信息，按统一规则申请收录。
+title: "[收录] 插件名称"
+body:
+  - type: markdown
+    attributes:
+      value: 请先阅读 https://zoterocn.org/rules 。申请及处理结果公开可见，不要填写私人信息。
+  - type: input
+    id: plugin-name
+    attributes:
+      label: 插件名称
+    validations:
+      required: true
+  - type: input
+    id: repository
+    attributes:
+      label: 公开仓库地址
+      placeholder: https://github.com/作者/仓库
+    validations:
+      required: true
+  - type: input
+    id: zotero-version
+    attributes:
+      label: 适配的 Zotero 版本
+      description: 按作者公开声明填写；未声明请写未声明，并提供可核对的说明。
+    validations:
+      required: true
+  - type: textarea
+    id: purpose
+    attributes:
+      label: 一两句用途说明
+      description: 说明能解决什么问题，不夸大效果。
+    validations:
+      required: true
+  - type: input
+    id: release
+    attributes:
+      label: 作者发布页（可选）
+      description: 请链接作者自己的发布页，便于核对安装包与适配信息。
