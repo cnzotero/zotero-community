@@ -46,7 +46,7 @@ export function DelistedPage() {
   return (
     <article className="section prose">
       <h1 className="page-title">{pageMeta("/delisted").h1}</h1>
-      <p className="lead">插件广场是否展示一个插件,只按<Link to="/rules" className="inline-link">收录规则</Link>第 3 章写明的条件自动判断,对所有插件一视同仁。这里公开列出目前已下架的插件和原因。</p>
+      <p className="lead">插件广场按<Link to="/rules" className="inline-link">收录规则</Link>判断插件是否展示,并记录社区管理作出的下架决定。这里公开列出目前已下架的插件和原因。</p>
 
       <h2>判断口径</h2>
       <p>满足下面任意一条,插件就会下架:</p>
@@ -58,7 +58,7 @@ export function DelistedPage() {
       <p>「距今」按本站每次更新数据、重新生成页面的日期计算。仓库已归档本身不是下架理由,只在下面作为一条事实注明。</p>
 
       <h2>如何恢复</h2>
-      <p>恢复是自动的,不需要申请:作者发布新版本、不再符合上面任何一条后,本站下一次更新数据时会重新判断,插件自动重新上架,并从本页移除。如果你认为某条判断有误(例如数据没有及时反映最新发布),请在 <a href={`${REPO}/issues`} target="_blank" rel="noopener noreferrer" className="inline-link">公开仓库的 Issue</a> 里提出,写明插件名称和依据。</p>
+      <p>因上述发布与适配条件自动下架的插件,作者发布新版本、不再符合条件后,本站下一次更新数据时会自动恢复上架。社区管理下架的插件需解除相应决定后才会重新判断,不会因发布新版本自动恢复。如果你认为某条判断有误(例如数据没有及时反映最新发布),请在 <a href={`${REPO}/issues`} target="_blank" rel="noopener noreferrer" className="inline-link">公开仓库的 Issue</a> 里提出,写明插件名称和依据。</p>
 
       <h2>已下架的插件</h2>
       {data && (

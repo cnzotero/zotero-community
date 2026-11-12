@@ -47,6 +47,34 @@ test("数据入口:按构建日期分出在架与下架,数量守恒", () => {
   assert.equal(real.listed.length + real.delisted.length, real.total);
 });
 
+test("管理下架覆盖作者全部插件:刷新或新版本不恢复,保留原始数据与下架日期,解除后重新判断", () => {
+  const real = loadCatalog("2026-11-12");
+  const targets = real.delisted.filter((d) => d.plugin.id.startsWith("l0o0/"));
+  assert.deepEqual(targets.map((d) => d.plugin.id).sort(), [
+    "l0o0/garden-for-zotero", "l0o0/jasminum", "l0o0/magiczotero", "l0o0/scholar-sketch", "l0o0/tara",
+  ]);
+  assert.ok(targets.every((d) => d.reason === "manual"));
+  assert.ok(!real.listed.some((p) => p.id.startsWith("l0o0/")));
+  const data = { generatedAt: "2026-11-12", plugins: [
+    mk("L0O0/new-plugin", "2026-11-12", [10], { author: "Display name" }),
+    mk("other/project", "2026-11-12", [10], { author: "L0O0" }),
+    mk("other/untouched", "2026-11-12", [10]),
+  ] };
+  const before = structuredClone(data);
+  const first = catalogOf(data, "2026-11-12");
+  assert.deepEqual(first.listed.map((p) => p.id), ["other/untouched"]);
+  assert.equal(first.delisted.length, 2);
+  assert.equal(first.delisted[0].facts.lastRelease, "2026-11-12");
+  assert.equal(first.delisted[0].facts.days, 0);
+  const next = catalogOf(data, "2026-11-13", first.ledger);
+  assert.ok(next.delisted.every((d) => next.ledger[d.plugin.id].since === "2026-11-12"));
+  assert.ok(next.delistedData.records.every((r) => r.reason === "manual" && !JSON.stringify(r).includes(".xpi")));
+  const restored = catalogOf(data, "2026-11-13", next.ledger, { authors: {} });
+  assert.equal(restored.listed.length, 3);
+  assert.deepEqual(restored.ledger, {});
+  assert.deepEqual(data, before);
+});
+
 test("下架的插件从全站消失:没有详情页、不进 sitemap、不进分类页与版本页,空分类不生成页面", async () => {
   const dir = mkdtempSync(join(tmpdir(), "catalog-"));
   writeFileSync(join(dir, "index.html"), TEMPLATE);

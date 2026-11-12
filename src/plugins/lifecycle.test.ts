@@ -176,6 +176,7 @@ test("一视同仁:判断模块的源码里没有按插件 id、作者或名称�
 
 test("原因名称与规则一致", () => {
   assert.deepEqual(DELIST_REASONS, {
+    "manual": "社区管理下架",
     "stale-1y-no-package": "超过 1 年未发布,且没有可下载的安装包",
     "stale-2y": "最近一次发布超过 2 年",
     "stale-1y-unadapted": "超过 1 年未发布,且未声明适配当前 Zotero 版本",

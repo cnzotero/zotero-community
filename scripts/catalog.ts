@@ -3,13 +3,17 @@
 // 所以全站(页面、sitemap、llms.txt、计数文案、搜索)看到的都是同一份在架名单,不在各页面各自过滤。
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import type { Plugin } from "../src/plugins/lib.ts";
-import { splitCatalog, type DelistedPlugin } from "../src/plugins/lifecycle.ts";
+import { daysSince, type Plugin } from "../src/plugins/lib.ts";
+import { declaredMaxMajor, lastReleaseDate, splitCatalog, type DelistedPlugin } from "../src/plugins/lifecycle.ts";
 import { delistedRecords, updateDelistedLedger, type DelistedData, type DelistedLedger } from "../src/plugins/delisted.ts";
 
 export const PLUGINS_FILE = fileURLToPath(new URL("../src/data/plugins.json", import.meta.url));
 /** 下架台账:记录每个下架插件从哪天起下架;由预渲染脚本更新,与数据一起提交回仓库。 */
 export const DELISTED_FILE = fileURLToPath(new URL("../src/data/delisted.json", import.meta.url));
+
+/** 独立于每日公开数据刷新的管理决定;保留原始插件数据,解除决定后才允许恢复上架。 */
+export interface Moderation { authors: Record<string, string> }
+const MODERATION: Moderation = JSON.parse(readFileSync(new URL("../src/data/moderation.json", import.meta.url), "utf8"));
 
 /**
  * 构建日期(YYYY-MM-DD,UTC)。预渲染脚本会把它写进这个环境变量,
@@ -46,8 +50,28 @@ export interface Catalog {
 }
 
 /** 由插件数据与旧的下架台账算出某一天的在架名单与下架记录。纯函数,便于测试。 */
-export function catalogOf(data: { generatedAt: string; plugins: Plugin[] }, day: string, oldLedger: DelistedLedger = {}): Catalog {
-  const { listed, delisted, currentMajor } = splitCatalog(data.plugins, new Date(day));
+export function catalogOf(data: { generatedAt: string; plugins: Plugin[] }, day: string, oldLedger: DelistedLedger = {}, moderation: Moderation = MODERATION): Catalog {
+  const now = new Date(day);
+  const automatic = splitCatalog(data.plugins, now);
+  const { currentMajor } = automatic;
+  const authors = new Map(Object.entries(moderation.authors).map(([author, reason]) => [author.toLowerCase(), reason]));
+  const automaticDelisted = new Map(automatic.delisted.map((d) => [d.plugin.id, d]));
+  const listed: Plugin[] = [];
+  const delisted: DelistedPlugin[] = [];
+  for (const plugin of data.plugins) {
+    const reason = authors.get(plugin.id.split("/")[0].toLowerCase()) ?? authors.get(plugin.author.toLowerCase());
+    if (reason !== undefined) {
+      const lastRelease = lastReleaseDate(plugin);
+      delisted.push({
+        plugin, reason: "manual", reasonText: reason,
+        facts: { lastRelease, days: lastRelease ? daysSince(lastRelease, now) : null, declaredMax: declaredMaxMajor(plugin), currentMajor, archived: plugin.archived === true },
+      });
+    } else {
+      const entry = automaticDelisted.get(plugin.id);
+      if (entry) delisted.push(entry);
+      else listed.push(plugin);
+    }
+  }
   const ledger = updateDelistedLedger(oldLedger, delisted, day);
   const delistedData = { listed: listed.length, current: currentMajor, records: delistedRecords(delisted, ledger, day) };
   return { day, generatedAt: data.generatedAt, total: data.plugins.length, listed, delisted, currentMajor, ledger, delistedData };
