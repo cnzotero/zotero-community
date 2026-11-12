@@ -16,10 +16,11 @@ export const STALE_DAYS = 730;
 /** 超过这么多天没有发布(1 年),且没有可下载的安装包、或适配声明没跟上当前 Zotero,就下架。 */
 export const UNADAPTED_DAYS = 365;
 
-export type DelistReason = "stale-1y-no-package" | "stale-2y" | "stale-1y-unadapted";
+export type DelistReason = "stale-1y-no-package" | "stale-2y" | "stale-1y-unadapted" | "manual";
 
 /** 下架原因的简短名称(与收录规则第 3 章的措辞一致)。 */
 export const DELIST_REASONS: Record<DelistReason, string> = {
+  "manual": "社区管理下架",
   "stale-1y-no-package": "超过 1 年未发布,且没有可下载的安装包",
   "stale-2y": "最近一次发布超过 2 年",
   "stale-1y-unadapted": "超过 1 年未发布,且未声明适配当前 Zotero 版本",
