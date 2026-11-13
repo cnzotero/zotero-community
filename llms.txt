@@ -1,0 +1,45 @@
+# Zotero 中文社区
+
+> 社区自发运营的非官方站点,整理 Zotero 插件的公开信息、中文教程与期刊查询。本站与 Zotero 官方无隶属关系。
+
+插件广场只列出在架的插件:超过 1 年未发布且没有可下载的安装包、最近一次发布超过 2 年、或超过 1 年未发布且未声明适配当前 Zotero 版本的插件按收录规则自动下架,作者发布新版本后自动恢复。下面的数量只计在架插件。
+
+## 主要栏目
+
+- [首页](https://zoterocn.org/): 查找 Zotero 插件、阅读中文教程、查询期刊信息与引用样式。按自己的研究需要选择工具，查看兼容范围和公开更新记录。
+- [Zotero 插件广场](https://zoterocn.org/plugins): 按用途、Zotero 版本和更新时间筛选插件，查看适配范围、公开发布记录及下载入口。所有插件按同一规则展示。
+- [Zotero 插件数据看板](https://zoterocn.org/plugins/charts): 查看已收录插件的公开星标、安装包下载次数、版本适配与发布节奏。结合统计日期和数据说明，了解社区插件的变化。
+- [期刊查询](https://zoterocn.org/journals): 输入期刊名称、缩写或 ISSN，查询收录、分区与期刊指标。查看数据版本，缺失项目显示暂无，帮助核对期刊信息。
+- [Zotero 中文教程](https://zoterocn.org/guides): 阅读 Zotero 中文教程，了解插件开发准备、首个插件、调试与发布流程。每篇附参考来源，便于继续查证和实践。
+- [Zotero 引用样式](https://zoterocn.org/styles): 依据 Zotero 官方文档，说明引用样式（CSL）从哪里来、如何从官方样式库或本地文件添加、如何在 Word 与 LibreOffice 中切换，以及到哪里查找 GB/T 7714 等中文样式。投稿前以目标期刊最新要求为准。
+- [收录与数据规则](https://zoterocn.org/rules): 了解插件收录与自动下架条件、兼容范围、公开数据和排序规则。目录内的插件一视同仁，没有推荐位和付费置顶，唯一例外是本社区自己的插件单独展示；未声明的兼容范围不作推定。
+- [Zotero中文社区插件](https://zoterocn.org/plugin): 本社区维护的 Zotero 插件:在 Zotero 里浏览、搜索本站收录的插件,核对来源后安装或更新。适配 Zotero 7–10,开源免费,附安装步骤与常见问题。
+- [关于 Zotero 中文社区](https://zoterocn.org/about): 了解 Zotero 中文社区的用途与参与方式。本站由社区自发运营，提供插件信息、中文教程及期刊查询，与 Zotero 官方无隶属关系。
+
+## 插件分类
+
+- [Zotero AI 插件](https://zoterocn.org/categories/ai): 收录 77 款,列出用途、适配版本与下载入口
+- [Zotero 阅读插件](https://zoterocn.org/categories/reading): 收录 43 款,列出用途、适配版本与下载入口
+- [Zotero 元数据插件](https://zoterocn.org/categories/metadata): 收录 54 款,列出用途、适配版本与下载入口
+- [Zotero 界面插件](https://zoterocn.org/categories/interface): 收录 40 款,列出用途、适配版本与下载入口
+- [Zotero 附件插件](https://zoterocn.org/categories/attachment): 收录 41 款,列出用途、适配版本与下载入口
+- [Zotero 集成插件](https://zoterocn.org/categories/integration): 收录 35 款,列出用途、适配版本与下载入口
+- [Zotero 笔记插件](https://zoterocn.org/categories/notes): 收录 40 款,列出用途、适配版本与下载入口
+- [Zotero 工具插件](https://zoterocn.org/categories/utility): 收录 15 款,列出用途、适配版本与下载入口
+- [Zotero 写作插件](https://zoterocn.org/categories/writing): 收录 2 款,列出用途、适配版本与下载入口
+- [Zotero 可视化插件](https://zoterocn.org/categories/visualization): 收录 1 款,列出用途、适配版本与下载入口
+
+## 按 Zotero 版本
+
+- [Zotero 10 兼容的插件](https://zoterocn.org/compat/zotero-10): 277 款插件声明适配;未声明适配范围的不计入
+- [Zotero 9 兼容的插件](https://zoterocn.org/compat/zotero-9): 297 款插件声明适配;未声明适配范围的不计入
+- [Zotero 8 兼容的插件](https://zoterocn.org/compat/zotero-8): 282 款插件声明适配;未声明适配范围的不计入
+- [Zotero 7 兼容的插件](https://zoterocn.org/compat/zotero-7): 246 款插件声明适配;未声明适配范围的不计入
+
+## 教程
+
+- [Zotero 插件开发入门：先理解结构与开发环境](https://zoterocn.org/guides/dev-01-overview): 理解 Zotero 7 起的插件结构、当前模板的版本要求，以及独立开发环境的准备。
+- [十分钟认识第一个 Zotero 插件：模板与构建](https://zoterocn.org/guides/dev-02-first-plugin): 从可核对的模板快照开始，修改插件身份、安装依赖并生成安装包。
+- [Zotero 插件 API 与调试：从只读到可控修改](https://zoterocn.org/guides/dev-03-api-and-debug): 学习读取条目、安排写入、监听事件、添加界面与偏好设置，并建立调试步骤。
+- [Zotero 插件打包发布：安装包、版本与更新清单](https://zoterocn.org/guides/dev-04-build-release): 检查安装包、兼容声明与更新地址，了解发布和升级验证的完整路径。
+- [提交 Zotero 插件与持续维护：收录、适配和反馈](https://zoterocn.org/guides/dev-05-submit-and-maintain): 准备可核对的公开资料，说明兼容范围，并建立持续维护与问题反馈方式。
