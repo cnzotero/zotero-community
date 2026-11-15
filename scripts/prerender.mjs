@@ -12,10 +12,11 @@ import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArticle, wordCount } from "../src/guides/markdown.ts";
 import {
-  CATEGORY_KEYS, SITE, SITE_NAME, STATIC_PAGES, categoryIntro, categoryLabel, categoryMeta, categoryPath, categoryStableFacts, compatMeta, duplicateNames, isIndexable, ogImage, pageUrl, pluginMeta,
+  CATEGORY_KEYS, SITE, SITE_NAME, STATIC_PAGES, categoryIntro, categoryLabel, categoryMeta, categoryPath, categoryStableFacts, compatMeta, duplicateNames, isIndexable, ogImage, pageUrl, pluginMeta, topicIntro, topicMeta,
 } from "../src/seo/pages.ts";
 import { STYLE_SOURCE_LIST } from "../src/content/styles.ts";
 import { ZOTERO_VERSIONS, compatIndex, compatList, pickDownload } from "../src/plugins/lib.ts";
+import { activeTopics, topicList } from "../src/plugins/topics.ts";
 import { BUILD_DATE_ENV, DELISTED_FILE, buildDay, loadCatalog, readBuildDateMeta, stripBuildDateMeta } from "./catalog.ts";
 import { delistedLedgerJson } from "../src/plugins/delisted.ts";
 import { OFFICIAL } from "../src/official/official.ts";
@@ -125,6 +126,8 @@ function collectionLd(meta, list, trail) {
 const categoryLd = (meta, list) => collectionLd(meta, list, [["首页", "/"], ["插件广场", "/plugins"], [meta.h1, meta.path]]);
 // 与页面上的面包屑一致:首页 › 本页(「版本兼容」没有独立页面,不单列一级)
 const compatLd = (meta, list) => collectionLd(meta, list, [["首页", "/"], [meta.h1, meta.path]]);
+// 功能专题页:首页 › 插件广场 › 专题(与页面上的面包屑一致)
+const topicLd = (meta, list) => collectionLd(meta, list, [["首页", "/"], ["插件广场", "/plugins"], [meta.h1, meta.path]]);
 
 function articleLd(a, path) {
   return [
@@ -214,7 +217,7 @@ export function sitemapXml(entries) {
 export const robotsTxt = () => `User-agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: ${SITE}/sitemap.xml\n`;
 
 /** 给大模型等自动读取工具的站点说明:只列事实与可收录页面的链接,不列单个插件。 */
-export function llmsTxt({ pages, categories, compat = [], articles }) {
+export function llmsTxt({ pages, categories, compat = [], topics = [], articles }) {
   const line = (title, path, desc) => `- [${title}](${pageUrl(path)})${desc ? `: ${desc}` : ""}`;
   return [
     `# ${SITE_NAME}`,
@@ -231,6 +234,7 @@ export function llmsTxt({ pages, categories, compat = [], articles }) {
     "",
     ...categories.map(({ meta, count }) => line(meta.h1, meta.path, `收录 ${count} 款,列出用途、适配版本与下载入口`)),
     "",
+    ...(topics.length ? ["## 按功能找插件", "", ...topics.map(({ meta, count }) => line(meta.h1, meta.path, `收录 ${count} 款,按插件名称或简介里的用途词收录`)), ""] : []),
     ...(compat.length ? ["## 按 Zotero 版本", "", ...compat.map(({ meta, count }) => line(meta.h1, meta.path, `${count} 款插件声明适配;未声明适配范围的不计入`)), ""] : []),
     "## 教程",
     "",
@@ -367,6 +371,13 @@ export async function computeLedger({ plugins, articleSources, today, prepare, o
     const meta = compatMeta(major, list.length);
     add(meta.path, fingerprint({ meta: [meta.title, meta.description, meta.h1], members: list.map((p) => p.id).sort() }), null);
   }
+  // 功能专题页:成员名单、标题或选择指引变了才算变化
+  const topicsDate = dateOf(join(root, "src/plugins/topics.ts"));
+  for (const { topic } of activeTopics(plugins)) {
+    const list = topicList(plugins, topic.key);
+    const meta = topicMeta(topic.key, plugins);
+    add(meta.path, fingerprint({ meta: [meta.title, meta.h1], copy: topicIntro(topic.key), members: list.map((p) => p.id).sort() }), topicsDate);
+  }
   for (const s of articleSources) add(`/guides/${s.article.slug}`, fingerprint(s.raw), s.file ? dateOf(s.file) : null);
   return { prints, ledger: updateLedger(old, prints, today) };
 }
@@ -436,6 +447,14 @@ export async function build(distDir, plugins, today = new Date().toISOString().s
     listed(meta);
     compat.push({ meta, count: list.length });
   }
+  const topics = [];
+  for (const { topic } of activeTopics(plugins)) {
+    const list = topicList(plugins, topic.key);
+    const meta = topicMeta(topic.key, plugins);
+    page(meta, topicLd(meta, list));
+    listed(meta);
+    topics.push({ meta, count: list.length });
+  }
   for (const a of articles) {
     const meta = { path: `/guides/${a.slug}`, title: `${a.title}｜${SITE_NAME}`, description: a.description, h1: a.title, kind: "guide" };
     page(meta, articleLd(a, meta.path));
@@ -449,7 +468,7 @@ export async function build(distDir, plugins, today = new Date().toISOString().s
   if (missing.length) throw new Error(`内容指纹台账漏算了这些页面:${missing.join(", ")}`);
   writeFileSync(join(distDir, "sitemap.xml"), sitemapXml(entries));
   writeFileSync(join(distDir, "robots.txt"), robotsTxt());
-  writeFileSync(join(distDir, "llms.txt"), llmsTxt({ pages: STATIC_PAGES.filter(isIndexable), categories, compat, articles }));
+  writeFileSync(join(distDir, "llms.txt"), llmsTxt({ pages: STATIC_PAGES.filter(isIndexable), categories, compat, topics, articles }));
   return entries;
 }
 

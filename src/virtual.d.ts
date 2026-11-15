@@ -13,6 +13,11 @@ declare module "virtual:compat-index" {
   export default index;
 }
 
+declare module "virtual:topic-index" {
+  const index: import("./plugins/topics.ts").TopicIndexItem[];
+  export default index;
+}
+
 declare module "virtual:delisted" {
   const data: import("./plugins/delisted.ts").DelistedData;
   export default data;

@@ -1,13 +1,14 @@
 import { useEffect, useState, type FormEvent } from "react";
 import boardsData from "virtual:home-boards";
 import compatData from "virtual:compat-index";
+import topicData from "virtual:topic-index";
 import { Link } from "../link.tsx";
 import { navigate } from "../router.ts";
 import { ARTICLES, articlePath } from "../guides/content.ts";
-import { serverCompatIndex, serverHomeBoards } from "../plugins/data.ts";
+import { serverCompatIndex, serverHomeBoards, serverTopicIndex } from "../plugins/data.ts";
 import { PluginCard } from "../plugins/PluginsPage.tsx";
 import { CATEGORIES, type HomeBoardKey } from "../plugins/lib.ts";
-import { COMPAT_SCOPE, categoryPath, compatPath, pageMeta } from "../seo/pages.ts";
+import { COMPAT_SCOPE, categoryPath, compatPath, pageMeta, topicPath } from "../seo/pages.ts";
 import { takeEarlyInput, useNow } from "../ssr.ts";
 import { OfficialBox } from "../official/OfficialBox.tsx";
 
@@ -31,6 +32,7 @@ export function Home() {
   // 榜单数据构建时已按同一套排序算好(预渲染时用注入的数据),首页不加载整份插件数据
   const top = (serverHomeBoards() ?? boardsData)[board];
   const compat = serverCompatIndex() ?? compatData;
+  const topics = serverTopicIndex() ?? topicData;
   const boardNote = BOARDS.find((b) => b.key === board)?.note ?? "";
   // 接管前已经在搜索框里输入的文字:挂载后补上,不丢
   useEffect(() => {
@@ -80,6 +82,18 @@ export function Home() {
           {CATEGORIES.map((c) => <Link key={c.key} to={categoryPath(c.key)} className="chip">{c.label}</Link>)}
         </nav>
       </section>
+
+      {topics.length > 0 && (
+        <section className="section">
+          <div className="section-head">
+            <h2>按功能找插件</h2>
+          </div>
+          <nav className="chips" aria-label="按功能找插件">
+            {topics.map((t) => <Link key={t.key} to={topicPath(t.key)} className="chip">{t.label}({t.count} 款)</Link>)}
+          </nav>
+          <p className="meta home-note">按插件名称或简介里写明的用途归入专题，一个插件可以出现在多个专题。</p>
+        </section>
+      )}
 
       {compat.length > 0 && (
         <section className="section">

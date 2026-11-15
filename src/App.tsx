@@ -15,6 +15,7 @@ const PluginsList = lazyRoute(() => import("./plugins/PluginsPage.tsx").then((m)
 const PluginDetail = lazyRoute(() => import("./plugins/PluginsPage.tsx").then((m) => m.PluginDetail));
 const CategoryPage = lazyRoute(() => import("./plugins/CategoryPage.tsx").then((m) => m.CategoryPage));
 const CompatPage = lazyRoute(() => import("./plugins/CompatPage.tsx").then((m) => m.CompatPage));
+const TopicPage = lazyRoute(() => import("./plugins/TopicPage.tsx").then((m) => m.TopicPage));
 const ChartsPage = lazyRoute(() => import("./plugins/ChartsPage.tsx").then((m) => m.ChartsPage));
 const JournalsPage = lazyRoute(() => import("./journals/JournalsPage.tsx").then((m) => m.JournalsPage));
 const Guides = lazyRoute(() => import("./guides/GuidesPages.tsx").then((m) => m.Guides));
@@ -129,6 +130,7 @@ const VIEWS: Record<Route, ComponentType & { preload?: () => Promise<void> }> = 
   guide: GuideArticle,
   category: CategoryPage,
   compat: CompatPage,
+  topic: TopicPage,
   notfound: NotFound,
   submission: Submission,
   rules: Rules,
@@ -137,7 +139,7 @@ const VIEWS: Record<Route, ComponentType & { preload?: () => Promise<void> }> = 
   official: OfficialPluginPage,
 };
 
-const NEEDS_PLUGIN_DATA = new Set<Route>(["plugins", "plugin", "category", "compat", "charts"]);
+const NEEDS_PLUGIN_DATA = new Set<Route>(["plugins", "plugin", "category", "compat", "topic", "charts"]);
 
 /** 预先加载某个页面需要的代码与数据(浏览器接管静态页面前调用,避免出现「加载中」)。 */
 export function preloadRoute(route: Route): Promise<unknown> {
@@ -156,7 +158,7 @@ export function App() {
   const route = useRoute();
   useVisitBeacon();
   useEffect(() => {
-    if (route === "plugin" || route === "guide" || route === "category" || route === "compat" || route === "notfound") return; // 详情类页面自己设置标题
+    if (route === "plugin" || route === "guide" || route === "category" || route === "compat" || route === "topic" || route === "notfound") return; // 详情类页面自己设置标题
     applyMeta(pageMeta(routePath(route) ?? "/"));
   }, [route]);
   const View = VIEWS[route];

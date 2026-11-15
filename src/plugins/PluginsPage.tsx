@@ -4,7 +4,8 @@ import { PageHero } from "../pageHero.tsx";
 import { downloadsPerDay } from "./charts-lib.ts";
 import { cachedPluginData, loadPluginData, type PluginData } from "./data.ts";
 import { applyMeta } from "../seo/head.ts";
-import { categoryPath, compatPath, duplicateNames, pageMeta, pluginMeta } from "../seo/pages.ts";
+import { categoryPath, compatPath, duplicateNames, pageMeta, pluginMeta, topicPath } from "../seo/pages.ts";
+import { topicIndex } from "./topics.ts";
 import { currentPath, currentSearch, takeEarlyInput, useImageOk, useNow } from "../ssr.ts";
 import { DownloadIcon, ExternalIcon, GithubIcon, ShareIcon, StarIcon } from "../icons.tsx";
 import { OfficialBox } from "../official/OfficialBox.tsx";
@@ -309,6 +310,7 @@ export function PluginsList() {
   const list = useMemo(() => applyFilters(all, f, now), [all, f, now]);
   const authors = useMemo(() => topAuthors(all), [all]);
   const compat = useMemo(() => compatIndex(all), [all]);
+  const topics = useMemo(() => topicIndex(all), [all]);
   const active = f.category !== "all" || f.zotero !== null || f.within !== "any" || f.query.trim() !== "" || f.author !== "";
 
   return (
@@ -343,6 +345,12 @@ export function PluginsList() {
         <nav className="cat-link compat-nav" aria-label="按 Zotero 版本">
           <span className="meta">按 Zotero 版本:</span>
           {compat.map((c) => <Link key={c.major} to={compatPath(c.major)} className="inline-link">Zotero {c.major} 兼容的插件({c.count})</Link>)}
+        </nav>
+      )}
+      {topics.length > 0 && (
+        <nav className="cat-link compat-nav" aria-label="按功能找插件">
+          <span className="meta">按功能找插件:</span>
+          {topics.map((t) => <Link key={t.key} to={topicPath(t.key)} className="inline-link">{t.label}({t.count})</Link>)}
         </nav>
       )}
       {f.category !== "all" && (

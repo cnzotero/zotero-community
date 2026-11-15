@@ -271,6 +271,37 @@ test("版本兼容页:只为有插件声明的大版本生成,成员即声明支
   assert.ok(!read(dir, "/plugins/b/plain").includes('href="/compat/'));
 });
 
+test("功能专题页:只为在架插件不少于 3 款的专题生成,成员按规则收录,进 sitemap、llms.txt,首页与插件广场链到", async () => {
+  const mk = (id, name, summary, stars) => ({ ...PLUGINS[1], id, name, summary, stars, category: "utility" });
+  const plugins = [
+    mk("p/one", "One", "划词翻译", 30), mk("p/two", "Two", "Full PDF translation", 900), mk("p/three", "Three", "支持双语对照", 5),
+    mk("q/ocr1", "Scan A", "OCR 识别扫描件", 1), mk("q/ocr2", "Scan B", "OCR", 1),
+    mk("r/none", "Plain", "普通插件", 1),
+  ];
+  const { dir, entries } = await run(plugins);
+  const sm = readFileSync(join(dir, "sitemap.xml"), "utf8");
+  const llms = readFileSync(join(dir, "llms.txt"), "utf8");
+  const path = "/topics/translate";
+  assert.ok(entries.some((e) => e.path === path));
+  assert.ok(sm.includes(`<loc>https://zoterocn.org${path}</loc>`));
+  assert.ok(llms.includes(`(https://zoterocn.org${path})`) && llms.includes("## 按功能找插件"));
+  const html = read(dir, path);
+  assert.match(html, /<title>Zotero 翻译插件大全\(3 款\):用途、适配版本与下载<\/title>/);
+  assert.deepEqual(h1s(html), ["Zotero 翻译插件"]);
+  assert.match(html, /收录规则：插件名称或简介中出现「翻译」/);
+  const list = jsonLd(html).find((j) => j["@type"] === "CollectionPage").mainEntity;
+  assert.deepEqual(list.itemListElement.map((x) => x.url.replace("https://zoterocn.org/plugins/", "")), ["p/two", "p/one", "p/three"], "按星标排序");
+  assert.ok(!html.includes('href="/plugins/r/none"') && !html.includes('href="/plugins/q/ocr1"'), "不符合规则的不混进来");
+  const bc = jsonLd(html).find((j) => j["@type"] === "BreadcrumbList");
+  assert.deepEqual(bc.itemListElement.map((x) => x.name), ["首页", "插件广场", "Zotero 翻译插件"]);
+  // 只有 2 款的专题不生成空壳页
+  assert.ok(!entries.some((e) => e.path === "/topics/ocr"));
+  assert.ok(!existsSync(join(dir, "topics/ocr/index.html")));
+  // 内链
+  assert.ok(read(dir, "/").includes(`href="${path}"`), "首页缺专题入口");
+  assert.ok(read(dir, "/plugins").includes(`href="${path}"`), "插件广场缺专题入口");
+});
+
 test("引用样式页:正文完整、每段注明来源、外链都新标签打开并带 noopener,结构化数据只引用页面上出现的来源", async () => {
   const { dir } = await run();
   const html = read(dir, "/styles");
