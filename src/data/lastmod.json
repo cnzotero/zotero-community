@@ -1,5 +1,5 @@
 {
-  "/": {"hash":"148ecb865ef932c6","lastmod":"2026-11-15"},
+  "/": {"hash":"ce268a5093ace291","lastmod":"2026-11-15"},
   "/about": {"hash":"5f1fe7a0f3145f71","lastmod":"2026-11-10"},
   "/categories/ai": {"hash":"074454f94bd9dd11","lastmod":"2026-11-15"},
   "/categories/attachment": {"hash":"16ed08218bd7081e","lastmod":"2026-11-10"},
@@ -23,7 +23,7 @@
   "/guides/dev-05-submit-and-maintain": {"hash":"722f1375bc953851","lastmod":"2026-11-10"},
   "/journals": {"hash":"d39d0ed025cd1e27","lastmod":"2026-11-10"},
   "/plugin": {"hash":"63b87fa7407089c1","lastmod":"2026-11-11"},
-  "/plugins": {"hash":"525ae2a4a5abcf64","lastmod":"2026-11-15"},
+  "/plugins": {"hash":"03ce176f05628509","lastmod":"2026-11-15"},
   "/plugins/018/zotcard": {"hash":"3b244db2fe763c95","lastmod":"2026-10-12"},
   "/plugins/018/zotero-excalidraw": {"hash":"b4e0dfbfe2aa8cb1","lastmod":"2026-10-12"},
   "/plugins/1654842532/zotero-ai-assistant": {"hash":"c290a7aaca5afe57","lastmod":"2026-06-01"},
@@ -373,5 +373,21 @@
   "/plugins/zzlb0224/zotero-annotation-manage": {"hash":"0b5e9adda738cec9","lastmod":"2026-01-27"},
   "/plugins/zzq-02/zotero-vocab-builder": {"hash":"7d923cc610640be6","lastmod":"2026-09-23"},
   "/rules": {"hash":"7784a7a9c5243c0d","lastmod":"2026-11-15"},
-  "/styles": {"hash":"7db8eeb739b0475e","lastmod":"2026-11-10"}
+  "/styles": {"hash":"7db8eeb739b0475e","lastmod":"2026-11-10"},
+  "/topics/ai-chat": {"hash":"c3357df674f951fc","lastmod":"2026-11-15"},
+  "/topics/attachment": {"hash":"2cf0dfd11bc57db8","lastmod":"2026-11-15"},
+  "/topics/automation": {"hash":"42c357575c4f1e6d","lastmod":"2026-11-15"},
+  "/topics/citation": {"hash":"6794c5c7552651b9","lastmod":"2026-11-15"},
+  "/topics/dedup": {"hash":"ebb3d61411a4b684","lastmod":"2026-11-15"},
+  "/topics/export": {"hash":"f1db255cb35debc8","lastmod":"2026-11-15"},
+  "/topics/journal": {"hash":"5cd433062fa7583c","lastmod":"2026-11-15"},
+  "/topics/metadata": {"hash":"94af701cadb4b9b5","lastmod":"2026-11-15"},
+  "/topics/notes": {"hash":"a7f6eef7ec6d599c","lastmod":"2026-11-15"},
+  "/topics/ocr": {"hash":"18606ca2abdefdfb","lastmod":"2026-11-15"},
+  "/topics/organize": {"hash":"50f30e20d88a57a1","lastmod":"2026-11-15"},
+  "/topics/reader": {"hash":"51944c311f2ebee6","lastmod":"2026-11-15"},
+  "/topics/search": {"hash":"db207fc88887ae80","lastmod":"2026-11-15"},
+  "/topics/sync": {"hash":"2c5ddb8036c4c293","lastmod":"2026-11-15"},
+  "/topics/translate": {"hash":"7c584550649f1666","lastmod":"2026-11-15"},
+  "/topics/visual": {"hash":"9a5a4cc09e6094f1","lastmod":"2026-11-15"}
 }
