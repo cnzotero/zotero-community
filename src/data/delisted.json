@@ -1,6 +1,7 @@
 {
   "aidecameron/zotero-annotation-color-customizer": {"since":"2026-11-10","reason":"stale-1y-unadapted"},
   "albertshenc/zotero-literature-manager": {"since":"2026-11-10","reason":"stale-1y-no-package"},
+  "alima-webdev/zotero-review-assistant": {"since":"2026-11-15","reason":"stale-1y-unadapted"},
   "argenos/zotero-mdnotes": {"since":"2026-11-10","reason":"stale-1y-no-package"},
   "bowen-0x00/zotero-action-cmd": {"since":"2026-11-10","reason":"stale-2y"},
   "bwiernik/zotero-shortdoi": {"since":"2026-11-10","reason":"stale-2y"},
