@@ -6,6 +6,7 @@ import type { History } from "./charts-lib.ts";
 import type { DelistedData } from "./delisted.ts";
 import { compatIndex, homeBoards, type HomeBoards, type Plugin } from "./lib.ts";
 import { currentZoteroMajor } from "./lifecycle.ts";
+import { topicIndex, type TopicIndexItem } from "./topics.ts";
 
 export interface PluginData {
   generatedAt: string;
@@ -16,6 +17,7 @@ let plugins: PluginData | null = null;
 let history: History | null = null;
 let boards: HomeBoards | null = null;
 let compat: { major: number; count: number }[] | null = null;
+let topics: TopicIndexItem[] | null = null;
 let pending: Promise<PluginData> | null = null;
 let pendingHistory: Promise<History> | null = null;
 let delisted: DelistedData | null = null;
@@ -27,6 +29,7 @@ export function setServerData(d: { generatedAt: string; plugins: Plugin[]; histo
   history = d.history;
   boards = homeBoards(d.plugins);
   compat = compatIndex(d.plugins);
+  topics = topicIndex(d.plugins);
   delisted = d.delisted ?? { listed: d.plugins.length, current: currentZoteroMajor(d.plugins), records: [] };
 }
 
@@ -37,6 +40,8 @@ export const cachedDelisted = (): DelistedData | null => delisted;
 export const serverHomeBoards = (): HomeBoards | null => boards;
 /** 预渲染时由注入数据算出的版本兼容页目录;浏览器里为 null,改用构建期产出的小份数据。 */
 export const serverCompatIndex = (): { major: number; count: number }[] | null => compat;
+/** 预渲染时由注入数据算出的功能专题目录;浏览器里为 null,改用构建期产出的小份数据。 */
+export const serverTopicIndex = (): TopicIndexItem[] | null => topics;
 
 export function loadPluginData(): Promise<PluginData> {
   if (plugins) return Promise.resolve(plugins);

@@ -2,6 +2,7 @@
 // 预渲染脚本(构建时)和前端路由(浏览器里切换页面时)共用这一份,保证两边一致。
 import { CATEGORIES, authorOf, cadenceText, compatSummary, downloadsText, formatStars, groupFacts, type Plugin } from "../plugins/lib.ts";
 
+import { topicList, topicOf } from "../plugins/topics.ts";
 import categoryCopy from "../content/category-copy.json" with { type: "json" };
 
 export const SITE = "https://zoterocn.org";
@@ -9,7 +10,7 @@ export const SITE_NAME = "Zotero 中文社区";
 export const OG_IMAGE = `${SITE}/images/plugins/og-plugins.png`;
 
 /** 页面类型:决定分享图等按类型区分的设置。 */
-export type PageKind = "home" | "section" | "plugin" | "category" | "compat" | "guide" | "notfound";
+export type PageKind = "home" | "section" | "plugin" | "category" | "compat" | "topic" | "guide" | "notfound";
 
 /**
  * 各类页面的分享图(og:image)。目前只有一张通用图,全部回退到它;
@@ -140,5 +141,33 @@ export function compatMeta(major: number, count: number): PageMeta {
     description: `${count} 款插件在公开发布说明中声明适配 Zotero ${major}。逐一列出用途简介、适配范围与下载入口,按 GitHub 星标排序;未声明适配范围的插件不计入。`,
     h1: `Zotero ${major} 兼容的插件`,
     kind: "compat",
+  };
+}
+
+// ---------- 功能专题页 ----------
+
+export const topicPath = (key: string): string => `/topics/${key}`;
+export const topicIntro = (key: string): string => topicOf(key)?.intro ?? "";
+
+/**
+ * 功能专题页元信息(翻译、引用、笔记……)。数量与适配范围都从数据里算出,算不出的项整句省略。
+ * plugins 传全部在架插件(函数内按专题规则筛选)。
+ */
+export function topicMeta(key: string, plugins: Plugin[]): PageMeta | null {
+  const t = topicOf(key);
+  if (!t) return null;
+  const name = categoryTopic(t.label);
+  const f = groupFacts(topicList(plugins, key));
+  const facts = [
+    `收录 ${f.count} 款 ${name}`,
+    f.min !== null && f.max !== null ? `其中 ${f.declared} 款声明了适配版本,覆盖 ${majorRange(f.min, f.max)}` : null,
+    f.latest ? `最近一次发布于 ${f.latest}` : null,
+  ].filter(Boolean).join(",");
+  return {
+    path: topicPath(key),
+    title: `${name}${f.count > 2 ? "大全" : ""}(${f.count} 款):用途、适配版本与下载`,
+    description: `${facts}。按插件名称或简介里的用途词收录,逐一列出用途简介、适配版本与下载入口,按 GitHub 星标排序。`,
+    h1: name,
+    kind: "topic",
   };
 }

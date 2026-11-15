@@ -1,6 +1,7 @@
 import { defineConfig, type Plugin as VitePlugin } from "vite";
 import react from "@vitejs/plugin-react";
 import { compatIndex, homeBoards } from "./src/plugins/lib.ts";
+import { topicIndex } from "./src/plugins/topics.ts";
 import { BUILD_DATE_META, DELISTED_FILE, PLUGINS_FILE, buildDay, loadCatalog, type Catalog } from "./scripts/catalog.ts";
 
 // 同一次构建只定一次构建日期;预渲染时会通过环境变量传入同一天(见 scripts/catalog.ts)。
@@ -12,6 +13,7 @@ const DAY = buildDay();
  *   virtual:plugin-catalog  插件广场、分类页、版本页、详情页、数据看板用的数据(按需加载)
  *   virtual:home-boards     首页三个榜单(首页不必加载整份插件数据)
  *   virtual:compat-index    首页「按 Zotero 版本找插件」:各版本兼容页的版本号与插件数
+ *   virtual:topic-index     首页「按功能找插件」:各功能专题页的名称与插件数
  *   virtual:delisted        下架记录页与收录规则页用的在架数与下架记录(不含下载地址)
  */
 function catalogModules(): VitePlugin {
@@ -19,6 +21,7 @@ function catalogModules(): VitePlugin {
     "virtual:plugin-catalog": (c) => ({ generatedAt: c.generatedAt, plugins: c.listed }),
     "virtual:home-boards": (c) => homeBoards(c.listed),
     "virtual:compat-index": (c) => compatIndex(c.listed),
+    "virtual:topic-index": (c) => topicIndex(c.listed),
     "virtual:delisted": (c) => c.delistedData,
   };
   let catalog: Catalog | null = null;
