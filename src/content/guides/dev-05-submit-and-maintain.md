@@ -2,6 +2,7 @@
 title: "提交 Zotero 插件与持续维护：收录、适配和反馈"
 description: "准备可核对的公开资料，说明兼容范围，并建立持续维护与问题反馈方式。"
 slug: "dev-05-submit-and-maintain"
+category: "dev"
 order: 5
 published: "2026-11-10"
 updated: "2026-11-10"

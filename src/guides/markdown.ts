@@ -1,6 +1,8 @@
 // 教程用的小型 Markdown 解析:只支持教程实际用到的语法(标题、段落、列表、代码块、引用、
 // 行内代码/加粗/链接)。不使用 innerHTML:浏览器里转成 React 元素,构建时转成已转义的 HTML 字符串。
 // 链接只允许 http(s) 与站内路径,其余一律当普通文字,杜绝 javascript: 之类的注入。
+// HTML 注释(<!-- 截图:... -->,给贡献者的拍摄清单)只留在文稿里,不进页面。
+import { isGuideCategory, type GuideCategory } from "./categories.ts";
 
 export interface Frontmatter {
   title: string;
@@ -12,6 +14,8 @@ export interface Frontmatter {
   published?: string;
   /** 最近一次内容更新日期 YYYY-MM-DD(可选) */
   updated?: string;
+  /** 分类(可选,取值固定,见 categories.ts) */
+  category?: GuideCategory;
 }
 
 export type Inline =
@@ -37,7 +41,10 @@ const unquote = (s: string) => s.trim().replace(/^"(.*)"$/s, "$1").replace(/^'(.
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
-/** 解析文件头的简单 YAML:title / description / slug / order / published / updated / sources(列表)。 */
+/**
+ * 解析文件头的简单 YAML:title / description / slug / order / published / updated / category / sources(列表)。
+ * 不认识的字段一律忽略,不报错;category 的取值必须是固定分类之一。
+ */
 export function parseFrontmatter(src: string): { meta: Frontmatter; body: string } {
   const m = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/.exec(src);
   if (!m) throw new Error("缺少文件头");
@@ -59,6 +66,10 @@ export function parseFrontmatter(src: string): { meta: Frontmatter; body: string
       const d = unquote(v);
       if (!DATE.test(d)) throw new Error(`${k} 日期格式应为 YYYY-MM-DD: ${d}`);
       meta[k] = d;
+    } else if (k === "category") {
+      const c = unquote(v);
+      if (!isGuideCategory(c)) throw new Error(`category 不是已有分类: ${c}`);
+      meta.category = c;
     }
   }
   if (!meta.title || !meta.slug) throw new Error("文件头缺少 title 或 slug");
@@ -114,6 +125,12 @@ export function parseBlocks(body: string): Block[] {
       continue;
     }
     if (!line.trim()) { flush(); i++; continue; }
+    if (/^\s*<!--/.test(line)) {
+      flush();
+      while (i < lines.length && !lines[i].includes("-->")) i++;
+      i++; // 注释结束行
+      continue;
+    }
     const h = /^(#{1,3})\s+(.*)$/.exec(line);
     if (h) {
       flush();

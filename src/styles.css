@@ -453,6 +453,22 @@ body { background: var(--bg); }
 .sources ul { padding-left: 20px; word-break: break-all; }
 .article-nav { display: flex; justify-content: space-between; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
 @media (max-width: 640px) { .series-item { grid-template-columns: 32px 1fr; } .series-time { display: none; } }
+/* 教程分类:锚点导航、分组、首页区块、文章页「同分类的其他教程」 */
+.guide-cats { margin: 4px 0 20px; }
+.guide-cats .chip { gap: 6px; }
+.guide-cat-n { font-size: 12px; color: var(--muted); }
+.guide-group { scroll-margin-top: 72px; }
+.guide-home-group ul, .related-guides ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+.guide-home-group li { font-size: 14px; }
+.guide-home-group h3 a:hover { color: var(--accent); }
+.related-guides { margin-top: 20px; }
+@media (max-width: 640px) {
+  /* 手机上分类导航排成一行横向滑动,不挤成多行 */
+  .guide-cats { flex-wrap: nowrap; overflow-x: auto; margin-left: -16px; margin-right: -16px; padding: 0 16px 4px; scrollbar-width: none; }
+  .guide-cats::-webkit-scrollbar { display: none; }
+  .guide-cats .chip { flex: none; white-space: nowrap; }
+  .guide-group { scroll-margin-top: 140px; }
+}
 
 .cat-link { margin: 4px 0 10px; font-size: 14px; }
 

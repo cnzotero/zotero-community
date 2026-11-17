@@ -1,28 +1,28 @@
 # Zotero 中文教程
 
-先把一个小文库用顺手，再按需要增加插件。以下为教程初稿，**桌面操作均未实测**；文档核对于 2026-11-11，真机截图待补。每篇写明适用范围，版本不同请以应用内提示和 Zotero 官方文档为准。
+先把一个小文库用顺手，再按需要增加插件。全部教程按分类发布在站内[教程栏目](https://zoterocn.org/guides)，正文只在 [src/content/guides/](../src/content/guides/) 一处维护（文件头写明标题、分类、排序与参考来源），修改请直接改那里。以下为教程初稿，**桌面操作均未实测**；文档核对于 2026-11-11，真机截图待补。每篇写明适用范围，版本不同请以应用内提示和 Zotero 官方文档为准。
 
 ## 入门
 
-1. [安装 Zotero 与第一个文库](getting-started/install-zotero.md)
-2. [怎么安装插件](getting-started/install-plugins.md)
-3. [插件装不上怎么办](getting-started/plugin-wont-install.md)
+1. [安装 Zotero 与第一个文库](https://zoterocn.org/guides/install-zotero)
+2. [怎么安装 Zotero 插件](https://zoterocn.org/guides/install-plugins)
+3. [Zotero 插件装不上怎么办](https://zoterocn.org/guides/plugin-wont-install)
 
 ## 插件
 
-- [怎么挑插件：先看需求和公开依据](plugins/choose-plugins.md)
-- [用社区插件市场安装与更新](plugins/community-plugin-market.md)
+- [怎么挑 Zotero 插件：先看需求和公开依据](https://zoterocn.org/guides/choose-plugins)
+- [用社区插件市场安装与更新](https://zoterocn.org/guides/community-plugin-market)
 
 ## 样式与引用
 
-- [引用样式怎么安装](styles/install-styles.md)
-- [GB/T 7714 中文样式怎么找](styles/gb-t-7714.md)
-- [在 Word 里更换引用样式](styles/word-switch-style.md)
+- [Zotero 引用样式怎么安装](https://zoterocn.org/guides/install-styles)
+- [GB/T 7714 中文样式怎么找](https://zoterocn.org/guides/gb-t-7714)
+- [在 Word 里更换引用样式](https://zoterocn.org/guides/word-switch-style)
 
 ## 同步与备份
 
-- [同步、备份与附件有什么区别](sync-backup/sync-vs-backup.md)
-- [文库不见了，如何准备恢复](sync-backup/restore-library.md)
+- [同步、备份与附件有什么区别](https://zoterocn.org/guides/sync-vs-backup)
+- [文库不见了，如何准备恢复](https://zoterocn.org/guides/restore-library)
 
 ## 开发
 

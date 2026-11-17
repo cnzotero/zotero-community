@@ -8,6 +8,7 @@ import {
 } from "./prerender.mjs";
 import { CATEGORIES } from "../src/plugins/lib.ts";
 import { STATIC_PAGES } from "../src/seo/pages.ts";
+import { categoryAnchor, groupArticles, guideCategoryLabel, sameCategory } from "../src/guides/categories.ts";
 import { STYLE_LINKS, STYLE_SOURCE_LIST } from "../src/content/styles.ts";
 
 const TEMPLATE = `<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8" /><meta name="description" content="旧描述" /><meta property="og:title" content="旧" /><title>旧标题</title></head><body><div id="root"></div><script type="module" src="/x.js"></script></body></html>`;
@@ -166,6 +167,35 @@ test("教程文章:全文进入静态页面、带作者与日期的 TechArticle�
   }
   // /guides 列表页里带有文章链接,方便爬虫发现
   for (const a of ARTICLES) assert.match(read(dir, "/guides"), new RegExp(`href="/guides/${a.slug}"`));
+});
+
+test("教程分类:总览页按固定顺序分组并有锚点导航,文章页标出分类并列出同分类的其他教程", async () => {
+  const { dir } = await run([], ARTICLES);
+  const groups = groupArticles(ARTICLES);
+  assert.ok(groups.length >= 5 && groups.every((g) => g.key !== "other"), "每篇教程都应有分类");
+  const index = read(dir, "/guides");
+  // 分组小节按固定分类顺序出现,导航里的锚点与小节 id 一一对应
+  const ids = [...index.matchAll(/<section[^>]*id="(cat-[a-z]+)"/g)].map((m) => m[1]);
+  assert.deepEqual(ids, groups.map((g) => categoryAnchor(g.key)));
+  const nav = /<nav[^>]*aria-label="教程分类"[^>]*>([\s\S]*?)<\/nav>/.exec(index)[1];
+  assert.deepEqual([...nav.matchAll(/href="#([^"]+)"/g)].map((m) => m[1]), ids);
+  for (const g of groups) {
+    const sec = new RegExp(`id="${categoryAnchor(g.key)}"[\\s\\S]*?</section>`).exec(index)[0];
+    assert.deepEqual([...sec.matchAll(/href="\/guides\/([a-z0-9-]+)"/g)].map((m) => m[1]), g.articles.map((a) => a.slug), `${g.key} 组内顺序`);
+  }
+  for (const a of ARTICLES) {
+    const html = read(dir, `/guides/${a.slug}`);
+    const art = jsonLd(html).find((j) => j["@type"] === "TechArticle");
+    assert.equal(art.articleSection, guideCategoryLabel(a.category));
+    const others = sameCategory(ARTICLES, a).filter((x) => x.slug !== a.slug);
+    if (others.length === 0) { assert.ok(!html.includes("同分类的其他教程")); continue; }
+    const rel = /同分类的其他教程<\/h2>([\s\S]*?)<\/section>/.exec(html)[1];
+    assert.deepEqual([...rel.matchAll(/href="\/guides\/([a-z0-9-]+)"/g)].map((m) => m[1]), others.map((x) => x.slug), a.slug);
+  }
+  // 首页「教程」区块:每个分类都有入口,每类一到两篇,另有「全部教程」
+  const home = read(dir, "/");
+  for (const g of groups) assert.match(home, new RegExp(`href="/guides#${categoryAnchor(g.key)}"`));
+  assert.match(home, /href="\/guides"[^>]*>全部教程/);
 });
 
 test("真实教程目录能被预渲染读取", () => {
