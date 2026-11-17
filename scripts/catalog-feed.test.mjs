@@ -145,8 +145,10 @@ test("社区插件按同一套口径读取目录源:解析无丢弃,四种排序
   assert.equal(parsed.ok, true);
   assert.equal(parsed.catalog.dropped, 0);
   assert.equal(parsed.catalog.plugins.length, real.listed.length);
+  // 社区插件的「下载」排序仍只看 GitHub 累计下载(本站下载只在网站上统计),所以对照时去掉网站数据里的 siteDl
+  const forPlugin = real.listed.map(({ siteDl, ...rest }) => rest);
   for (const key of ["stars", "updated", "cadence", "downloads"]) {
-    assert.deepEqual(market.sortPlugins(parsed.catalog.plugins, key).map((p) => p.id), sortPlugins(real.listed, key).map((p) => p.id), key);
+    assert.deepEqual(market.sortPlugins(parsed.catalog.plugins, key).map((p) => p.id), sortPlugins(key === "downloads" ? forPlugin : real.listed, key).map((p) => p.id), key);
   }
   for (const q of ["翻译", "pdf", "windingwind", "AI 笔记", "ｚｏｔｅｒｏ"]) {
     assert.deepEqual(parsed.catalog.plugins.filter((p) => market.matchesQuery(p, q)).map((p) => p.id), realFeed.plugins.filter((_, i) => matchesQuery(sortPlugins(real.listed, "stars")[i], q)).map((p) => p.id), q);
