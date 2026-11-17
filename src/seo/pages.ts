@@ -43,7 +43,7 @@ export const STATIC_PAGES: PageMeta[] = ([
   { path: "/plugins/charts", title: "Zotero 插件数据看板｜星标、下载与更新", description: "查看已收录插件的公开星标、安装包下载次数、版本适配与发布节奏。结合统计日期和数据说明，了解社区插件的变化。", h1: "Zotero 插件数据看板" },
   { path: "/journals", title: "期刊查询｜收录、分区与期刊指标", description: "输入期刊名称、缩写或 ISSN，查询收录、分区与期刊指标。查看数据版本，缺失项目显示暂无，帮助核对期刊信息。", h1: "期刊查询" },
   { path: "/submission", title: "投稿建议｜了解期刊与投稿准备", description: "了解投稿前需要核对的期刊信息与准备事项。本栏目正在筹备，可先使用期刊查询核对收录、分区和相关指标。", h1: "投稿建议", indexable: false },
-  { path: "/guides", title: "Zotero 教程｜从入门使用到插件开发", description: "阅读 Zotero 中文教程，了解插件开发准备、首个插件、调试与发布流程。每篇附参考来源，便于继续查证和实践。", h1: "Zotero 中文教程" },
+  { path: "/guides", title: "Zotero 使用教程｜安装、插件、引用样式、同步备份与插件开发", description: "Zotero 中文使用教程：安装 Zotero 与浏览器 Connector，安装、挑选和排查插件，查找 GB/T 7714 等引用样式并在 Word 中切换，同步与备份文库，以及插件开发入门。每篇附官方参考来源。", h1: "Zotero 使用教程" },
   { path: "/styles", title: "Zotero 引用样式｜添加、切换与中文样式查找", description: "依据 Zotero 官方文档，说明引用样式（CSL）从哪里来、如何从官方样式库或本地文件添加、如何在 Word 与 LibreOffice 中切换，以及到哪里查找 GB/T 7714 等中文样式。投稿前以目标期刊最新要求为准。", h1: "Zotero 引用样式" },
   { path: "/forum", title: "Zotero 问答讨论｜使用问题与交流入口", description: "查找 Zotero 使用问题的交流入口，了解如何描述问题、提供版本与复现步骤，便于与其他使用者共同排查。", h1: "Zotero 问答讨论", indexable: false },
   { path: "/rules", title: "收录与数据规则｜Zotero 中文社区", description: "了解插件收录与自动下架条件、兼容范围、公开数据和排序规则。目录内的插件一视同仁，没有推荐位和付费置顶，唯一例外是本社区自己的插件单独展示；未声明的兼容范围不作推定。", h1: "收录与数据规则" },

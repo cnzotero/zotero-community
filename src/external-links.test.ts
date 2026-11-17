@@ -22,6 +22,7 @@ test("所有直接写的 <a href> 外链都带 target=_blank 与 rel=noopener", 
       const tag = m[0];
       if (!/href=/.test(tag)) continue;
       if (/href=\{to\}/.test(tag)) continue; // Link 组件内部的站内链接
+      if (/href=(?:"#|\{`#)/.test(tag)) continue; // 页内锚点(如教程总览的分类导航)
       if (!/target="_blank"/.test(tag) || !/rel="noopener noreferrer"/.test(tag)) bad.push(`${file}: ${tag.slice(0, 90)}`);
     }
   }

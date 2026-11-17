@@ -2,6 +2,7 @@
 title: "十分钟认识第一个 Zotero 插件：模板与构建"
 description: "从可核对的模板快照开始，修改插件身份、安装依赖并生成安装包。"
 slug: "dev-02-first-plugin"
+category: "dev"
 order: 2
 published: "2026-11-10"
 updated: "2026-11-10"

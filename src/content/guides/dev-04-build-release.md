@@ -2,6 +2,7 @@
 title: "Zotero 插件打包发布：安装包、版本与更新清单"
 description: "检查安装包、兼容声明与更新地址，了解发布和升级验证的完整路径。"
 slug: "dev-04-build-release"
+category: "dev"
 order: 4
 published: "2026-11-10"
 updated: "2026-11-10"

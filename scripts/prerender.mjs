@@ -11,6 +11,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArticle, wordCount } from "../src/guides/markdown.ts";
+import { guideCategoryLabel } from "../src/guides/categories.ts";
 import {
   CATEGORY_KEYS, SITE, SITE_NAME, STATIC_PAGES, categoryIntro, categoryLabel, categoryMeta, categoryPath, categoryStableFacts, compatMeta, duplicateNames, isIndexable, ogImage, pageUrl, pluginMeta, topicIntro, topicMeta,
 } from "../src/seo/pages.ts";
@@ -142,7 +143,9 @@ function articleLd(a, path) {
       wordCount: wordCount(a.blocks),
       ...(a.published ? { datePublished: a.published } : {}),
       ...(a.updated ? { dateModified: a.updated } : {}),
-      isPartOf: { "@type": "CreativeWorkSeries", name: "Zotero 插件开发系列" },
+      ...(a.category ? { articleSection: guideCategoryLabel(a.category) } : {}),
+      // 开发类是连续的系列;其他分类只标所属栏目
+      isPartOf: a.category === "dev" ? { "@type": "CreativeWorkSeries", name: "Zotero 插件开发系列" } : { "@type": "CollectionPage", name: "Zotero 使用教程", url: `${SITE}/guides` },
       author: { "@type": "Organization", name: SITE_NAME, url: `${SITE}/` },
       publisher: { "@type": "Organization", name: SITE_NAME, logo: { "@type": "ImageObject", url: `${SITE}/brand/icon-512.png` } },
       citation: a.sources,
@@ -378,7 +381,8 @@ export async function computeLedger({ plugins, articleSources, today, prepare, o
     const meta = topicMeta(topic.key, plugins);
     add(meta.path, fingerprint({ meta: [meta.title, meta.h1], copy: topicIntro(topic.key), members: list.map((p) => p.id).sort() }), topicsDate);
   }
-  for (const s of articleSources) add(`/guides/${s.article.slug}`, fingerprint(s.raw), s.file ? dateOf(s.file) : null);
+  // 教程首次进台账时用文件头的更新日期;没写再用文件在 git 里的最后修改日期
+  for (const s of articleSources) add(`/guides/${s.article.slug}`, fingerprint(s.raw), s.article.updated ?? (s.file ? dateOf(s.file) : null));
   return { prints, ledger: updateLedger(old, prints, today) };
 }
 

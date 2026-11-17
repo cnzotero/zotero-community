@@ -16,7 +16,7 @@ export function OfficialPluginPage() {
       <p className="lead">{OFFICIAL.summary}当前版本 v{OFFICIAL.version},{OFFICIAL.compatText}。</p>
       <p>
         <a className="btn" href={OFFICIAL.releaseUrl} target="_blank" rel="noopener noreferrer"><DownloadIcon size={14} /> 下载安装</a>{" "}
-        <Ext href={OFFICIAL.docUrl}>图文使用教程</Ext>
+        <Link to={OFFICIAL.docUrl} className="inline-link">使用教程</Link>
       </p>
 
       <h2>它能做什么</h2>

@@ -18,7 +18,7 @@ export interface OfficialPlugin {
   releaseUrl: string;
   /** 站内介绍与安装教程 */
   pagePath: string;
-  /** 仓库里的使用教程 */
+  /** 站内使用教程 */
   docUrl: string;
   sourceUrl: string;
 }
@@ -33,6 +33,6 @@ export const OFFICIAL: OfficialPlugin = {
   compatText: `适配 Zotero ${major(z.strict_min_version)}–${major(z.strict_max_version)}`,
   releaseUrl: `${REPO}/releases/tag/plugin-v${manifest.version}`,
   pagePath: "/plugin",
-  docUrl: `${REPO}/blob/main/docs/plugins/community-plugin-market.md`,
+  docUrl: "/guides/community-plugin-market",
   sourceUrl: `${REPO}/tree/main/plugin`,
 };

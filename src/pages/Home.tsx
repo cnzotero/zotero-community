@@ -4,6 +4,7 @@ import compatData from "virtual:compat-index";
 import topicData from "virtual:topic-index";
 import { Link } from "../link.tsx";
 import { navigate } from "../router.ts";
+import { categoryAnchor, homePicks } from "../guides/categories.ts";
 import { ARTICLES, articlePath } from "../guides/content.ts";
 import { serverCompatIndex, serverHomeBoards, serverTopicIndex } from "../plugins/data.ts";
 import { PluginCard } from "../plugins/PluginsPage.tsx";
@@ -109,20 +110,17 @@ export function Home() {
 
       <section className="section">
         <div className="section-head">
-          <h2>插件开发教程</h2>
+          <h2>教程</h2>
           <Link to="/guides" className="more">全部教程</Link>
         </div>
-        <ol className="series-list">
-          {ARTICLES.map((a) => (
-            <li key={a.slug}>
-              <Link to={articlePath(a.slug)} className="series-item">
-                <span className="series-no">{a.order}</span>
-                <span className="series-text"><b>{a.title}</b><span className="meta">{a.description}</span></span>
-                <span />
-              </Link>
-            </li>
+        <div className="grid guide-home">
+          {homePicks(ARTICLES).map((g) => (
+            <div key={g.key} className="card guide-home-group">
+              <h3><Link to={`/guides#${categoryAnchor(g.key)}`}>{g.label}</Link></h3>
+              <ul>{g.articles.map((a) => <li key={a.slug}><Link to={articlePath(a.slug)} className="inline-link">{a.title}</Link></li>)}</ul>
+            </div>
           ))}
-        </ol>
+        </div>
       </section>
 
       <section className="section">
