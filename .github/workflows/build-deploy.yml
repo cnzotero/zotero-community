@@ -30,10 +30,10 @@ jobs:
 
       - run: npm ci
 
-      # 定时与手动触发时:刷新星标、发布节奏、下载次数、Issues 并保存当天快照
+      # 定时与手动触发时:刷新星标、发布节奏、下载次数、Issues、最新版本与安装包,并保存当天快照
       - name: 刷新插件数据
         if: github.event_name != 'push'
-        run: node scripts/refresh-plugins.mjs
+        run: node --experimental-strip-types scripts/refresh-plugins.mjs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

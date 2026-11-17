@@ -10,7 +10,7 @@
     "build": "tsc && vite build && node --experimental-strip-types scripts/prerender.mjs",
     "preview": "vite preview",
     "test": "node --test --test-concurrency=1 --experimental-strip-types \"src/**/*.test.ts\" \"scripts/*.test.mjs\" \"plugin/test/*.test.mjs\"",
-    "refresh": "node scripts/refresh-plugins.mjs"
+    "refresh": "node --experimental-strip-types scripts/refresh-plugins.mjs"
   },
   "dependencies": {
     "react": "^19.2.4",

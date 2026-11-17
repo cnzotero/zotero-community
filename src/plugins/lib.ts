@@ -40,8 +40,8 @@ export interface Plugin {
   forks?: number;
   watchers?: number;
   issues?: number; // 未关闭的 Issues 数
-  /** GitHub 安装包累计下载(只统计 .xpi);prevTotal/prevAt 是上一次的基线,用来算每天新增 */
-  dl?: { total: number; at: string; prevTotal?: number; prevAt?: string };
+  /** GitHub 安装包累计下载(只统计 .xpi);prevTotal/prevAt 是上一次的基线,用来算每天新增;carried:含已移除的历史版本 */
+  dl?: { total: number; at: string; prevTotal?: number; prevAt?: string; carried?: boolean };
 }
 
 export interface Cadence {
@@ -51,6 +51,7 @@ export interface Cadence {
   medianDays: number | null; // 最近若干次发布间隔的中位数(天)
   last: string; // 最近一次发布日期
   capped?: boolean; // 接口取满上限,实际次数不少于 r12
+  carried?: boolean; // 含已移除的历史版本(见 src/data/carryover.json)
 }
 
 export interface Download {
