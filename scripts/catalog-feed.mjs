@@ -111,8 +111,8 @@ export function buildFeed({ listed, day, addonIds = {}, history = {}, dropped = 
 const isStr = (v) => typeof v === "string" && v.length > 0;
 const isDay = (v) => typeof v === "string" && DAY_RE.test(v);
 const isCount = (v) => Number.isInteger(v) && v >= 0;
-const PLUGIN_KEYS = new Set(["id", "name", "summary", "category", "author", "homepage", "stars", "updated", "cadence", "dl", "dlWeek", "archived", "zotero", "releases"]);
-const RELEASE_KEYS = new Set(["t", "v", "u", "i", "min", "max", "d"]);
+export const PLUGIN_KEYS = new Set(["id", "name", "summary", "category", "author", "homepage", "stars", "updated", "cadence", "dl", "dlWeek", "archived", "zotero", "releases"]);
+export const RELEASE_KEYS = new Set(["t", "v", "u", "i", "min", "max", "d"]);
 
 /** 校验目录源;返回问题清单(空数组表示通过)。excludedIds:不得出现的插件(下架的)。 */
 /** 被丢弃安装包的汇总:条数、涉及插件数、因此没有任何安装包的插件、按原因计数与示例。 */

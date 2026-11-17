@@ -498,6 +498,15 @@ body { background: var(--bg); }
 
 /* 引用样式页每段末尾的来源 */
 .source-line { font-size: 13px; color: var(--muted); margin-top: -4px; }
+/* 开放数据页、引用样式页的数据表:窄屏时表格自身横向滚动,页面不出现横向滚动 */
+.table-wrap { overflow-x: auto; margin: 12px 0 16px; -webkit-overflow-scrolling: touch; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 13.5px; line-height: 1.55; }
+.data-table caption { text-align: left; font-weight: 600; color: var(--ink-soft); padding: 4px 0 6px; }
+.data-table th, .data-table td { border-bottom: 1px solid var(--line); padding: 7px 8px; text-align: left; vertical-align: top; color: var(--ink-soft); }
+.data-table th { background: var(--mist); font-weight: 600; white-space: nowrap; }
+.data-table td code { white-space: nowrap; }
+.data-table td.nowrap { white-space: nowrap; }
+.data-table td code.style-id { white-space: normal; overflow-wrap: anywhere; font-size: 12px; }
 
 /* 社区官方插件:单独的展示位,与目录卡片明显区分(实线强调色边框、浅色底、徽标) */
 .official-box { display: grid; grid-template-columns: auto 1fr auto; gap: 14px 18px; align-items: center; margin: 16px 0 20px; padding: 16px 18px; border: 2px solid var(--accent); border-radius: 14px; background: var(--accent-soft); }

@@ -336,11 +336,11 @@ test("引用样式页:正文完整、每段注明来源、外链都新标签打�
   const { dir } = await run();
   const html = read(dir, "/styles");
   assert.deepEqual(h1s(html), ["Zotero 引用样式"]);
-  for (const h of ["1. 引用样式是什么", "2. 在 Zotero 里添加样式", "3. 在 Word 和 LibreOffice 里选择样式", "4. 中文样式(GB/T 7714 等)", "5. 样式不对怎么办,投稿前核对什么"]) assert.ok(html.includes(`<h2>${h}</h2>`), h);
+  for (const h of ["1. 引用样式是什么", "2. 在 Zotero 里添加样式", "3. 在 Word 和 LibreOffice 里选择样式", "4. 中文样式(GB/T 7714 等)", "5. 中文引用样式一览", "6. 样式不对怎么办,投稿前核对什么"]) assert.ok(html.includes(`<h2>${h}</h2>`), h);
   assert.ok(!html.includes("正在整理中"), "占位文案已移除");
   assert.match(html, /投稿前以目标期刊的最新要求为准/);
   assert.match(html, /核对日期:2026-11-10/); // 构建日期
-  assert.equal((html.match(/<p class="source-line">来源:/g) ?? []).length, 5, "每段末尾都有来源");
+  assert.equal((html.match(/<p class="source-line">来源:/g) ?? []).length, 6, "每段末尾都有来源");
   const main = /<main class="container">([\s\S]*)<\/main>/.exec(html)[1];
   const ext = [...main.matchAll(/<a\b[^>]*href="(https?:\/\/[^"]*)"[^>]*>/g)];
   assert.ok(ext.length >= STYLE_SOURCE_LIST.length);
