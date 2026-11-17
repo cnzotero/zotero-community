@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "../link.tsx";
 import { PageHero } from "../pageHero.tsx";
 import { downloadsPerDay } from "./charts-lib.ts";
+import { downloadLinkHandlers, siteDownloadsOf, useSiteDownloads } from "./site-downloads.ts";
 import { cachedPluginData, loadPluginData, type PluginData } from "./data.ts";
 import { applyMeta } from "../seo/head.ts";
 import { categoryPath, compatPath, duplicateNames, pageMeta, pluginMeta, topicPath } from "../seo/pages.ts";
@@ -17,6 +18,7 @@ import {
 } from "./lib.ts";
 
 const PAGE = 24;
+const SITE_DL_TITLE = "从本站下载按钮发起的下载次数,不含从 GitHub 直接下载;从本站开始统计之日起累计";
 const CATEGORY_LABEL = Object.fromEntries(CATEGORIES.map((c) => [c.key, c.label])) as Record<CategoryKey, string>;
 
 type Loaded = { state: "loading" } | { state: "error" } | { state: "ready"; data: PluginData };
@@ -146,6 +148,7 @@ function CardTags({ p, now }: { p: Plugin; now: Date }) {
 
 export function PluginCard({ p, now, zv, onAuthor }: { p: Plugin; now: Date; zv: number | null; onAuthor?: (a: string) => void }) {
   const dl = pickDownload(p, zv ?? 10) ?? (zv === null ? ZV.map((v) => pickDownload(p, v)).find(Boolean) ?? null : null);
+  const site = siteDownloadsOf(useSiteDownloads(), p.id);
   return (
     <article className="card plugin-card">
       <Link to={pluginPath(p.id)} className="card-main">
@@ -160,6 +163,7 @@ export function PluginCard({ p, now, zv, onAuthor }: { p: Plugin; now: Date; zv:
         <div className="plugin-stats">
           <span title="GitHub 星标"><StarIcon size={13} /> {formatStars(p.stars)}</span>
           {p.dl && p.dl.total > 0 && <span title="GitHub 累计下载次数"><DownloadIcon size={13} /> {formatCount(p.dl.total)}</span>}
+          {site !== null && <span title={SITE_DL_TITLE}>本站下载 {formatCount(site)} 次</span>}
           {p.latest && <span>v{p.latest.version}</span>}
           <span title={speedText(p) ?? undefined}>{cadenceText(p)}</span>
         </div>
@@ -167,7 +171,7 @@ export function PluginCard({ p, now, zv, onAuthor }: { p: Plugin; now: Date; zv:
       </Link>
       <div className="card-actions">
         {dl ? (
-          <a className="btn btn-sm" href={dl.u} target="_blank" rel="noopener noreferrer" title={`下载 v${dl.v}`}>
+          <a className="btn btn-sm" href={dl.u} target="_blank" rel="noopener noreferrer" title={`下载 v${dl.v}`} {...downloadLinkHandlers(p.id, dl.v)}>
             <DownloadIcon size={14} /> 下载
           </a>
         ) : (
@@ -449,7 +453,7 @@ function DownloadBox({ p }: { p: Plugin }) {
       </div>
       {d ? (
         <p className="dl-main">
-          <a className="btn" href={d.u} target="_blank" rel="noopener noreferrer"><DownloadIcon size={15} /> 下载 v{d.v}(.xpi)</a>
+          <a className="btn" href={d.u} target="_blank" rel="noopener noreferrer" {...downloadLinkHandlers(p.id, d.v)}><DownloadIcon size={15} /> 下载 v{d.v}(.xpi)</a>
           <span className="meta">{downloadFilename(d.u)} · 来自 {downloadHost(d.u)}</span>
         </p>
       ) : (
@@ -480,6 +484,8 @@ export function PluginDetail() {
   const p = useMemo(() => (id ? all.find((x) => x.id === id) ?? null : null), [all, id]);
   const related = useMemo(() => (p ? relatedPlugins(all, p) : []), [all, p]);
   const headerDl = useMemo(() => (p ? ([10, 9, 8, 7].map((v) => pickDownload(p, v)).find(Boolean) ?? null) : null), [p]);
+  const siteStats = useSiteDownloads();
+  const site = p ? siteDownloadsOf(siteStats, p.id) : null;
 
   useEffect(() => {
     if (!p) { document.title = "插件广场 · Zotero 中文社区"; return; }
@@ -515,7 +521,7 @@ export function PluginDetail() {
               <p className="meta">作者 {authorOf(p.id)} · <Link to={categoryPath(p.category)} className="inline-link">{CATEGORY_LABEL[p.category]}类插件</Link></p>
               <div className="detail-actions">
                 {headerDl ? (
-                  <a className="btn" href={headerDl.u} target="_blank" rel="noopener noreferrer"><DownloadIcon size={15} /> 下载 v{headerDl.v}</a>
+                  <a className="btn" href={headerDl.u} target="_blank" rel="noopener noreferrer" {...downloadLinkHandlers(p.id, headerDl.v)}><DownloadIcon size={15} /> 下载 v{headerDl.v}</a>
                 ) : null}
                 <a className={headerDl ? "btn btn-ghost" : "btn"} href={p.homepage} target="_blank" rel="noopener noreferrer"><GithubIcon size={15} /> GitHub 仓库</a>
                 {p.latest && (
@@ -531,6 +537,7 @@ export function PluginDetail() {
             <div><dt>适配 Zotero</dt><dd><CompatBadge p={p} /><CompatLinks p={p} /></dd></div>
             <div><dt>GitHub 星标</dt><dd><StarIcon size={14} /> {p.stars.toLocaleString("zh-CN")}</dd></div>
             <div><dt>累计下载(GitHub)</dt><dd>{p.dl ? formatCount(p.dl.total) : "暂无"}{p.dl?.carried ? <small className="dd-sub"> 含历史版本</small> : null}{downloadsPerDay(p) ? <small className="dd-sub"> +{Math.round(downloadsPerDay(p) as number).toLocaleString("zh-CN")}/天</small> : null}</dd></div>
+            {site !== null && <div><dt title={SITE_DL_TITLE}>本站下载</dt><dd title={SITE_DL_TITLE}>{formatCount(site)} 次</dd></div>}
             <div><dt>更新速度</dt><dd>{speedText(p) ?? "暂无"}</dd></div>
             <div><dt>近一年发布</dt><dd>{p.cadence ? `${p.cadence.r12}${p.cadence.capped ? "+" : ""} 次` : "暂无"}</dd></div>
           </dl>
