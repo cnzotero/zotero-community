@@ -1,0 +1,27 @@
+{
+  "说明": "历史保留:公开发布被大量移除、导致统计塌缩的插件,保留移除前最后一次公开刷新的数据,之后与现存发布合并计算(对所有插件同一规则,见 scripts/carryover-scan.mjs 与 scripts/refresh-plugins.mjs)。cadence / dl 段取自 commit 指向的本仓库提交里的 src/data/plugins.json 与 src/data/history.json(date 为该次刷新的数据日期,cutoff 为该提交时间),dropCommit / dropDate 是第一次看到下降的刷新。track 段由每日刷新自动维护。口径:这些插件的累计下载与近一年发布次数含已移除的历史版本。",
+  "plugins": {
+    "wdcpclover/ai4paper": {
+      "cadence": {
+        "commit": "d866653c8acddda1027a452ce62d966ee4ba6fc9",
+        "date": "2026-11-10",
+        "cutoff": "2026-11-10T21:14:32Z",
+        "dropCommit": "58b9b2a1fb2b4b6bd6d3380843d132506222fd1b",
+        "dropDate": "2026-11-12",
+        "r12": 2016,
+        "days12": 212,
+        "monthly": [0, 0, 0, 0, 283, 491, 317, 87, 121, 391, 228, 98],
+        "medianDays": 0.1,
+        "last": "2026-11-10"
+      },
+      "dl": {
+        "commit": "d866653c8acddda1027a452ce62d966ee4ba6fc9",
+        "date": "2026-11-10",
+        "cutoff": "2026-11-10T21:14:32Z",
+        "dropCommit": "58b9b2a1fb2b4b6bd6d3380843d132506222fd1b",
+        "dropDate": "2026-11-12",
+        "total": 37202
+      }
+    }
+  }
+}

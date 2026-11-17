@@ -410,7 +410,7 @@ function CadenceChart({ p, now }: { p: Plugin; now: Date }) {
           </div>
         ))}
       </div>
-      <p className="meta">{cadenceText(p)}{speedText(p) ? ` · ${speedText(p)}` : ""} · 最近发布 {c.last}。数据来自 GitHub 发布记录。</p>
+      <p className="meta">{cadenceText(p)}{speedText(p) ? ` · ${speedText(p)}` : ""} · 最近发布 {c.last}。数据来自 GitHub 发布记录{c.carried ? ",含历史版本" : ""}。</p>
     </section>
   );
 }
@@ -530,7 +530,7 @@ export function PluginDetail() {
             <div><dt>发布日期</dt><dd title={p.updated}>{p.updated ? `${p.updated}(${relativeTime(p.updated, now)})` : "未知"}</dd></div>
             <div><dt>适配 Zotero</dt><dd><CompatBadge p={p} /><CompatLinks p={p} /></dd></div>
             <div><dt>GitHub 星标</dt><dd><StarIcon size={14} /> {p.stars.toLocaleString("zh-CN")}</dd></div>
-            <div><dt>累计下载(GitHub)</dt><dd>{p.dl ? formatCount(p.dl.total) : "暂无"}{downloadsPerDay(p) ? <small className="dd-sub"> +{Math.round(downloadsPerDay(p) as number).toLocaleString("zh-CN")}/天</small> : null}</dd></div>
+            <div><dt>累计下载(GitHub)</dt><dd>{p.dl ? formatCount(p.dl.total) : "暂无"}{p.dl?.carried ? <small className="dd-sub"> 含历史版本</small> : null}{downloadsPerDay(p) ? <small className="dd-sub"> +{Math.round(downloadsPerDay(p) as number).toLocaleString("zh-CN")}/天</small> : null}</dd></div>
             <div><dt>更新速度</dt><dd>{speedText(p) ?? "暂无"}</dd></div>
             <div><dt>近一年发布</dt><dd>{p.cadence ? `${p.cadence.r12}${p.cadence.capped ? "+" : ""} 次` : "暂无"}</dd></div>
           </dl>
