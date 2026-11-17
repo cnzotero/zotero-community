@@ -15,5 +15,6 @@ if [ "$(git rev-parse HEAD)" = "$(git rev-parse FETCH_HEAD)" ]; then exit 0; fi
 git reset -q --hard FETCH_HEAD
 # 必须有首页才同步,避免异常的空分支把网站清空
 [ -s index.html ] || { echo "deploy 分支缺少 index.html,放弃同步" >&2; exit 1; }
-rsync -a --delete --exclude '.git' ./ "$WEB_ROOT/"
+# 访问量与本站下载次数由服务器上的定时任务写进网站目录,不在构建产物里:同步时保留,不要删掉
+rsync -a --delete --exclude '.git' --exclude '/stats.json' --exclude '/dl-stats.json' ./ "$WEB_ROOT/"
 echo "已同步 $(git rev-parse --short HEAD) $(date -u +%FT%TZ)"
