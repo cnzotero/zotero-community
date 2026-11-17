@@ -77,3 +77,12 @@ test("没有数据或为 0 时不显示", () => {
   assert.equal(siteDownloadsOf(s, "__proto__"), null);
   assert.equal(siteDownloadsOf(null, "a/b"), null);
 });
+
+test("本站下载显示:实时汇总里有这个插件时以它为准,没有时用插件数据里每日刷新写入的数", () => {
+  const s = parseDlStats({ total: 9, today: 1, plugins: { "a/b": { total: 9, today: 1 } } });
+  assert.equal(siteDownloadsOf(s, "a/b", 4), 9);
+  assert.equal(siteDownloadsOf(s, "c/d", 4), 4);
+  assert.equal(siteDownloadsOf(null, "a/b", 4), 4);
+  assert.equal(siteDownloadsOf(null, "a/b", 0), null);
+  assert.equal(siteDownloadsOf(null, "a/b", undefined), null);
+});

@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   DEFAULT_FILTERS, activityTag, authorOf, authorStats, barHeights, cadenceText, speedText, topAuthors, compareVersions, downloadFilename, downloadHost, isAllowedXpiUrl, pickDownload, applyFilters, cardTags, popularityTag, compatSummary, computeStats, filterPlugins, formatStars, freshness,
-  compatIndex, compatList, declaredMajors, parseFilters, pluginIdFromPath, relatedPlugins, relativeTime, serializeFilters, sortPlugins, supportsZotero,
+  compatIndex, compatList, declaredMajors, homeBoards, parseFilters, pluginIdFromPath, relatedPlugins, relativeTime, serializeFilters, sortPlugins, supportsZotero,
   type Plugin,
 } from "./lib.ts";
 
@@ -229,4 +229,33 @@ test("真实数据:每个版本页的插件数等于声明支持该版本的插�
     assert.equal(count, data.plugins.filter((p) => p.zotero.declared && p.zotero.majors.includes(major)).length);
     assert.equal(compatList(data.plugins, major).length, count);
   }
+});
+
+test("下载量排序:本站下载为主键,GitHub 累计下载为次键,再按星标、名称", () => {
+  const p1 = mk({ id: "s/a", name: "A", stars: 5, dl: { total: 100, at: "2026-11-17" } });
+  const p2 = mk({ id: "s/b", name: "B", stars: 5, dl: { total: 9000, at: "2026-11-17" } });
+  const p3 = mk({ id: "s/c", name: "C", stars: 5, dl: { total: 50, at: "2026-11-17" }, siteDl: { total: 3, today: 0, at: "2026-11-17" } });
+  const p4 = mk({ id: "s/d", name: "D", stars: 9, siteDl: { total: 3, today: 1, at: "2026-11-17" } });
+  const p5 = mk({ id: "s/e", name: "E", stars: 1 });
+  // 本站下载 3 次的两个在前(同为 3 次时按 GitHub 累计下载:C 有 50、D 没有);其余按 GitHub 累计下载
+  assert.deepEqual(sortPlugins([p1, p2, p3, p4, p5], "downloads").map((p) => p.id), ["s/c", "s/d", "s/b", "s/a", "s/e"]);
+  // 首页榜单:没有 GitHub 下载数据、但有本站下载的也参与;两样都没有的不参与
+  assert.deepEqual(homeBoards([p1, p2, p3, p4, p5]).downloads.map((p) => p.id), ["s/c", "s/d", "s/b", "s/a"]);
+});
+
+test("下载量排序:所有插件本站下载都为 0(或没有)时,与只按 GitHub 累计下载的旧排序完全一致", () => {
+  const oldSort = (list: Plugin[]) => {
+    const byName = (a: Plugin, b: Plugin) => a.name.localeCompare(b.name, "zh-Hans-CN") || a.id.localeCompare(b.id);
+    return [...list].sort((a, b) => (b.dl?.total ?? -1) - (a.dl?.total ?? -1) || b.stars - a.stars || byName(a, b));
+  };
+  const list: Plugin[] = [];
+  for (let i = 0; i < 40; i++) {
+    const zero = i % 3 === 0 ? { siteDl: { total: 0, today: 0, at: "2026-11-17" } } : {};
+    const dl = i % 5 === 0 ? {} : { dl: { total: (i * 37) % 11 * 100, at: "2026-11-17" } };
+    list.push(mk({ id: `z/p${i}`, name: `插件${(i * 7) % 13}`, stars: (i * 13) % 4, ...zero, ...dl }));
+  }
+  assert.deepEqual(sortPlugins(list, "downloads").map((p) => p.id), oldSort(list).map((p) => p.id));
+  const oldBoard = oldSort(list.filter((p) => p.dl?.total != null)).slice(0, 6).map((p) => p.id);
+  assert.deepEqual(homeBoards(list).downloads.map((p) => p.id), oldBoard);
+  assert.equal(homeBoards(list).downloads.length, 6);
 });

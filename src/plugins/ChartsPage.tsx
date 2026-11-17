@@ -172,7 +172,7 @@ export function ChartsPage() {
             <Panel title="星标榜" note="按 GitHub 星标数排名。">
               <RankBars items={stars} fmt={formatStars} />
             </Panel>
-            <Panel title="下载榜" note="累计下载只统计 GitHub 发布页里的安装包,不含其他下载渠道;每天新增来自相邻两天的差值。">
+            <Panel title="GitHub 下载榜" note="按 GitHub 累计下载排名:只统计 GitHub 发布页里的安装包(部分插件含已移除的历史版本),不含其他下载渠道,与首页「下载最多(本站下载)」口径不同;每天新增来自相邻两天的差值。">
               <RankBars items={dls} fmt={compact} />
             </Panel>
             <Panel title="本周新增星标" note="最近 7 天新增星标最多的插件,由每天保存的快照算出。">

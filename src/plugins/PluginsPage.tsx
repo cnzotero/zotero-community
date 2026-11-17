@@ -13,7 +13,7 @@ import { OfficialBox } from "../official/OfficialBox.tsx";
 import {
   CATEGORIES, DEFAULT_FILTERS, ZOTERO_VERSIONS as ZV, ZOTERO_VERSIONS, applyFilters, authorOf, authorStats, barHeights, byNameStable, cadenceText,
   cardTags, compatIndex, compatSummary, computeStats, downloadFilename, downloadHost, formatCount, formatStars, isAllowedXpiUrl, parseFilters, pickDownload,
-  pluginIdFromPath, pluginPath, relatedPlugins, relativeTime, serializeFilters, speedText, topAuthors,
+  pluginIdFromPath, pluginPath, relatedPlugins, relativeTime, serializeFilters, speedText, topAuthors, SITE_DL_RANK_NOTE,
   type CategoryKey, type Filters, type Plugin, type SortKey, type UpdatedWithin,
 } from "./lib.ts";
 
@@ -148,7 +148,7 @@ function CardTags({ p, now }: { p: Plugin; now: Date }) {
 
 export function PluginCard({ p, now, zv, onAuthor }: { p: Plugin; now: Date; zv: number | null; onAuthor?: (a: string) => void }) {
   const dl = pickDownload(p, zv ?? 10) ?? (zv === null ? ZV.map((v) => pickDownload(p, v)).find(Boolean) ?? null : null);
-  const site = siteDownloadsOf(useSiteDownloads(), p.id);
+  const site = siteDownloadsOf(useSiteDownloads(), p.id, p.siteDl?.total);
   return (
     <article className="card plugin-card">
       <Link to={pluginPath(p.id)} className="card-main">
@@ -218,7 +218,7 @@ function Filters_({ f, set, openMobile, authors }: { f: Filters; set: (n: Partia
             <option value="stars">热度(星标)</option>
             <option value="updated">最近更新</option>
             <option value="cadence">更新频率</option>
-            <option value="downloads">下载量</option>
+            <option value="downloads">下载量(本站下载)</option>
             <option value="name">名称</option>
           </select>
         </label>
@@ -378,6 +378,7 @@ export function PluginsList() {
       {loaded.state === "ready" && list.length > 0 && (
         <>
           <p className="result-count">共 {list.length} 款</p>
+          {f.sort === "downloads" && <p className="meta">{SITE_DL_RANK_NOTE}</p>}
           <div className="grid plugin-grid">
             {list.slice(0, shown).map((p) => <PluginCard key={p.id} p={p} now={now} zv={f.zotero} onAuthor={(a) => set({ author: a })} />)}
           </div>
@@ -485,7 +486,7 @@ export function PluginDetail() {
   const related = useMemo(() => (p ? relatedPlugins(all, p) : []), [all, p]);
   const headerDl = useMemo(() => (p ? ([10, 9, 8, 7].map((v) => pickDownload(p, v)).find(Boolean) ?? null) : null), [p]);
   const siteStats = useSiteDownloads();
-  const site = p ? siteDownloadsOf(siteStats, p.id) : null;
+  const site = p ? siteDownloadsOf(siteStats, p.id, p.siteDl?.total) : null;
 
   useEffect(() => {
     if (!p) { document.title = "插件广场 · Zotero 中文社区"; return; }

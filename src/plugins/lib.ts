@@ -42,6 +42,8 @@ export interface Plugin {
   issues?: number; // 未关闭的 Issues 数
   /** GitHub 安装包累计下载(只统计 .xpi);prevTotal/prevAt 是上一次的基线,用来算每天新增;carried:含已移除的历史版本 */
   dl?: { total: number; at: string; prevTotal?: number; prevAt?: string; carried?: boolean };
+  /** 本站下载(从本站「下载」按钮发起的下载)累计与当天次数,每日刷新时从本站汇总写入;at 为汇总日期 */
+  siteDl?: { total: number; today: number; at: string };
 }
 
 export interface Cadence {
@@ -148,13 +150,21 @@ export function filterPlugins(list: Plugin[], f: Filters, now: Date): Plugin[] {
   });
 }
 
+/** 下载量排序与首页「下载最多」榜的口径说明(两处共用同一句)。 */
+export const SITE_DL_RANK_NOTE =
+  "按本站下载排序:本站下载是从本站「下载」按钮发起的下载,不含从 GitHub 直接下载,从本站开始统计之日起累计,按每天刷新时的数字排序;统计初期本站下载还少,次数相同时以 GitHub 累计下载(含历史版本)作为次序参考。";
+
+/** 本站下载累计(每日刷新时写入的数);没有记为 0。 */
+export const siteDlTotal = (p: Plugin): number => p.siteDl?.total ?? 0;
+
 export function sortPlugins(list: Plugin[], sort: SortKey): Plugin[] {
   const byName = (a: Plugin, b: Plugin) => a.name.localeCompare(b.name, "zh-Hans-CN") || a.id.localeCompare(b.id);
   const out = [...list];
   out.sort((a, b) => {
     if (sort === "stars") return b.stars - a.stars || byName(a, b);
     if (sort === "updated") return (b.updated || "").localeCompare(a.updated || "") || byName(a, b);
-    if (sort === "downloads") return (b.dl?.total ?? -1) - (a.dl?.total ?? -1) || b.stars - a.stars || byName(a, b);
+    // 下载量:以本站下载累计为主,相同(包括都还没有本站下载)时按 GitHub 累计下载,再按星标、名称
+    if (sort === "downloads") return siteDlTotal(b) - siteDlTotal(a) || (b.dl?.total ?? -1) - (a.dl?.total ?? -1) || b.stars - a.stars || byName(a, b);
     // 更新频率按「近一年有发布的天数」排:同一天发多次只算一天,避免靠大量预发布版本刷次数。
     if (sort === "cadence") return (b.cadence?.days12 ?? -1) - (a.cadence?.days12 ?? -1) || (b.cadence?.r12 ?? -1) - (a.cadence?.r12 ?? -1) || b.stars - a.stars || byName(a, b);
     return byName(a, b);
@@ -433,7 +443,7 @@ export function homeBoards(list: Plugin[], n = 6): HomeBoards {
   return {
     stars: sortPlugins(list, "stars").slice(0, n),
     cadence: sortPlugins(list, "cadence").slice(0, n),
-    downloads: sortPlugins(list.filter((p) => p.dl?.total != null), "downloads").slice(0, n),
+    downloads: sortPlugins(list.filter((p) => p.dl?.total != null || siteDlTotal(p) > 0), "downloads").slice(0, n),
   };
 }
 
