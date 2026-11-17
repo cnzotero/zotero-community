@@ -95,9 +95,12 @@ export function parseDlStats(raw: unknown): SiteDownloadStats | null {
   return { total, today, plugins: out };
 }
 
-/** 某个插件的本站下载次数;没有数据或为 0 时返回 null(页面上不显示这一项)。 */
-export function siteDownloadsOf(stats: SiteDownloadStats | null, id: string): number | null {
-  const n = stats && Object.hasOwn(stats.plugins, id) ? stats.plugins[id].total : 0;
+/**
+ * 某个插件的本站下载次数;没有数据或为 0 时返回 null(页面上不显示这一项)。
+ * 页面读到的实时汇总里有这个插件时以它为准(比每日刷新写进插件数据的数更新);没有时用 fallback(插件数据里的 siteDl.total)。
+ */
+export function siteDownloadsOf(stats: SiteDownloadStats | null, id: string, fallback = 0): number | null {
+  const n = stats && Object.hasOwn(stats.plugins, id) ? stats.plugins[id].total : fallback;
   return n && n > 0 ? n : null;
 }
 

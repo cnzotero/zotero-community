@@ -8,7 +8,7 @@ import { categoryAnchor, homePicks } from "../guides/categories.ts";
 import { ARTICLES, articlePath } from "../guides/content.ts";
 import { serverCompatIndex, serverHomeBoards, serverTopicIndex } from "../plugins/data.ts";
 import { PluginCard } from "../plugins/PluginsPage.tsx";
-import { CATEGORIES, type HomeBoardKey } from "../plugins/lib.ts";
+import { CATEGORIES, SITE_DL_RANK_NOTE, type HomeBoardKey } from "../plugins/lib.ts";
 import { COMPAT_SCOPE, categoryPath, compatPath, pageMeta, topicPath } from "../seo/pages.ts";
 import { takeEarlyInput, useNow } from "../ssr.ts";
 import { OfficialBox } from "../official/OfficialBox.tsx";
@@ -17,7 +17,7 @@ import { OfficialBox } from "../official/OfficialBox.tsx";
 const BOARDS: { key: HomeBoardKey; label: string; note: string }[] = [
   { key: "stars", label: "星标最多", note: "按 GitHub 星标排序,与插件广场的目录使用同一套规则,目录内的插件没有置顶或推荐位。" },
   { key: "cadence", label: "更新最勤", note: "按近一年有发布的天数排序,同一天发布多次只算一天;与插件广场「更新频率」同一套规则。" },
-  { key: "downloads", label: "下载最多", note: "按发布页公开的安装包累计下载量排序;没有公开下载数据的插件不参与。" },
+  { key: "downloads", label: "下载最多(本站下载)", note: SITE_DL_RANK_NOTE },
 ];
 
 const TOOLS = [

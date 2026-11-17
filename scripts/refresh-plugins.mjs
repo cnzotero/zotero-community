@@ -13,13 +13,21 @@
 //   - 近一年发布次数 / 有发布的天数 / 每月次数 = 快照(按经过的天数平移)+ 快照之后的现存发布,不重复计数;
 //   - 累计下载 = 快照总数 + 之后的新增。新增按发布逐个记账(见 trackDownloads):今日总数比上次低(又有发布被移除,
 //     或接口某天少返回了几个发布)时不记负数,也不会在发布重新出现时重复计入。
+//   - 快照总数可以按作者提供的移除前累计校准:dl.total 改成校准值,原快照值留在 dl.snapshotOriginal,
+//     dl.calibration 写明日期与依据。基线变了的那次刷新不留「上次基线」(当天不出现虚高的每天新增),
+//     该插件的历史快照整体平移同样的差值(近七天新增等按快照差值算的数字不受影响)。
 // 口径:这些插件的累计下载与近一年发布次数含已移除的历史版本。
+//
+// 本站下载:最后一步从本站读 /dl-stats.json(服务器按「下载」按钮的上报汇总出的数字),把每个插件的本站下载累计
+// 写进 plugins.json 的 siteDl,首页「下载最多」榜与插件广场的下载量排序都以它为主键。取不到、返回错误或格式不对时
+// 跳过这一步、保留已有的值,不影响其它数据的刷新;单个插件的条目不合格式只跳过那一条。
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 import { releaseRejection } from "./catalog-feed.mjs";
 import { MAX_XPI_BYTES, downloadXpi, readZipManifest } from "./import-addon-ids.mjs";
 import { ZOTERO_VERSIONS, compareVersions } from "../src/plugins/lib.ts";
+import { parseDlStats } from "../src/plugins/site-downloads.ts";
 
 const FILE = resolve(dirname(fileURLToPath(import.meta.url)), "../src/data/plugins.json");
 const HISTORY = resolve(dirname(fileURLToPath(import.meta.url)), "../src/data/history.json");
@@ -67,6 +75,12 @@ export function pushHistory(hist, day, stars, dl, keep = 35) {
   out.push([day, stars, dl]);
   out.sort((a, b) => a[0].localeCompare(b[0]));
   return out.slice(-keep);
+}
+
+/** 历史快照里的下载数整体加上 delta(基线校准时用;没有下载数的快照不动,不会小于 0)。 */
+export function shiftHistory(hist, delta) {
+  if (!delta) return hist;
+  return (hist ?? []).map((x) => (typeof x[2] === "number" ? [x[0], x[1], Math.max(0, x[2] + delta)] : x));
 }
 
 /** 合并下载统计并保留上次数据,用来算「今日新增」:同一天重复运行不覆盖上次的基线。 */
@@ -238,7 +252,9 @@ const releaseXpiDownloads = (r) => sumXpiDownloads([r]);
  * - 快照之后发布的:整份下载都算新增(起点 0);
  * - 快照时已存在、至今还在的:只算开始记账之后的增长(起点 = 第一次记账时的数;快照到开始记账之间的增长不补,宁少不多);
  * - 发布被移除:账上保留最后见到的数,不会变成负数;某天接口少返回了几个发布、第二天又出现,也不会重复计入(取最大值)。
- * 累计下载 = 快照总数 + 各发布(最大值 − 起点)之和。返回 { track, total, init }。
+ * 累计下载 = 快照总数 + 各发布(最大值 − 起点)之和。
+ * track.base 记下账上按哪个快照总数算的;快照总数被校准(与 base 不同)时 rebase = 新旧之差。
+ * 旧数据没有 base 时按 snapshotOriginal(校准前的快照值)算,都没有就当没变。返回 { track, total, init, rebase }。
  */
 export function trackDownloads(track, snapDl, releases, today) {
   const cut = Date.parse(snapDl.cutoff);
@@ -253,16 +269,18 @@ export function trackDownloads(track, snapDl, releases, today) {
   }
   const total = snapDl.total + sum(Object.values(rel).map((e) => e[0] - (e[2] ?? 0)));
   const sorted = Object.fromEntries(Object.entries(rel).sort((x, y) => x[1][1].localeCompare(y[1][1]) || x[0].localeCompare(y[0])));
-  return { track: { since: track?.since ?? today, rel: sorted }, total, init: !track };
+  const prevBase = track ? track.base ?? snapDl.snapshotOriginal ?? snapDl.total : snapDl.total;
+  return { track: { since: track?.since ?? today, base: snapDl.total, rel: sorted }, total, init: !track, rebase: snapDl.total - prevBase };
 }
 
 /**
  * 刷新一个插件(就地修改 p)。repo:GraphQL 返回的仓库;nodes:全部发布(已翻页);truncated:发布是否没取全。
- * ctx:{ today, nowMs, carry(该插件在 carryover.json 里的条目或 undefined;其中 track 会被就地更新), fetchXpi, log }。
+ * ctx:{ today, nowMs, carry(该插件在 carryover.json 里的条目或 undefined;其中 track 会被就地更新), fetchXpi, log,
+ * onRebase(快照总数被校准时以差值调用,调用方据此平移该插件的历史快照) }。
  * 最新版本那一步单独兜住:失败只记日志,星标、节奏、下载照常更新。返回今天写进历史快照的下载数。
  */
 export async function refreshPlugin(p, repo, nodes, truncated, ctx) {
-  const { today, nowMs = Date.now(), carry, fetchXpi = downloadXpi, log = () => {} } = ctx;
+  const { today, nowMs = Date.now(), carry, fetchXpi = downloadXpi, log = () => {}, onRebase = () => {} } = ctx;
   p.stars = repo.stargazerCount ?? p.stars;
   p.forks = repo.forkCount ?? 0;
   p.watchers = repo.watchers?.totalCount ?? 0;
@@ -283,8 +301,13 @@ export async function refreshPlugin(p, repo, nodes, truncated, ctx) {
   if (carry?.dl) {
     const t = trackDownloads(carry.track, carry.dl, real, today);
     carry.track = t.track;
-    // 第一次按快照算时不留「上次基线」,避免把补回的历史算成当天新增
-    const fresh = t.init || p.dl?.carried !== true;
+    const rebased = !t.init && t.rebase !== 0;
+    if (rebased) {
+      onRebase(t.rebase);
+      log(`${p.id} 历史保留的快照总数已校准,差值 ${t.rebase}`);
+    }
+    // 第一次按快照算、或快照总数刚被校准时不留「上次基线」,避免把补回的历史算成当天新增
+    const fresh = t.init || rebased || p.dl?.carried !== true;
     p.dl = { ...(fresh ? { total: t.total, at: today } : mergeDownloads(p.dl, t.total, today)), carried: true };
     dlForHistory = t.total;
   } else {
@@ -379,6 +402,42 @@ async function fetchMorePages(token, id, first) {
   return { nodes, truncated: info.hasNextPage };
 }
 
+// ---------- 本站下载 ----------
+
+export const DL_STATS_URL = "https://zoterocn.org/dl-stats.json";
+
+/**
+ * 读本站下载汇总:{ plugins: { id: { total, today } }, at }(at 为汇总生成的日期,取不到时用 fallbackDay)。
+ * 网络出错、超时、非 2xx(包括还没生成时的 404)、不是 JSON、整体格式不对,一律返回 null(调用方保留已有值)。
+ * 格式校验与页面用的是同一个函数 parseDlStats。
+ */
+export async function fetchSiteDownloads(fallbackDay, fetchImpl = fetch, url = DL_STATS_URL) {
+  try {
+    const r = await fetchImpl(url, { headers: { "user-agent": "zotero-community-refresh" }, signal: AbortSignal.timeout(20_000) });
+    if (!r.ok) return null;
+    const raw = await r.json();
+    const stats = parseDlStats(raw);
+    if (!stats) return null;
+    const g = typeof raw.generatedAt === "string" && /^\d{4}-\d{2}-\d{2}T/.test(raw.generatedAt) && !Number.isNaN(Date.parse(raw.generatedAt)) ? raw.generatedAt.slice(0, 10) : null;
+    return { plugins: stats.plugins, at: g ?? fallbackDay };
+  } catch {
+    return null;
+  }
+}
+
+/** 把本站下载汇总写进插件数据(就地修改):汇总里有的插件写 siteDl = { total, today, at };没有的保留原值。返回写入的个数。 */
+export function applySiteDownloads(plugins, site) {
+  if (!site) return 0;
+  let n = 0;
+  for (const p of plugins) {
+    const s = Object.hasOwn(site.plugins, p.id) ? site.plugins[p.id] : null;
+    if (!s) continue;
+    p.siteDl = { total: s.total, today: s.today, at: site.at };
+    n++;
+  }
+  return n;
+}
+
 /** 读 carryover.json;没有文件返回空的骨架。 */
 export function readCarryover(file = CARRYOVER) {
   try {
@@ -417,13 +476,17 @@ if (import.meta.url === `file://${process.argv[1]}`) {
         try {
           let nodes = (repo.releases?.nodes ?? []).filter(Boolean), truncated = false;
           if (repo.releases?.pageInfo?.hasNextPage) ({ nodes, truncated } = await fetchMorePages(token, p.id, repo));
-          const dl = await refreshPlugin(p, repo, nodes, truncated, { today, carry: carryover.plugins[p.id], log });
+          const onRebase = (d) => { history[p.id] = shiftHistory(history[p.id], d); };
+          const dl = await refreshPlugin(p, repo, nodes, truncated, { today, carry: carryover.plugins[p.id], log, onRebase });
           history[p.id] = pushHistory(history[p.id], today, p.stars, dl);
         } catch (e) { failed++; console.error(p.id, String(e).slice(0, 100)); }
       }
     } catch (e) { failed += group.length; console.error("批次失败:", String(e).slice(0, 160)); }
     console.log(`${Math.min(i + BATCH, list.length)}/${list.length}(失败 ${failed})`);
   }
+  const site = await fetchSiteDownloads(today);
+  if (site) console.log(`本站下载:写入 ${applySiteDownloads(data.plugins, site)} 个插件`);
+  else console.warn("本站下载汇总没有取到或格式不对,保留已有值");
   data.plugins.sort((a, b) => b.stars - a.stars || a.id.localeCompare(b.id));
   data.generatedAt = today;
   writeFileSync(FILE, JSON.stringify(data));

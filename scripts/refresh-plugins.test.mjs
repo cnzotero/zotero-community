@@ -49,7 +49,8 @@ test("历史快照:同一天覆盖、按日期排序、只留最近 N 天", () =
 // ---------- 最新版本与安装包 ----------
 
 import {
-  applyRelease, formatCarryover, manifestInfo, mergeCadence, needsManifest, pickLatestRelease, refreshPlugin, shiftMonthly, trackDownloads, versionFromTag,
+  applyRelease, applySiteDownloads, fetchSiteDownloads, formatCarryover, manifestInfo, mergeCadence, needsManifest, pickLatestRelease, refreshPlugin,
+  shiftHistory, shiftMonthly, trackDownloads, versionFromTag,
 } from "./refresh-plugins.mjs";
 import { findCollapses, mergeCandidates, persistentDrop } from "./carryover-scan.mjs";
 import { feedReleases, validateFeed, buildFeed } from "./catalog-feed.mjs";
@@ -266,5 +267,109 @@ test("carryover.json:数据文件格式与出处字段齐全;只含数字与字�
       assert.ok(!Number.isNaN(Date.parse(e[k].cutoff)));
     }
     if (e.cadence) assert.equal(e.cadence.monthly.reduce((s, x) => s + x, 0), e.cadence.r12);
+    // 校准过的快照总数:必须写明校准日期与依据,并保留原先从公开快照得到的数
+    if (e.dl && (e.dl.calibration || e.dl.snapshotOriginal !== undefined)) {
+      assert.ok(Number.isInteger(e.dl.snapshotOriginal) && e.dl.snapshotOriginal >= 0, `${id} 缺 snapshotOriginal`);
+      assert.match(e.dl.calibration?.date ?? "", /^\d{4}-\d{2}-\d{2}$/, `${id} 缺校准日期`);
+      assert.ok(typeof e.dl.calibration?.source === "string" && e.dl.calibration.source.length > 0, `${id} 缺校准依据`);
+    }
   }
+  // 按作者提供的删除前累计校准的基线
+  const a = d.plugins["wdcpclover/ai4paper"].dl;
+  assert.deepEqual([a.total, a.snapshotOriginal, a.calibration.date], [220000, 37202, "2026-11-17"]);
+});
+
+test("快照总数校准:页面累计 = 校准值 + 之后的新增;现存发布不重复计入;旧账没有 base 时按 snapshotOriginal 算差值", () => {
+  const r = (tag, at, n) => ({ tagName: tag, publishedAt: at, releaseAssets: { nodes: [{ name: `${tag}.xpi`, downloadCount: n }] } });
+  const releases = [r("a", "2026-11-13T00:00:00Z", 1148), r("b", "2026-11-14T00:00:00Z", 725)];
+  // 校准前已经在记账的旧账(没有 base 字段)
+  const before = trackDownloads(undefined, { cutoff: "2026-11-10T21:14:32Z", total: 37202 }, releases, "2026-11-17");
+  assert.equal(before.total, 37202 + 1873);
+  delete before.track.base;
+  const snap = { cutoff: "2026-11-10T21:14:32Z", total: 220000, snapshotOriginal: 37202 };
+  const t = trackDownloads(before.track, snap, releases, "2026-11-18");
+  assert.equal(t.total, 220000 + 1873);
+  assert.equal(t.rebase, 220000 - 37202);
+  assert.equal(t.track.base, 220000);
+  assert.equal(t.track.since, "2026-11-17");
+  // 记下 base 之后不再重复平移;之后的新增照常累加
+  const t2 = trackDownloads(t.track, snap, [r("a", "2026-11-13T00:00:00Z", 1150), r("b", "2026-11-14T00:00:00Z", 725), r("c", "2026-11-18T00:00:00Z", 4)], "2026-11-19");
+  assert.equal(t2.rebase, 0);
+  assert.equal(t2.total, 220000 + 1879);
+  // 没有校准过的插件:旧账没有 base、也没有 snapshotOriginal 时差值为 0
+  assert.equal(trackDownloads(before.track, { cutoff: "2026-11-10T21:14:32Z", total: 37202 }, releases, "2026-11-18").rebase, 0);
+});
+
+test("快照总数校准生效当天:不留上次基线(不出现虚高的每天新增),历史快照整体平移;第二天起照常", async () => {
+  const p = basePlugin();
+  p.dl = { total: 1030, at: "2026-11-17", carried: true };
+  const carry = { cadence: SNAP, dl: { cutoff: SNAP.cutoff, date: "2026-11-10", total: 5000, snapshotOriginal: 1000 }, track: { since: "2026-11-17", rel: { "v2.0.0": [30, "2026-11-15"] } } };
+  const repo = { stargazerCount: 1 };
+  const node = (n) => rel("v2.0.0", "2026-11-15T00:00:00Z", [{ name: "demo-v2.0.0.xpi", size: 1, downloadUrl: `${GH}/releases/download/v2.0.0/demo-v2.0.0.xpi`, downloadCount: n }]);
+  let hist = [["2026-11-10", 1, 1000], ["2026-11-12", 1, null], ["2026-11-17", 1, 1030]];
+  const ctx = { today: "2026-11-18", nowMs: Date.parse("2026-11-18T12:00:00Z"), carry, fetchXpi: async () => Buffer.alloc(0), onRebase: (d) => { hist = shiftHistory(hist, d); } };
+  assert.equal(await refreshPlugin(p, repo, [node(40)], false, ctx), 5040);
+  assert.deepEqual(p.dl, { total: 5040, at: "2026-11-18", carried: true });
+  assert.deepEqual(hist, [["2026-11-10", 1, 5000], ["2026-11-12", 1, null], ["2026-11-17", 1, 5030]]);
+  assert.equal(carry.track.base, 5000);
+  // 同一天再跑一次:不再平移,仍不留上次基线
+  assert.equal(await refreshPlugin(p, repo, [node(41)], false, ctx), 5041);
+  assert.deepEqual([p.dl.total, p.dl.at, p.dl.prevTotal], [5041, "2026-11-18", undefined]);
+  assert.equal(hist[2][2], 5030);
+  // 第二天:照常算每天新增
+  assert.equal(await refreshPlugin(p, repo, [node(50)], false, { ...ctx, today: "2026-11-19", nowMs: Date.parse("2026-11-19T12:00:00Z") }), 5050);
+  assert.deepEqual(p.dl, { total: 5050, at: "2026-11-19", prevTotal: 5041, prevAt: "2026-11-18", carried: true });
+  assert.equal(hist[2][2], 5030);
+});
+
+test("历史快照平移:只动有下载数的快照,不小于 0;差值为 0 时原样返回", () => {
+  const h = [["2026-11-10", 1, 100], ["2026-11-11", 2, null]];
+  assert.deepEqual(shiftHistory(h, 50), [["2026-11-10", 1, 150], ["2026-11-11", 2, null]]);
+  assert.deepEqual(shiftHistory(h, -500), [["2026-11-10", 1, 0], ["2026-11-11", 2, null]]);
+  assert.equal(shiftHistory(h, 0), h);
+  assert.deepEqual(shiftHistory(undefined, 5), []);
+});
+
+// ---------- 本站下载 ----------
+
+const res = (status, body) => ({ ok: status >= 200 && status < 300, status, json: async () => (typeof body === "string" ? JSON.parse(body) : body) });
+
+test("本站下载取数:正常时返回各插件的累计与当天次数,日期取汇总生成时间", async () => {
+  const body = { generatedAt: "2026-11-18T03:00:00Z", total: 7, today: 2, plugins: { "acme/demo": { total: 5, today: 2 }, "x/y": { total: 2, today: 0 } } };
+  let seen = null;
+  const site = await fetchSiteDownloads("2026-11-17", async (url) => { seen = url; return res(200, body); });
+  assert.equal(seen, "https://zoterocn.org/dl-stats.json");
+  assert.deepEqual(site, { plugins: { "acme/demo": { total: 5, today: 2 }, "x/y": { total: 2, today: 0 } }, at: "2026-11-18" });
+  // 生成时间缺失或不合格式时,日期用刷新当天
+  const noDate = await fetchSiteDownloads("2026-11-17", async () => res(200, { ...body, generatedAt: "昨天" }));
+  assert.equal(noDate.at, "2026-11-17");
+});
+
+test("本站下载取数失败(404、服务器出错、网络异常、不是 JSON、格式不对)一律返回 null", async () => {
+  const cases = [
+    async () => res(404, "<html>"),
+    async () => res(500, {}),
+    async () => { throw new Error("网络不通"); },
+    async () => res(200, "不是 JSON"),
+    async () => res(200, { total: 1, today: 0 }),
+    async () => res(200, { total: -1, today: 0, plugins: {} }),
+    async () => res(200, []),
+  ];
+  for (const f of cases) assert.equal(await fetchSiteDownloads("2026-11-17", f), null);
+});
+
+test("写入本站下载:取不到时保留已有值;汇总里没有的插件不动;单条格式不对的跳过", async () => {
+  const mkp = (id, siteDl) => ({ id, ...(siteDl ? { siteDl } : {}) });
+  const old = { total: 3, today: 1, at: "2026-11-16" };
+  const list = [mkp("acme/demo", old), mkp("acme/other", old), mkp("acme/new")];
+  assert.equal(applySiteDownloads(list, null), 0);
+  assert.deepEqual(list[0].siteDl, old);
+  const site = await fetchSiteDownloads("2026-11-17", async () => res(200, {
+    generatedAt: "2026-11-17T20:00:00Z", total: 9, today: 1,
+    plugins: { "acme/demo": { total: 8, today: 1 }, "acme/other": { total: "坏", today: 0 }, "acme/new": { total: 1, today: 0 } },
+  }));
+  assert.equal(applySiteDownloads(list, site), 2);
+  assert.deepEqual(list[0].siteDl, { total: 8, today: 1, at: "2026-11-17" });
+  assert.deepEqual(list[1].siteDl, old);
+  assert.deepEqual(list[2].siteDl, { total: 1, today: 0, at: "2026-11-17" });
 });
