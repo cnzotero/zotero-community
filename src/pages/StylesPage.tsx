@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
-import { STYLE_LINKS, STYLE_SOURCES, type StyleSource } from "../content/styles.ts";
+import { CITATION_FORMAT_LABELS, STYLE_LINKS, STYLE_SOURCES, licenseLabel, type StyleSource } from "../content/styles.ts";
+import stylesIndex from "../content/styles-index.json" with { type: "json" };
+import { Link } from "../link.tsx";
 import { pageMeta } from "../seo/pages.ts";
 import { buildDate } from "../ssr.ts";
 
@@ -8,6 +10,43 @@ import { buildDate } from "../ssr.ts";
 
 function Ext({ href, children }: { href: string; children: ReactNode }) {
   return <a href={href} target="_blank" rel="noopener noreferrer" className="inline-link">{children}</a>;
+}
+
+interface StyleRow {
+  id: string;
+  title: string;
+  titleShort?: string;
+  source: string;
+  use: string;
+  citationFormat: string;
+  license: { url: string; text: string };
+  page: string;
+}
+
+/** 中文引用样式一览的表格:每一行都摘自样式文件头,来源链接指向介绍网页,不直链样式文件。 */
+function StyleTable({ rows, caption }: { rows: StyleRow[]; caption: string }) {
+  return (
+    <div className="table-wrap">
+      <table className="data-table">
+        <caption>{caption}</caption>
+        <thead>
+          <tr><th scope="col">样式</th><th scope="col">适用场景</th><th scope="col">引文方式</th><th scope="col">样式 ID</th><th scope="col">许可</th><th scope="col">来源</th></tr>
+        </thead>
+        <tbody>
+          {rows.map((s) => (
+            <tr key={s.id}>
+              <td>{s.title}{s.titleShort ? <>(简称 {s.titleShort})</> : null}</td>
+              <td>{s.use}</td>
+              <td className="nowrap">{CITATION_FORMAT_LABELS[s.citationFormat] ?? s.citationFormat}</td>
+              <td><code className="style-id">{s.id}</code></td>
+              <td className="nowrap"><a href={s.license.url} target="_blank" rel="noopener noreferrer" className="inline-link" title={s.license.text}>{licenseLabel(s.license.url)}</a></td>
+              <td className="nowrap"><a href={s.page} target="_blank" rel="noopener noreferrer" className="inline-link">{s.source === "csl" ? "Zotero 样式库" : "样式详情页"}</a></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 }
 
 function Sources({ list }: { list: StyleSource[] }) {
@@ -27,10 +66,14 @@ function Sources({ list }: { list: StyleSource[] }) {
 export function StylesPage() {
   const S = STYLE_SOURCES;
   const date = buildDate();
+  const rows = stylesIndex.styles as StyleRow[];
+  const official = rows.filter((s) => s.source === "csl");
+  const community = rows.filter((s) => s.source === "zotero-chinese");
+  const cnTotal = stylesIndex.sources.find((s) => s.key === "zotero-chinese")?.styleCount;
   return (
     <article className="section prose">
       <h1 className="page-title">{pageMeta("/styles").h1}</h1>
-      <p className="lead">按 Zotero 官方文档整理引用样式的基本用法:样式是什么、怎么添加、怎么在 Word 与 LibreOffice 里切换,以及中文样式到哪里找。每段末尾列出来源,本站不提供样式文件下载。</p>
+      <p className="lead">按 Zotero 官方文档整理引用样式的基本用法:样式是什么、怎么添加、怎么在 Word 与 LibreOffice 里切换,以及中文样式到哪里找,并附一份中文引用样式一览。每段末尾列出来源,本站不提供样式文件下载。</p>
 
       <h2>1. 引用样式是什么</h2>
       <p>Zotero 用引用样式决定引文和参考文献表的格式。这些样式都用 Citation Style Language(CSL)编写,许多其他软件也支持这种格式。</p>
@@ -75,7 +118,20 @@ export function StylesPage() {
       </ul>
       <Sources list={[S.cnRepo, S.cnSite]} />
 
-      <h2>5. 样式不对怎么办,投稿前核对什么</h2>
+      <h2>5. 中文引用样式一览</h2>
+      <p>下面两张表列出默认语言为中文的官方样式,以及 zotero-chinese/styles 仓库里的 GB/T 7714 系列样式。每一行都由脚本逐个读取样式文件头得到:样式名、样式 ID、引文方式与许可都是文件头原文;适用场景对国标样式按标题写版本,其余按标题、摘要与文档链接写明用途。读不到或缺字段的样式不列。</p>
+      <ul>
+        <li><b>本站不搬运、不托管样式文件。</b>表中「来源」指向样式的介绍网页(官方样式是 Zotero 样式库里该样式的检索结果),请在那里安装或下载。</li>
+        <li>同一版国标有数字编号、著者-出版年与注释几种引文方式;选哪一个,以学校或期刊的要求为准。社区仓库的样式名里写明了各自的差异(如「双语」「无URL」)。</li>
+        <li>样式 ID 写在样式文件开头。官方文档提醒:自己修改样式时,要同时改掉标题和 ID,否则原样式下次更新时,改过的版本会被覆盖。</li>
+        <li>这份一览也以 JSON 公开:<Link to="/open-data" className="inline-link">开放数据</Link>里有字段说明,文件地址是 <a href="/data/styles.json" target="_blank" rel="noopener noreferrer" className="inline-link">/data/styles.json</a>。核对日期:{stylesIndex.checkedAt}。</li>
+      </ul>
+      <StyleTable rows={official} caption={`CSL 官方样式仓库(Zotero 样式库)中默认语言为中文的样式,共 ${official.length} 个`} />
+      <StyleTable rows={community} caption={`zotero-chinese/styles 仓库中的 GB/T 7714 系列样式,共 ${community.length} 个`} />
+      <p>zotero-chinese/styles 仓库{cnTotal ? <>共有 {cnTotal} 个样式,</> : null}其余的按其说明主要是中文期刊与学位论文样式,请到 <Ext href={S.cnSite.url}>中文 CSL 样式</Ext> 页面按期刊或学校名称查找。</p>
+      <Sources list={[S.cslRepo, S.zoteroIndex, S.cnRepo, S.cnSite, S.styleEditing]} />
+
+      <h2>6. 样式不对怎么办,投稿前核对什么</h2>
       <ul>
         <li>样式输出不符合预期时,官方文档建议先确认 Zotero 是最新版本,并从 Zotero 样式库安装该样式的最新版。确认样式确实与样式指南、作者须知或已发表的示例不符后,可以到 Zotero 论坛报告,帖子标题写成「Style Error: 样式名」。</li>
         <li>在 Zotero 样式库里找不到需要的样式,可以按官方说明 <Ext href={STYLE_LINKS.requestStyles}>申请新样式</Ext>。</li>

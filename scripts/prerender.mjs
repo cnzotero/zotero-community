@@ -23,6 +23,7 @@ import { delistedLedgerJson } from "../src/plugins/delisted.ts";
 import { OFFICIAL } from "../src/official/official.ts";
 import { FEED_FILE, buildFeed, droppedSummary, validateFeed } from "./catalog-feed.mjs";
 import { ADDON_IDS_FILE } from "./import-addon-ids.mjs";
+import { STYLES_FEED_FILE, STYLES_FILE, stylesFeed, stylesJson } from "./styles-index.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 export const LEDGER_FILE = join(root, "src/data/lastmod.json");
@@ -321,6 +322,7 @@ const PAGE_SOURCES = {
   "/styles": "src/pages/StylesPage.tsx",
   "/forum": "src/App.tsx",
   "/rules": "src/pages/StaticPages.tsx",
+  "/open-data": "src/pages/OpenDataPage.tsx",
   "/about": "src/pages/StaticPages.tsx",
   "/submission": "src/pages/StaticPages.tsx",
   "/plugin": "src/official/OfficialPluginPage.tsx",
@@ -496,6 +498,18 @@ export function writeFeeds(distDir, { listed, delistedIds = [], today, history =
   return { feed, dropped: droppedSummary(dropped, feed) };
 }
 
+/**
+ * 写出中文引用样式一览 data/styles.json(只有元数据,不含样式文件)。
+ * 内容就是已提交的 src/content/styles-index.json,构建时不联网;校验不过就让构建失败。
+ */
+export function writeStylesFeed(distDir, file = STYLES_FILE) {
+  const idx = stylesFeed(JSON.parse(readFileSync(file, "utf8")));
+  const out = join(distDir, STYLES_FEED_FILE);
+  mkdirSync(dirname(out), { recursive: true });
+  writeFileSync(out, stylesJson(idx));
+  return idx;
+}
+
 if (import.meta.url === `file://${process.argv[1]}`) {
   const ledgerOnly = process.argv.includes("--ledger-only");
   const dist = resolve(process.argv.slice(2).find((a) => !a.startsWith("--")) ?? join(root, "dist"));
@@ -521,6 +535,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     const addonIds = existsSync(ADDON_IDS_FILE) ? JSON.parse(readFileSync(ADDON_IDS_FILE, "utf8")) : {};
     const { feed, dropped } = writeFeeds(dist, { listed: catalog.listed, delistedIds: catalog.delisted.map((d) => d.plugin.id), today, history, addonIds, entries });
     console.log(`目录源已生成:/${FEED_FILE}(${feed.count} 个在架插件)`);
+    const styles = writeStylesFeed(dist);
+    console.log(`引用样式一览已生成:/${STYLES_FEED_FILE}(${styles.count} 个样式,核对于 ${styles.checkedAt})`);
     if (dropped.releases) {
       console.log(`  未进目录的安装包 ${dropped.releases} 个(涉及 ${dropped.plugins} 个插件;因此没有任何安装包的 ${dropped.lostAll.length} 个),按原因:${JSON.stringify(dropped.byReason)}`);
       for (const d of dropped.examples) console.log(`    ${d.reason} ${d.id} ${d.u}`);

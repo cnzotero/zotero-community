@@ -22,6 +22,7 @@ const Guides = lazyRoute(() => import("./guides/GuidesPages.tsx").then((m) => m.
 const GuideArticle = lazyRoute(() => import("./guides/GuidesPages.tsx").then((m) => m.GuideArticle));
 const Rules = lazyRoute(() => import("./pages/StaticPages.tsx").then((m) => m.Rules));
 const About = lazyRoute(() => import("./pages/StaticPages.tsx").then((m) => m.About));
+const OpenDataPage = lazyRoute(() => import("./pages/OpenDataPage.tsx").then((m) => m.OpenDataPage));
 const StylesPage = lazyRoute(() => import("./pages/StylesPage.tsx").then((m) => m.StylesPage));
 const Submission = lazyRoute(() => import("./pages/StaticPages.tsx").then((m) => m.Submission));
 const DelistedPage = lazyRoute(() => import("./pages/DelistedPage.tsx").then((m) => m.DelistedPage));
@@ -134,6 +135,7 @@ const VIEWS: Record<Route, ComponentType & { preload?: () => Promise<void> }> = 
   notfound: NotFound,
   submission: Submission,
   rules: Rules,
+  openData: OpenDataPage,
   about: About,
   delisted: DelistedPage,
   official: OfficialPluginPage,

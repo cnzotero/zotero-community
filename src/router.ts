@@ -4,7 +4,7 @@ import { currentPath } from "./ssr.ts";
 
 const CATEGORY_SET = new Set(["ai", "reading", "metadata", "interface", "attachment", "integration", "notes", "utility", "writing", "visualization"]);
 
-export type Route = "home" | "guides" | "plugins" | "plugin" | "official" | "journals" | "submission" | "styles" | "forum" | "rules" | "about" | "charts" | "guide" | "category" | "compat" | "topic" | "delisted" | "notfound";
+export type Route = "home" | "guides" | "plugins" | "plugin" | "official" | "journals" | "submission" | "styles" | "forum" | "rules" | "openData" | "about" | "charts" | "guide" | "category" | "compat" | "topic" | "delisted" | "notfound";
 
 export const ROUTES: { route: Route; path: string; label: string; footer?: boolean }[] = [
   { route: "home", path: "/", label: "首页" },
@@ -16,6 +16,7 @@ export const ROUTES: { route: Route; path: string; label: string; footer?: boole
   { route: "forum", path: "/forum", label: "问答讨论" },
   { route: "charts", path: "/plugins/charts", label: "数据看板", footer: true },
   { route: "rules", path: "/rules", label: "收录规则", footer: true },
+  { route: "openData", path: "/open-data", label: "开放数据", footer: true },
   { route: "about", path: "/about", label: "关于本站", footer: true },
 ];
 
