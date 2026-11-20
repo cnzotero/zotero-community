@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#3451b2" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="64x64" href="/brand/favicon-64.png" />
+    <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png" />
+    <script>try{var s=localStorage.getItem("skin");if(s==="red")document.documentElement.dataset.skin="red"}catch(e){}</script>
+    <script type="module" crossorigin src="/assets/index-e-EW4lap.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-Dd-qLdCI.css">
+      <title>开放数据｜插件目录与引用样式的 JSON 格式说明</title>
+    <meta name="description" content="本站公开的机器可读文件：插件目录 /data/catalog.json 与中文引用样式一览 /data/styles.json。逐字段说明类型、含义与来源，附示例请求、更新方式和字段只增不改的兼容承诺。" />
+    <link rel="canonical" href="https://zoterocn.org/open-data" />
+    <meta name="robots" content="index,follow,max-image-preview:large" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Zotero 中文社区" />
+    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:title" content="开放数据｜插件目录与引用样式的 JSON 格式说明" />
+    <meta property="og:description" content="本站公开的机器可读文件：插件目录 /data/catalog.json 与中文引用样式一览 /data/styles.json。逐字段说明类型、含义与来源，附示例请求、更新方式和字段只增不改的兼容承诺。" />
+    <meta property="og:url" content="https://zoterocn.org/open-data" />
+    <meta property="og:image" content="https://zoterocn.org/images/plugins/og-plugins.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"首页","item":"https://zoterocn.org/"},{"@type":"ListItem","position":2,"name":"开放数据","item":"https://zoterocn.org/open-data"}]}</script>
+  </head>
+  <body>
+    <div id="root" data-ssr="/open-data" data-now="2026-11-20"><header class="topbar"><div class="topbar-inner"><a href="/" class="brand"><picture class="brand-logo" aria-hidden="true"><source media="(prefers-color-scheme: dark)" srcSet="/brand/logo-mark-dark.png"/><img src="/brand/logo-mark-light.png" alt="" width="32" height="32" decoding="async"/></picture><span>Zotero 中文社区</span></a><nav aria-label="主导航" class="nav"><a href="/" class="nav-link">首页</a><a href="/guides" class="nav-link">教程</a><a href="/plugins" class="nav-link">插件广场</a><a href="/journals" class="nav-link">期刊查询</a><a href="/submission" class="nav-link">投稿建议</a><a href="/styles" class="nav-link">引用样式</a><a href="/forum" class="nav-link">问答讨论</a></nav><div class="header-right"><a class="icon-btn header-gh" href="https://github.com/cnzotero/zotero-community" target="_blank" rel="noopener noreferrer" title="GitHub 仓库" aria-label="GitHub 仓库(新标签打开)"><svg width="17" height="17" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"></path></svg></a></div></div></header><main class="container"><!--$--><article class="section prose"><h1 class="page-title">开放数据</h1><p class="lead">本站页面上的插件目录与中文引用样式一览,也以 JSON 文件公开,方便你用程序读取、做统计或接入自己的工具。本页逐字段说明格式、更新方式和兼容承诺。</p><h2>1. 公开的文件</h2><div class="table-wrap"><table class="data-table"><thead><tr><th scope="col">地址</th><th scope="col">内容</th><th scope="col">什么时候更新</th></tr></thead><tbody><tr><td><a href="/data/catalog.json" target="_blank" rel="noopener noreferrer" class="inline-link">/data/catalog.json</a></td><td>插件目录:插件广场上全部在架插件的名称、分类、适配范围、星标、下载与各 Zotero 大版本的安装包地址。</td><td>随站点构建生成。站点通常每天自动刷新一次数据并重新构建(北京时间凌晨),代码更新时也会重新构建;以文件里的 <code>generatedAt</code> 为准。</td></tr><tr><td><a href="/data/styles.json" target="_blank" rel="noopener noreferrer" class="inline-link">/data/styles.json</a></td><td>中文引用样式一览:样式 ID、标题、适用场景、引文方式、来源与许可等元数据,不含样式文件本身。与<a href="/styles" class="inline-link">引用样式</a>页上的表格是同一份数据。</td><td>维护者手动运行核对脚本时更新,以文件里的 <code>checkedAt</code> 为准(目前是 <!-- -->2026-11-17<!-- -->)。</td></tr></tbody></table></div><ul><li>两份文件都是 UTF-8 编码的 JSON,内容随站点一起公开发布,不需要登录或密钥。</li><li>站点地图 <a href="/sitemap.xml" target="_blank" rel="noopener noreferrer" class="inline-link">/sitemap.xml</a> 与站点说明 <a href="/llms.txt" target="_blank" rel="noopener noreferrer" class="inline-link">/llms.txt</a> 也可以被程序读取,但它们只列页面地址,不是数据文件,格式不做下面的承诺。</li><li><b>期刊查询不属于开放数据。</b>它的接口只为本站页面服务:每次最多返回 20 条,有访问频率限制,不提供批量下载,请勿用程序批量抓取,见<a href="/rules" class="inline-link">收录规则</a>第 7 条。</li></ul><h2>2. 插件目录 /data/catalog.json</h2><p>只包含在架插件;按<a href="/rules" class="inline-link">收录规则</a>下架的插件不会出现,作者发布新版本重新上架后会自动回到这份文件里。生成时会先校验格式,并核对条数与站点上的插件详情页数一致,不一致就不发布。</p><div class="table-wrap"><table class="data-table"><caption>顶层字段</caption><thead><tr><th scope="col">字段</th><th scope="col">类型</th><th scope="col">含义</th><th scope="col">可否为空</th><th scope="col">来源</th></tr></thead><tbody><tr><td><code>schema</code></td><td>整数</td><td>格式版本号,目前是 1。</td><td>不会缺省</td><td>固定值</td></tr><tr><td><code>generatedAt</code></td><td>日期 YYYY-MM-DD</td><td>生成这份文件的构建日期(UTC)。</td><td>不会缺省</td><td>构建流程</td></tr><tr><td><code>site</code></td><td>字符串</td><td>本站地址,固定为 https://zoterocn.org。</td><td>不会缺省</td><td>固定值</td></tr><tr><td><code>count</code></td><td>整数</td><td>plugins 的条数,即在架插件数。</td><td>不会缺省</td><td>构建流程</td></tr><tr><td><code>categories</code></td><td>数组</td><td>本站分类:每项是 { key, label },key 是分类键(如 reading),label 是中文名(如「阅读」)。</td><td>不会缺省</td><td>本站分类</td></tr><tr><td><code>plugins</code></td><td>数组</td><td>在架插件,按 GitHub 星标从多到少排列,同分按名称。下架的插件不会出现。</td><td>不会缺省</td><td>见下表</td></tr></tbody></table></div><div class="table-wrap"><table class="data-table"><caption>plugins 数组里每一项</caption><thead><tr><th scope="col">字段</th><th scope="col">类型</th><th scope="col">含义</th><th scope="col">可否为空</th><th scope="col">来源</th></tr></thead><tbody><tr><td><code>id</code></td><td>字符串</td><td>插件的唯一标识,即代码仓库的「所有者/仓库名」,全部小写。</td><td>不会缺省</td><td>收录数据</td></tr><tr><td><code>name</code></td><td>字符串</td><td>插件名称(已去掉控制字符,限制长度)。</td><td>不会缺省</td><td>收录数据</td></tr><tr><td><code>summary</code></td><td>字符串</td><td>一句话用途简介。</td><td>可能是空字符串</td><td>收录数据(初始整理自 zotero-chinese/zotero-plugins)</td></tr><tr><td><code>category</code></td><td>字符串</td><td>主分类,取值是 categories 里的某个 key。</td><td>不会缺省</td><td>本站分类</td></tr><tr><td><code>author</code></td><td>字符串</td><td>作者名称。</td><td>不会缺省</td><td>收录数据</td></tr><tr><td><code>homepage</code></td><td>字符串(https 地址)</td><td>项目主页。</td><td>不会缺省</td><td>收录数据</td></tr><tr><td><code>stars</code></td><td>整数</td><td>GitHub 星标数,只代表热度,不代表质量。</td><td>不会缺省</td><td>GitHub 公开数据(每日刷新)</td></tr><tr><td><code>updated</code></td><td>日期 YYYY-MM-DD</td><td>本站记录到的最近一次发布日期。</td><td>没有发布记录时整个字段省略</td><td>GitHub 公开数据(每日刷新)</td></tr><tr><td><code>cadence</code></td><td>对象</td><td>更新节奏:r12 是近 12 个月(按每月 30 天计)的正式发布次数,days12 是其中有发布的天数(同一天发布多次只算一天,可能省略),last 是最近一次正式发布日期。预发布与草稿不计。</td><td>读不到发布记录时整个字段省略</td><td>GitHub 公开数据(每日刷新)</td></tr><tr><td><code>dl</code></td><td>对象</td><td>安装包下载:total 是发布页上全部 .xpi 安装包的累计下载次数之和,at 是统计日期。</td><td>没有下载数据时整个字段省略</td><td>GitHub 公开数据(每日刷新)</td></tr><tr><td><code>dlWeek</code></td><td>整数或 null</td><td>近 7 天新增下载:最近一次统计与恰好 7 天前的统计之差。两次统计缺一,或累计数变小,就是 null,不推算。</td><td>算不出时为 null</td><td>由每日统计算出</td></tr><tr><td><code>archived</code></td><td>true</td><td>代码仓库已在 GitHub 上归档时出现,值只会是 true。归档本身不是下架理由。</td><td>仓库未归档时整个字段省略</td><td>GitHub 公开数据(每日刷新)</td></tr><tr><td><code>zotero</code></td><td>对象</td><td>适配范围:declared 表示作者是否声明了适配的 Zotero 版本;majors 是声明范围覆盖的 Zotero 大版本(如 [7, 8, 9, 10])。未声明不等于不兼容。</td><td>不会缺省</td><td>作者发布信息</td></tr><tr><td><code>releases</code></td><td>数组</td><td>每个 Zotero 大版本(7 及以上)对应的最新安装包,按大版本从小到大。只收 github.com 上、属于该插件自己仓库的 .xpi 地址,其余地址不进这份文件。</td><td>可能是空数组</td><td>见下表</td></tr></tbody></table></div><div class="table-wrap"><table class="data-table"><caption>releases 数组里每一项</caption><thead><tr><th scope="col">字段</th><th scope="col">类型</th><th scope="col">含义</th><th scope="col">可否为空</th><th scope="col">来源</th></tr></thead><tbody><tr><td><code>t</code></td><td>整数</td><td>这个安装包面向的 Zotero 大版本(7 及以上)。同一插件内不重复。</td><td>不会缺省</td><td>作者发布信息</td></tr><tr><td><code>v</code></td><td>字符串</td><td>插件版本号。</td><td>不会缺省</td><td>作者发布信息</td></tr><tr><td><code>u</code></td><td>字符串(https 地址)</td><td>安装包直链,指向作者在 GitHub 上的发布页,本站不托管安装包。</td><td>不会缺省</td><td>作者发布页</td></tr><tr><td><code>i</code></td><td>字符串</td><td>安装包里声明的 Zotero 插件标识(如 xxx@example.com),可用来判断某个插件是否已安装。</td><td>取不到时省略</td><td>zotero-chinese/zotero-plugins 的公开目录,没有的读取自安装包本身</td></tr><tr><td><code>min</code></td><td>字符串</td><td>作者声明的最低 Zotero 版本。</td><td>作者未声明时省略</td><td>作者发布信息</td></tr><tr><td><code>max</code></td><td>字符串</td><td>作者声明的最高 Zotero 版本,可能带通配符 *(如 8.*)。</td><td>作者未声明时省略</td><td>作者发布信息</td></tr><tr><td><code>d</code></td><td>日期 YYYY-MM-DD</td><td>这个安装包的发布日期。</td><td>没有日期时省略</td><td>作者发布页</td></tr></tbody></table></div><p><b>示例:</b>下面是 <!-- -->2026-11-17<!-- --> 生成的文件里 Translate for Zotero 这一条,原样摘出,只把 <code>releases</code> 删减到最后一项。数值会随每日数据变化。</p><pre class="codeblock"><code>{
+  &quot;id&quot;: &quot;windingwind/zotero-pdf-translate&quot;,
+  &quot;name&quot;: &quot;Translate for Zotero&quot;,
+  &quot;summary&quot;: &quot;在阅读器中划词翻译，翻译标题、摘要与批注，支持多种翻译引擎。&quot;,
+  &quot;category&quot;: &quot;reading&quot;,
+  &quot;author&quot;: &quot;windingwind&quot;,
+  &quot;homepage&quot;: &quot;https://github.com/windingwind/zotero-pdf-translate&quot;,
+  &quot;stars&quot;: 12302,
+  &quot;updated&quot;: &quot;2026-10-03&quot;,
+  &quot;cadence&quot;: {
+    &quot;days12&quot;: 9,
+    &quot;r12&quot;: 9,
+    &quot;last&quot;: &quot;2026-10-03&quot;
+  },
+  &quot;dl&quot;: {
+    &quot;total&quot;: 2359212,
+    &quot;at&quot;: &quot;2026-11-16&quot;
+  },
+  &quot;dlWeek&quot;: 18430,
+  &quot;zotero&quot;: {
+    &quot;declared&quot;: true,
+    &quot;majors&quot;: [
+      7,
+      8,
+      9,
+      10
+    ]
+  },
+  &quot;releases&quot;: [
+    {
+      &quot;t&quot;: 10,
+      &quot;v&quot;: &quot;2.4.8&quot;,
+      &quot;u&quot;: &quot;https://github.com/windingwind/zotero-pdf-translate/releases/download/v2.4.8/translate-for-zotero.xpi&quot;,
+      &quot;i&quot;: &quot;zoteropdftranslate@euclpts.com&quot;,
+      &quot;min&quot;: &quot;7.9.9&quot;,
+      &quot;max&quot;: &quot;10.9.9&quot;,
+      &quot;d&quot;: &quot;2026-10-03&quot;
+    }
+  ]
+}</code></pre><h2>3. 中文引用样式一览 /data/styles.json</h2><p>收录 CSL 官方样式仓库里默认语言为中文的样式,以及 zotero-chinese/styles 仓库里的 GB/T 7714 系列样式。每一条都是脚本逐个读取样式文件头(<code>&lt;info&gt;</code> 里的标题、ID、类别、许可等)得到的,读不到或缺字段的不收。<b>这份文件只有元数据,本站不搬运、不托管任何样式文件</b>;要安装样式,请按 <code>page</code> 或 <code>file</code> 到来源获取,并遵守 <code>license</code> 写明的许可。</p><div class="table-wrap"><table class="data-table"><caption>顶层字段</caption><thead><tr><th scope="col">字段</th><th scope="col">类型</th><th scope="col">含义</th><th scope="col">可否为空</th><th scope="col">来源</th></tr></thead><tbody><tr><td><code>schema</code></td><td>整数</td><td>格式版本号,目前是 1。</td><td>不会缺省</td><td>固定值</td></tr><tr><td><code>checkedAt</code></td><td>日期 YYYY-MM-DD</td><td>最近一次从来源仓库逐个读取样式文件头、核对这份一览的日期。</td><td>不会缺省</td><td>生成脚本</td></tr><tr><td><code>site</code></td><td>字符串</td><td>本站地址。</td><td>不会缺省</td><td>固定值</td></tr><tr><td><code>note</code></td><td>字符串</td><td>使用说明:只含元数据,不含样式文件。</td><td>不会缺省</td><td>固定值</td></tr><tr><td><code>sources</code></td><td>数组</td><td>来源仓库:每项是 { key, label, repo, site, styleCount },styleCount 是核对当天该来源的样式总数(官方取 Zotero 样式库公开索引的条数,社区仓库取样式目录数)。</td><td>不会缺省</td><td>来源仓库</td></tr><tr><td><code>count</code></td><td>整数</td><td>styles 的条数。</td><td>不会缺省</td><td>生成脚本</td></tr><tr><td><code>styles</code></td><td>数组</td><td>样式元数据,官方在前、社区在后,各自按国标版本从新到旧。</td><td>不会缺省</td><td>见下表</td></tr></tbody></table></div><div class="table-wrap"><table class="data-table"><caption>styles 数组里每一项</caption><thead><tr><th scope="col">字段</th><th scope="col">类型</th><th scope="col">含义</th><th scope="col">可否为空</th><th scope="col">来源</th></tr></thead><tbody><tr><td><code>id</code></td><td>字符串</td><td>样式 ID,即样式文件 &lt;id&gt; 的原文。Zotero 用它区分样式。</td><td>不会缺省</td><td>样式文件头</td></tr><tr><td><code>title</code></td><td>字符串</td><td>样式标题,即 &lt;title&gt; 的原文。</td><td>不会缺省</td><td>样式文件头</td></tr><tr><td><code>titleShort</code></td><td>字符串</td><td>简称,即 &lt;title-short&gt; 的原文。</td><td>文件里没有时省略</td><td>样式文件头</td></tr><tr><td><code>source</code></td><td>字符串</td><td>来自哪个仓库:csl(CSL 官方样式仓库)或 zotero-chinese。</td><td>不会缺省</td><td>生成脚本</td></tr><tr><td><code>use</code></td><td>字符串</td><td>适用场景。标题含 GB/T 7714 的写「国家标准 GB/T 7714—年份」;其余按标题、摘要与文档链接写明用途。</td><td>不会缺省</td><td>样式文件头</td></tr><tr><td><code>standard</code></td><td>字符串</td><td>对应的国标版本,如「GB/T 7714—2015」。</td><td>不是国标样式时省略</td><td>样式标题</td></tr><tr><td><code>citationFormat</code></td><td>字符串</td><td>引文方式,即 &lt;category citation-format&gt; 的值:numeric(数字编号)、author-date(著者-出版年)、note(注释)等。</td><td>不会缺省</td><td>样式文件头</td></tr><tr><td><code>fields</code></td><td>字符串数组</td><td>学科类别,即 &lt;category field&gt; 的值,如 generic-base、law。</td><td>可能是空数组</td><td>样式文件头</td></tr><tr><td><code>defaultLocale</code></td><td>字符串</td><td>样式的默认语言,如 zh-CN。</td><td>不会缺省</td><td>样式文件头</td></tr><tr><td><code>updated</code></td><td>日期时间</td><td>样式文件自己记录的更新时间(&lt;updated&gt;)。</td><td>不会缺省</td><td>样式文件头</td></tr><tr><td><code>license</code></td><td>对象</td><td>样式文件自带的许可:url 是 &lt;rights license&gt; 的地址,text 是 &lt;rights&gt; 的原文。</td><td>不会缺省</td><td>样式文件头</td></tr><tr><td><code>page</code></td><td>字符串(https 地址)</td><td>样式的介绍网页:官方样式指向 Zotero 样式库里该样式的检索结果,社区样式指向其样式详情页。</td><td>不会缺省</td><td>来源网站</td></tr><tr><td><code>file</code></td><td>字符串(https 地址)</td><td>样式文件在来源仓库里的位置,用来核对本条元数据。</td><td>不会缺省</td><td>来源仓库</td></tr><tr><td><code>documentation</code></td><td>字符串数组</td><td>样式文件头里 rel=&quot;documentation&quot; 的链接,通常是期刊须知或标准原文。</td><td>文件里没有时省略</td><td>样式文件头</td></tr><tr><td><code>template</code></td><td>字符串</td><td>样式文件头里 rel=&quot;template&quot; 的链接:这个样式是以哪个样式为模板改出来的。</td><td>文件里没有时省略</td><td>样式文件头</td></tr></tbody></table></div><h2>4. 示例请求</h2><p><b>命令行(curl + jq):</b></p><pre class="codeblock"><code># 下载目录源并查看插件数量与生成日期(需要 jq)
+curl -s https://zoterocn.org/data/catalog.json | jq &#x27;{generatedAt, count}&#x27;
+
+# 列出声明适配 Zotero 10 的插件 id
+curl -s https://zoterocn.org/data/catalog.json \
+  | jq -r &#x27;.plugins[] | select(.zotero.majors | index(10)) | .id&#x27;
+
+# 引用样式一览:列出全部国标样式的 ID 与标题
+curl -s https://zoterocn.org/data/styles.json \
+  | jq -r &#x27;.styles[] | select(.standard) | &quot;\(.id)\t\(.title)&quot;&#x27;</code></pre><p><b>JavaScript(fetch):</b></p><pre class="codeblock"><code>// Node.js 18 及以上(自带 fetch),保存为 .mjs 后运行
+const res = await fetch(&quot;https://zoterocn.org/data/catalog.json&quot;);
+if (!res.ok) throw new Error(`HTTP ${res.status}`);
+const feed = await res.json();
+if (feed.schema !== 1) throw new Error(&quot;不认识的格式版本&quot;);
+
+// 每个插件在 Zotero 10 上能装的安装包(没有就跳过)
+for (const p of feed.plugins) {
+  const r = p.releases.find((x) =&gt; x.t === 10);
+  if (r) console.log(p.id, r.v, r.u);
+}</code></pre><p>截至本页核对时,服务器没有为这些文件开放浏览器跨域读取(响应里没有 <code>Access-Control-Allow-Origin</code>),所以上面的代码适合在 Node.js、脚本或你自己的服务器上运行;别的网站的网页里直接用 <code>fetch</code> 读取会被浏览器拦下。文件一天通常只变一次,建议缓存在自己那边,不必频繁重复下载。</p><h2>5. 兼容承诺</h2><ul><li>每份文件顶层都有 <code>schema</code>,目前都是 1。<b>同一个 schema 下字段只增不改:</b>已有字段的名称、类型与含义不变,不会删除;新增的字段可能出现在任何一层。</li><li>读取时请先检查 <code>schema</code>,并忽略自己不认识的字段。表里写着「省略」的字段可能整个不存在,请按可选处理。</li><li>确需改变已有字段时会换用新的 schema 号,不在原号下悄悄改动。</li><li>数组的顺序按上文写明的规则排列,但不要依赖某一项的位置,请用 <code>id</code> 定位。</li></ul><h2>6. 再利用与署名</h2><ul><li>插件目录:<a href="/rules" class="inline-link">收录规则</a>写明,目录数据欢迎自由引用,请注明来源。</li><li>目录的初始收录名单与中文摘要整理自 zotero-chinese/zotero-plugins 项目的公开插件目录(MIT 协议),安装包的插件标识也主要取自该目录;星标、版本、发布日期与下载数来自各项目在 GitHub 上的公开页面。署名与许可证全文见<a href="https://github.com/cnzotero/zotero-community/blob/main/THIRD_PARTY_NOTICES.md" target="_blank" rel="noopener noreferrer" class="inline-link">第三方声明</a>。</li><li>引用样式一览:每条元数据摘自样式文件自己的文件头,样式文件本身的许可以 <code>license</code> 字段和来源仓库的说明为准。</li><li>仓库里的社区插件代码采用 MIT 许可证,但该授权不自动覆盖整个站点仓库;复用站点其他内容前请先确认相应授权,见<a href="https://github.com/cnzotero/zotero-community/blob/main/README.md" target="_blank" rel="noopener noreferrer" class="inline-link">项目说明</a>。</li><li>数据可能有遗漏或滞后,以各项目主页和来源仓库为准;发现错误欢迎在<a href="https://github.com/cnzotero/zotero-community/issues" target="_blank" rel="noopener noreferrer" class="inline-link">公开仓库的 Issue</a> 里指出。</li></ul></article><!--/$--></main><footer class="footer"><div class="container"><nav aria-label="页脚导航" class="footer-nav"><a href="/plugins/charts">数据看板</a><a href="/rules">收录规则</a><a href="/open-data">开放数据</a><a href="/about">关于本站</a><a href="https://github.com/cnzotero/zotero-community" target="_blank" rel="noopener noreferrer">GitHub</a></nav>Zotero 中文社区 · 社区自发运营 · 本站与 Zotero 官方无隶属关系<span class="skin-switch" role="group" aria-label="配色"><span>配色</span><button class="skin-dot on" style="background:#3451b2" title="靛蓝" aria-label="切换为靛蓝" aria-pressed="true"></button><button class="skin-dot" style="background:#c9252f" title="洁净红" aria-label="切换为洁净红" aria-pressed="false"></button></span></div></footer></div>
+  </body>
+</html>
