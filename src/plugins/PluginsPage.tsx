@@ -324,6 +324,8 @@ export function PluginsList() {
         <Link to="/plugins/charts" className="inline-link hero-link">数据看板</Link>
         <span className="hero-sep"> · </span>
         <Link to="/rules" className="inline-link hero-link">收录规则</Link>
+        <span className="hero-sep"> · </span>
+        <Link to="/guides/install-plugins" className="inline-link hero-link">Zotero 插件安装教程</Link>
       </PageHero>
       {/* 社区官方插件单独展示,不在下面的目录里,不参与筛选、排序与计数 */}
       <OfficialBox />
