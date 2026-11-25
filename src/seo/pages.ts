@@ -38,8 +38,8 @@ export const pageUrl = (path: string): string => `${SITE}${path === "/" ? "/" : 
 // 标题与描述由独立的文案调研产出,逐条核对过字数与事实;不夸大、不给任何插件特殊对待。
 // h1 就是页面上显示的大标题,页面组件直接读这里,保证静态页面与浏览器里看到的一致。
 export const STATIC_PAGES: PageMeta[] = ([
-  { path: "/", title: "Zotero 中文社区｜Zotero 插件大全、翻译与 AI 插件、教程与期刊查询", description: "查找 Zotero 插件（翻译、AI、阅读、笔记等），阅读中文教程，查询期刊信息与引用样式。按自己的研究需要选择工具，查看兼容范围和公开更新记录。", h1: "让 Zotero 更顺手,让研究更有条理", kind: "home" },
-  { path: "/plugins", title: "Zotero 插件大全｜翻译、AI、阅读等插件的用途、兼容与更新", description: "按用途（翻译、AI、阅读、笔记等）、Zotero 版本和更新时间筛选插件，查看适配范围、公开发布记录及下载入口。所有插件按同一规则展示。", h1: "Zotero 插件广场" },
+  { path: "/", title: "Zotero 中文社区｜Zotero 插件商店、插件大全、教程与期刊查询", description: "Zotero 插件商店：查找 Zotero 插件（翻译、AI、阅读、笔记等），阅读中文教程，查询期刊信息与引用样式。按自己的研究需要选择工具，查看兼容范围和公开更新记录。", h1: "让 Zotero 更顺手,让研究更有条理", kind: "home" },
+  { path: "/plugins", title: "Zotero 插件商店｜插件大全：翻译、AI、阅读等插件的用途、兼容与更新", description: "Zotero 插件商店（插件广场）：按用途（翻译、AI、阅读、笔记等）、Zotero 版本和更新时间筛选插件，查看适配范围、公开发布记录及下载入口。所有插件按同一规则展示。", h1: "Zotero 插件商店" },
   { path: "/plugins/charts", title: "Zotero 插件数据看板｜星标、下载与更新", description: "查看已收录插件的公开星标、安装包下载次数、版本适配与发布节奏。结合统计日期和数据说明，了解社区插件的变化。", h1: "Zotero 插件数据看板" },
   { path: "/journals", title: "期刊查询｜收录、分区与期刊指标", description: "输入期刊名称、缩写或 ISSN，查询收录、分区与期刊指标。查看数据版本，缺失项目显示暂无，帮助核对期刊信息。", h1: "期刊查询" },
   { path: "/submission", title: "投稿建议｜了解期刊与投稿准备", description: "了解投稿前需要核对的期刊信息与准备事项。本栏目正在筹备，可先使用期刊查询核对收录、分区和相关指标。", h1: "投稿建议", indexable: false },
