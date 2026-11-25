@@ -26,6 +26,15 @@ const DATA = {
   ],
 };
 
+test("人工下架:可以只下架单个插件,同作者的其它插件不受影响;原因按填写的原样记录", () => {
+  const data = { generatedAt: "2026-11-09", plugins: [mk("a/one", "2026-10-01", [10]), mk("a/two", "2026-10-01", [10]), mk("b/x", "2026-10-01", [10])] };
+  const c = catalogOf(data, "2026-11-10", {}, { authors: {}, plugins: { "A/One": "应作者要求下架。" } });
+  assert.deepEqual(c.listed.map((p) => p.id), ["a/two", "b/x"]);
+  assert.deepEqual(c.delisted.map((d) => [d.plugin.id, d.reason, d.reasonText]), [["a/one", "manual", "应作者要求下架。"]]);
+  // 不写 plugins 时与以前一致
+  assert.equal(catalogOf(data, "2026-11-10", {}, { authors: {} }).delisted.length, 0);
+});
+
 test("构建日期:环境变量里的合法日期优先,否则取当天(UTC);index.html 里的标记可读出、可去掉", () => {
   assert.equal(buildDay({ [BUILD_DATE_ENV]: "2026-01-02" }), "2026-01-02");
   assert.equal(buildDay({ [BUILD_DATE_ENV]: "bad" }), new Date().toISOString().slice(0, 10));

@@ -8,7 +8,7 @@ import { categoryAnchor, homePicks } from "../guides/categories.ts";
 import { ARTICLES, articlePath } from "../guides/content.ts";
 import { serverCompatIndex, serverHomeBoards, serverTopicIndex } from "../plugins/data.ts";
 import { PluginCard } from "../plugins/PluginsPage.tsx";
-import { CATEGORIES, SITE_DL_RANK_NOTE, type HomeBoardKey } from "../plugins/lib.ts";
+import { CATEGORIES, HOME_BOARD_VISIBLE, SITE_DL_RANK_NOTE, type HomeBoardKey } from "../plugins/lib.ts";
 import { COMPAT_SCOPE, categoryPath, compatPath, pageMeta, topicPath } from "../seo/pages.ts";
 import { takeEarlyInput, useNow } from "../ssr.ts";
 import { OfficialBox } from "../official/OfficialBox.tsx";
@@ -30,6 +30,7 @@ export function Home() {
   const [q, setQ] = useState("");
   const now = useNow();
   const [board, setBoard] = useState<HomeBoardKey>("stars");
+  const [expanded, setExpanded] = useState(false);
   // 榜单数据构建时已按同一套排序算好(预渲染时用注入的数据),首页不加载整份插件数据
   const top = (serverHomeBoards() ?? boardsData)[board];
   const compat = serverCompatIndex() ?? compatData;
@@ -71,7 +72,10 @@ export function Home() {
           ))}
         </div>
         <p className="meta home-note">{boardNote}</p>
-        <div className="grid plugin-grid home-grid">{top.map((p) => <PluginCard key={p.id} p={p} now={now} zv={null} compact siteFirst={board === "downloads"} />)}</div>
+        <div className={expanded ? "grid plugin-grid home-grid is-expanded" : "grid plugin-grid home-grid"}>{(expanded ? top : top.slice(0, HOME_BOARD_VISIBLE)).map((p) => <PluginCard key={p.id} p={p} now={now} zv={null} compact siteFirst={board === "downloads"} />)}</div>
+        {top.length > HOME_BOARD_VISIBLE && (
+          <p className="board-more"><button type="button" className="more board-more-btn" aria-expanded={expanded} onClick={() => setExpanded((v) => !v)}>{expanded ? "收起" : `展开更多(还有 ${top.length - HOME_BOARD_VISIBLE} 个)`}</button></p>
+        )}
       </section>
 
       <section className="section">
