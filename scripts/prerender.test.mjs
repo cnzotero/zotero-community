@@ -424,3 +424,18 @@ test("构建写出的台账再构建一次不变,sitemap 也不变", async () =>
   assert.equal(readFileSync(ledgerFile, "utf8"), l1);
   assert.equal(readFileSync(join(dir, "sitemap.xml"), "utf8"), s1);
 });
+
+test("预加载:每种页面预加载自己要用的代码块与数据块,没有对应文件的跳过,文件名只接受安全字符", async () => {
+  const { preloadFiles, withPreloads } = await import("./prerender.mjs");
+  const files = ["index-AAA.js", "GuidesPages-b1.js", "content-c2.js", "PluginsPage-d3.js", "_virtual_plugin-catalog-e4.js", "Home-f5.js", "x y-evil.js", "index-AAA.css"];
+  assert.deepEqual(preloadFiles("/guides/install-zotero", files), ["GuidesPages-b1.js", "content-c2.js"]);
+  assert.deepEqual(preloadFiles("/guides", files), ["GuidesPages-b1.js", "content-c2.js"]);
+  assert.deepEqual(preloadFiles("/plugins/a/b", files), ["PluginsPage-d3.js", "_virtual_plugin-catalog-e4.js"]);
+  assert.deepEqual(preloadFiles("/categories/ai", files), ["PluginsPage-d3.js", "_virtual_plugin-catalog-e4.js"]); // CategoryPage 没有对应文件,跳过
+  assert.deepEqual(preloadFiles("/", files), ["Home-f5.js"]);
+  assert.deepEqual(preloadFiles("/不存在的页面", files), []);
+  const html = withPreloads("<head>\n</head><body></body>", "/guides/x", files);
+  assert.match(html, /<link rel="modulepreload" crossorigin href="\/assets\/GuidesPages-b1\.js" \/>/);
+  assert.match(html, /href="\/assets\/content-c2\.js"/);
+  assert.equal(withPreloads("<head></head>", "/rules", ["index-AAA.js"]), "<head></head>");
+});
