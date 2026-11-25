@@ -35,6 +35,14 @@ test("人工下架:可以只下架单个插件,同作者的其它插件不受影
   assert.equal(catalogOf(data, "2026-11-10", {}, { authors: {} }).delisted.length, 0);
 });
 
+test("隐藏:指定的插件既不展示,也不进下架记录;其它插件不受影响", () => {
+  const data = { generatedAt: "2026-11-09", plugins: [mk("a/one", "2026-10-01", [10]), mk("a/two", "2026-10-01", [10])] };
+  const c = catalogOf(data, "2026-11-10", {}, { authors: {}, hidden: ["A/One"] });
+  assert.deepEqual(c.listed.map((p) => p.id), ["a/two"]);
+  assert.equal(c.delisted.length, 0);
+  assert.equal(c.delistedData.records.length, 0);
+});
+
 test("构建日期:环境变量里的合法日期优先,否则取当天(UTC);index.html 里的标记可读出、可去掉", () => {
   assert.equal(buildDay({ [BUILD_DATE_ENV]: "2026-01-02" }), "2026-01-02");
   assert.equal(buildDay({ [BUILD_DATE_ENV]: "bad" }), new Date().toISOString().slice(0, 10));
