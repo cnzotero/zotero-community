@@ -320,7 +320,7 @@ export function PluginsList() {
 
   return (
     <section className="section">
-      <PageHero kind="hero" title={pageMeta("/plugins").h1} lead="收录常用的 Zotero 插件,按公开数据整理,点击查看详情。">
+      <PageHero kind="hero" title={pageMeta("/plugins").h1} lead="Zotero 中文社区的插件商店(插件广场):收录常用的 Zotero 插件,按公开数据整理,点击查看详情。">
         <Link to="/plugins/charts" className="inline-link hero-link">数据看板</Link>
         <span className="hero-sep"> · </span>
         <Link to="/rules" className="inline-link hero-link">收录规则</Link>
