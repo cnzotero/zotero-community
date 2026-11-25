@@ -1,5 +1,5 @@
 import type { MouseEvent, ReactNode } from "react";
-import { navigate } from "./router.ts";
+import { navigate, prefetchPath } from "./router.ts";
 
 export function Link({ to, children, className }: { to: string; children: ReactNode; className?: string }) {
   const onClick = (e: MouseEvent<HTMLAnchorElement>) => {
@@ -7,8 +7,10 @@ export function Link({ to, children, className }: { to: string; children: ReactN
     e.preventDefault();
     navigate(to);
   };
+  // 鼠标移上、键盘聚焦、手指按下时就开始下载目标页面,点下去时多半已经就绪
+  const warm = () => { void prefetchPath(to); };
   return (
-    <a href={to} onClick={onClick} className={className}>
+    <a href={to} onClick={onClick} onMouseEnter={warm} onFocus={warm} onTouchStart={warm} className={className}>
       {children}
     </a>
   );

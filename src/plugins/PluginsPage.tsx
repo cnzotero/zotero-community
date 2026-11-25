@@ -146,11 +146,12 @@ function CardTags({ p, now }: { p: Plugin; now: Date }) {
   );
 }
 
-export function PluginCard({ p, now, zv, onAuthor }: { p: Plugin; now: Date; zv: number | null; onAuthor?: (a: string) => void }) {
+/** compact:首页榜单用的紧凑卡片(一行放 5 个),只保留星标、下载、版本三项数字与前两个标签。 */
+export function PluginCard({ p, now, zv, onAuthor, compact = false }: { p: Plugin; now: Date; zv: number | null; onAuthor?: (a: string) => void; compact?: boolean }) {
   const dl = pickDownload(p, zv ?? 10) ?? (zv === null ? ZV.map((v) => pickDownload(p, v)).find(Boolean) ?? null : null);
   const site = siteDownloadsOf(useSiteDownloads(), p.id, p.siteDl?.total);
   return (
-    <article className="card plugin-card">
+    <article className={compact ? "card plugin-card plugin-card-compact" : "card plugin-card"}>
       <Link to={pluginPath(p.id)} className="card-main">
         <div className="plugin-head">
           <Avatar p={p} />
@@ -163,9 +164,9 @@ export function PluginCard({ p, now, zv, onAuthor }: { p: Plugin; now: Date; zv:
         <div className="plugin-stats">
           <span title="GitHub 星标"><StarIcon size={13} /> {formatStars(p.stars)}</span>
           {p.dl && p.dl.total > 0 && <span title="GitHub 累计下载次数"><DownloadIcon size={13} /> {formatCount(p.dl.total)}</span>}
-          {site !== null && <span title={SITE_DL_TITLE}>本站下载 {formatCount(site)} 次</span>}
+          {site !== null && !compact && <span title={SITE_DL_TITLE}>本站下载 {formatCount(site)} 次</span>}
           {p.latest && <span>v{p.latest.version}</span>}
-          <span title={speedText(p) ?? undefined}>{cadenceText(p)}</span>
+          {!compact && <span title={speedText(p) ?? undefined}>{cadenceText(p)}</span>}
         </div>
         <CardTags p={p} now={now} />
       </Link>
@@ -177,7 +178,7 @@ export function PluginCard({ p, now, zv, onAuthor }: { p: Plugin; now: Date; zv:
         ) : (
           <Link to={pluginPath(p.id)} className="btn btn-sm btn-ghost">查看详情</Link>
         )}
-        {dl && <Link to={pluginPath(p.id)} className="btn btn-sm btn-ghost">详情</Link>}
+        {dl && !compact && <Link to={pluginPath(p.id)} className="btn btn-sm btn-ghost">详情</Link>}
         <span className="spacer" />
         {onAuthor && (
           <button className="icon-btn" title={`只看 ${authorOf(p.id)} 的插件`} aria-label={`只看 ${authorOf(p.id)} 的插件`} onClick={() => onAuthor(authorOf(p.id))}>

@@ -60,7 +60,7 @@ export function Home() {
 
       <OfficialBox compact />
 
-      <section className="section">
+      <section className="section home-boards">
         <div className="section-head">
           <h2>热门插件</h2>
           <Link to="/plugins" className="more">查看全部插件</Link>
@@ -71,7 +71,7 @@ export function Home() {
           ))}
         </div>
         <p className="meta home-note">{boardNote}</p>
-        <div className="grid plugin-grid">{top.map((p) => <PluginCard key={p.id} p={p} now={now} zv={null} />)}</div>
+        <div className="grid plugin-grid home-grid">{top.map((p) => <PluginCard key={p.id} p={p} now={now} zv={null} compact />)}</div>
       </section>
 
       <section className="section">

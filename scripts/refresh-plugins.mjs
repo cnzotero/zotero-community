@@ -335,12 +335,12 @@ export async function refreshPlugin(p, repo, nodes, truncated, ctx) {
   return dlForHistory;
 }
 
-const FIELDS = `stargazerCount forkCount isArchived pushedAt watchers { totalCount } issues(states: OPEN) { totalCount } releases(first: ${PAGE}, orderBy: {field: CREATED_AT, direction: DESC}%AFTER%) {
+export const FIELDS = `stargazerCount forkCount isArchived pushedAt watchers { totalCount } issues(states: OPEN) { totalCount } releases(first: ${PAGE}, orderBy: {field: CREATED_AT, direction: DESC}%AFTER%) {
   totalCount pageInfo { hasNextPage endCursor }
   nodes { tagName url publishedAt isDraft isPrerelease releaseAssets(first: 20) { nodes { name size downloadUrl downloadCount } } }
 }`;
 
-async function gql(token, query, tries = 4) {
+export async function gql(token, query, tries = 4) {
   for (let i = 0; i < tries; i++) {
     const r = await fetch("https://api.github.com/graphql", {
       method: "POST",
@@ -359,8 +359,8 @@ async function gql(token, query, tries = 4) {
   throw new Error("GraphQL 请求失败");
 }
 
-const q = (s) => JSON.stringify(s);
-const FAILED = Symbol("failed");
+export const q = (s) => JSON.stringify(s);
+export const FAILED = Symbol("failed");
 
 const repoQuery = (id, alias, after = "") => {
   const [owner, name] = id.split("/");
@@ -368,7 +368,7 @@ const repoQuery = (id, alias, after = "") => {
 };
 
 /** 同一个查询出错(数据残缺)时再试几次;仍出错返回 null。 */
-async function gqlClean(token, query, tries = 3) {
+export async function gqlClean(token, query, tries = 3) {
   for (let i = 0; i < tries; i++) {
     const data = await gql(token, query);
     if (data[FAILED].size === 0) return data;
@@ -388,7 +388,7 @@ async function fetchRepos(token, ids) {
   return out;
 }
 
-async function fetchMorePages(token, id, first) {
+export async function fetchMorePages(token, id, first) {
   const nodes = first.releases.nodes.filter(Boolean);
   let info = first.releases.pageInfo;
   for (let i = 0; i < MAX_EXTRA_PAGES && info.hasNextPage; i++) {

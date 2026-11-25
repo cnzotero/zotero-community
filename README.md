@@ -66,7 +66,7 @@
 
 ## 申请收录、更正与下架
 
-- [申请收录](https://github.com/cnzotero/zotero-community/issues/new?template=request-listing.yml)：名称、仓库、适配版本、简要用途。
+- [申请收录](https://github.com/cnzotero/zotero-community/issues/new?template=request-listing.yml)：名称、仓库、适配版本、简要用途。提交后会按收录规则自动核对：合格的直接收录，不合格的写明原因，修改后自动重新检查（目前自动处理 GitHub 仓库，Gitee 仓库由维护者人工评估）。
 - [更正信息](https://github.com/cnzotero/zotero-community/issues/new?template=correct-info.yml)：具体条目、错误项目、正确信息与依据。
 - [申请下架](https://github.com/cnzotero/zotero-community/issues/new?template=request-delisting.yml)：名称、与项目的关系、理由。
 - [报告插件问题](https://github.com/cnzotero/zotero-community/issues/new?template=report-plugin-issue.yml)：先区分作者插件本身的问题与社区目录展示问题。

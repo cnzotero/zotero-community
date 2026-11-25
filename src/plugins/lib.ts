@@ -439,7 +439,10 @@ export function relatedPlugins(list: Plugin[], p: Plugin, n = 4): Plugin[] {
 export type HomeBoardKey = "stars" | "cadence" | "downloads";
 export type HomeBoards = Record<HomeBoardKey, Plugin[]>;
 
-export function homeBoards(list: Plugin[], n = 6): HomeBoards {
+/** 首页每个榜单显示的插件数:每行 5 个、共 3 行。 */
+export const HOME_BOARD_SIZE = 15;
+
+export function homeBoards(list: Plugin[], n = HOME_BOARD_SIZE): HomeBoards {
   return {
     stars: sortPlugins(list, "stars").slice(0, n),
     cadence: sortPlugins(list, "cadence").slice(0, n),

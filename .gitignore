@@ -8,3 +8,4 @@ dist
 *.sqlite-*
 *.db
 __pycache__/
+intake-results.json

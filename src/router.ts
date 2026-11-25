@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { TOPIC_KEYS } from "./plugins/topics.ts";
 import { currentPath } from "./ssr.ts";
+import { prefetch, waitUpTo } from "./prefetch.ts";
 
 const CATEGORY_SET = new Set(["ai", "reading", "metadata", "interface", "attachment", "integration", "notes", "utility", "writing", "visualization"]);
 
@@ -42,11 +43,38 @@ export function routeFromPath(pathname: string): Route {
   return [...ROUTES, ...UNLISTED_ROUTES].find((r) => r.path === clean)?.route ?? "notfound";
 }
 
+/** 预取目标路径对应页面的代码与数据;已就绪返回 null。 */
+export function prefetchPath(path: string): Promise<void> | null {
+  return prefetch(routeFromPath(path.split(/[?#]/)[0]));
+}
+
+const NAVIGATING = "is-navigating";
+const NAV_WAIT_MS = 5000;
+let navSeq = 0;
+
+/**
+ * 站内跳转。目标页面还没下载好时,先留在当前页面(页面顶部出现进度条),下载完成或最多等 5 秒再切换,
+ * 避免整页换成「正在加载」的空白;已经就绪(悬停预取、空闲预取、之前访问过)就立刻切换。
+ */
 export function navigate(path: string): void {
   if (location.pathname + location.search === path) return;
-  history.pushState(null, "", path);
-  window.dispatchEvent(new PopStateEvent("popstate"));
-  window.scrollTo(0, 0);
+  const seq = ++navSeq;
+  const root = document.documentElement;
+  root.classList.remove(NAVIGATING);
+  const go = () => {
+    if (location.pathname + location.search === path) return;
+    history.pushState(null, "", path);
+    window.dispatchEvent(new PopStateEvent("popstate"));
+    window.scrollTo(0, 0);
+  };
+  const wait = prefetchPath(path);
+  if (!wait) return go();
+  root.classList.add(NAVIGATING);
+  void waitUpTo(wait, NAV_WAIT_MS).then(() => {
+    if (seq !== navSeq) return; // 期间又点了别的链接,以最后一次为准
+    root.classList.remove(NAVIGATING);
+    go();
+  });
 }
 
 export function useRoute(): Route {

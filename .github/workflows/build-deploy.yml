@@ -5,6 +5,9 @@ on:
     branches: [main]
   schedule:
     - cron: "30 20 * * *" # 北京时间每天 04:30:先刷新数据再发布
+  # 有人提交、修改或重新打开 Issue 时:自动核对「申请收录」并收录合格的(见 scripts/intake.mjs)
+  issues:
+    types: [opened, edited, reopened]
   workflow_dispatch:
 
 concurrency:
@@ -13,6 +16,7 @@ concurrency:
 
 permissions:
   contents: write
+  issues: write # 自动收录:在申请收录的 Issue 里公开回复处理结果、关闭已收录的
 
 jobs:
   build:
@@ -30,9 +34,19 @@ jobs:
 
       - run: npm ci
 
-      # 定时与手动触发时:刷新星标、发布节奏、下载次数、Issues、最新版本与安装包,并保存当天快照
-      - name: 刷新插件数据
+      # 自动收录:按收录规则统一核对打开着的「申请收录」,合格的写进插件数据(随后的步骤会测试、构建、发布);
+      # 回复与关闭 Issue 要等网站发布成功之后(见「公开回复收录结果」)。核对出错只记日志,不影响发布。
+      - name: 自动收录插件申请
         if: github.event_name != 'push'
+        continue-on-error: true
+        run: node --experimental-strip-types scripts/intake.mjs apply
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # 定时与手动触发时:刷新星标、发布节奏、下载次数、Issues、最新版本与安装包,并保存当天快照
+      # (Issue 触发时只做收录,不跑整份数据刷新)
+      - name: 刷新插件数据
+        if: github.event_name != 'push' && github.event_name != 'issues'
         run: node --experimental-strip-types scripts/refresh-plugins.mjs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -50,7 +64,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add src/data
           if ! git diff --cached --quiet; then
-            git commit -m "${{ github.event_name == 'push' && '更新内容指纹台账' || '每日刷新插件数据' }}"
+            git commit -m "${{ github.event_name == 'push' && '更新内容指纹台账' || github.event_name == 'issues' && '自动收录插件申请' || '每日刷新插件数据' }}"
             # 刷新期间 main 可能已有新提交:先同步再推送,避免因快进失败而丢掉当天数据
             git pull --rebase origin main
             git push origin HEAD:main
@@ -72,6 +86,14 @@ jobs:
           git add -A
           git commit -q -m "构建 ${GITHUB_SHA::7}"
           git push -q -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git" deploy
+
+      # 网站发布成功后,在申请收录的 Issue 里公开回复处理结果(已收录的关闭;不合格的写明原因,改好后会自动重新检查)
+      - name: 公开回复收录结果
+        if: github.event_name != 'push'
+        continue-on-error: true
+        run: node --experimental-strip-types scripts/intake.mjs notify
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # 把今天内容有变化的页面地址通知搜索引擎(IndexNow);失败不影响发布结果
       - name: 通知搜索引擎

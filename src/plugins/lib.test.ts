@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   DEFAULT_FILTERS, activityTag, authorOf, authorStats, barHeights, cadenceText, speedText, topAuthors, compareVersions, downloadFilename, downloadHost, isAllowedXpiUrl, pickDownload, applyFilters, cardTags, popularityTag, compatSummary, computeStats, filterPlugins, formatStars, freshness,
-  compatIndex, compatList, declaredMajors, homeBoards, parseFilters, pluginIdFromPath, relatedPlugins, relativeTime, serializeFilters, sortPlugins, supportsZotero,
+  HOME_BOARD_SIZE, compatIndex, compatList, declaredMajors, homeBoards, parseFilters, pluginIdFromPath, relatedPlugins, relativeTime, serializeFilters, sortPlugins, supportsZotero,
   type Plugin,
 } from "./lib.ts";
 
@@ -255,7 +255,7 @@ test("下载量排序:所有插件本站下载都为 0(或没有)时,与只按 G
     list.push(mk({ id: `z/p${i}`, name: `插件${(i * 7) % 13}`, stars: (i * 13) % 4, ...zero, ...dl }));
   }
   assert.deepEqual(sortPlugins(list, "downloads").map((p) => p.id), oldSort(list).map((p) => p.id));
-  const oldBoard = oldSort(list.filter((p) => p.dl?.total != null)).slice(0, 6).map((p) => p.id);
+  const oldBoard = oldSort(list.filter((p) => p.dl?.total != null)).slice(0, HOME_BOARD_SIZE).map((p) => p.id);
   assert.deepEqual(homeBoards(list).downloads.map((p) => p.id), oldBoard);
-  assert.equal(homeBoards(list).downloads.length, 6);
+  assert.equal(homeBoards(list).downloads.length, HOME_BOARD_SIZE);
 });

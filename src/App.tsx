@@ -3,6 +3,7 @@ import { FORUM_STATE } from "./content.ts";
 import { Link } from "./link.tsx";
 import { GithubIcon } from "./icons.tsx";
 import { lazyRoute } from "./lazy.ts";
+import { setPrefetchLoader } from "./prefetch.ts";
 import { loadDelisted, loadHistory, loadPluginData } from "./plugins/data.ts";
 import { ROUTES, routePath, useRoute, type Route } from "./router.ts";
 import { formatCount, useVisitBeacon, useVisitStats } from "./visits.ts";
@@ -152,6 +153,9 @@ export function preloadRoute(route: Route): Promise<unknown> {
     route === "delisted" || route === "rules" ? loadDelisted() : null,
   ]);
 }
+
+// 链接悬停、手指按下与空闲预取都走这一个入口(见 src/prefetch.ts)
+setPrefetchLoader((r) => preloadRoute(r as Route));
 
 /** 预渲染用:一次加载全部页面组件。 */
 export const preloadAllRoutes = (): Promise<unknown> => Promise.all(Object.values(VIEWS).map((v) => v.preload?.()));
