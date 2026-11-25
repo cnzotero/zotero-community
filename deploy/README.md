@@ -100,6 +100,16 @@ nginx 日志通常只有 root 或 adm 组可读,所以用 root 跑。新建 `/et
 */5 * * * * root /usr/bin/python3 /opt/zotero-community/bin/dl_stats.py --log /var/log/nginx/zoterocn-dl.log --state /var/lib/zoterocn-stats/dl-state.json --catalog /var/www/zoterocn/data/catalog.json --out /var/www/zoterocn/dl-stats.json
 ```
 
+### 4.1 外部汇总源(可选)
+
+插件作者或渠道方可以把「通过自己提供的下载入口(例如插件内的安装与更新)完成的下载」按插件汇总成累计与今日两个数字,本站定时来取,与按钮上报的数字相加后一起展示;同一口径对所有插件开放。令牌放在服务器上的文件里(例如 `/etc/zoterocn/feed-token`,权限 600),不进仓库。cron 命令末尾加两个参数:
+
+```cron
+... --out /var/www/zoterocn/dl-stats.json --feed-url https://汇总源地址 --feed-token-file /etc/zoterocn/feed-token
+```
+
+汇总源返回 `{"plugins": {"owner/repo": {"total": 累计, "today": 今日}}}`,请求头 `X-Feed-Token` 带令牌。只接受在架目录里的插件与非负整数;取不到或格式不对时沿用上次的数字,不影响其它统计;「今日」只在当天取到时才显示。
+
 ### 5. 日志轮转
 
 脚本按「改名为 `<日志>.1`、新建空文件」的方式处理轮转,要求 `.1` 不立即压缩。Debian/Ubuntu 自带的 `/etc/logrotate.d/nginx` 覆盖 `/var/log/nginx/*.log`,并带 `delaycompress`,不用另配。核对:
