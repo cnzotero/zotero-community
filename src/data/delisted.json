@@ -28,7 +28,6 @@
   "redleafnew/zotero-updateifs": {"since":"2026-11-10","reason":"stale-1y-no-package"},
   "retorquere/zotero-storage-scanner": {"since":"2026-11-10","reason":"stale-1y-no-package"},
   "siriusxt/zotero-scholar-rank": {"since":"2026-11-10","reason":"stale-2y"},
-  "syt2/zotero-addons": {"since":"2026-11-25","reason":"manual"},
   "syt2/zotero-tldr": {"since":"2026-11-10","reason":"stale-2y"},
   "tefkah/zotero-night": {"since":"2026-11-10","reason":"stale-2y"},
   "theratramnus/riopacaddchapter": {"since":"2026-11-10","reason":"stale-1y-unadapted"},
