@@ -12,7 +12,7 @@ export const PLUGINS_FILE = fileURLToPath(new URL("../src/data/plugins.json", im
 export const DELISTED_FILE = fileURLToPath(new URL("../src/data/delisted.json", import.meta.url));
 
 /** 独立于每日公开数据刷新的管理决定;保留原始插件数据,解除决定后才允许恢复上架。 */
-export interface Moderation { authors: Record<string, string>; /** 按插件 id(小写)单个下架:id → 公开显示的原因 */ plugins?: Record<string, string> }
+export interface Moderation { authors: Record<string, string>; /** 按插件 id(小写)单个下架:id → 公开显示的原因 */ plugins?: Record<string, string>; /** 按插件 id 直接隐藏:不展示,也不进下架记录、不写原因 */ hidden?: string[] }
 const MODERATION: Moderation = JSON.parse(readFileSync(new URL("../src/data/moderation.json", import.meta.url), "utf8"));
 
 /**
@@ -56,10 +56,12 @@ export function catalogOf(data: { generatedAt: string; plugins: Plugin[] }, day:
   const { currentMajor } = automatic;
   const authors = new Map(Object.entries(moderation.authors).map(([author, reason]) => [author.toLowerCase(), reason]));
   const pluginReasons = new Map(Object.entries(moderation.plugins ?? {}).map(([id, reason]) => [id.toLowerCase(), reason]));
+  const hidden = new Set((moderation.hidden ?? []).map((id) => id.toLowerCase()));
   const automaticDelisted = new Map(automatic.delisted.map((d) => [d.plugin.id, d]));
   const listed: Plugin[] = [];
   const delisted: DelistedPlugin[] = [];
   for (const plugin of data.plugins) {
+    if (hidden.has(plugin.id.toLowerCase())) continue; // 隐藏的插件:既不展示,也不出现在下架记录里
     const reason = pluginReasons.get(plugin.id.toLowerCase()) ?? authors.get(plugin.id.split("/")[0].toLowerCase()) ?? authors.get(plugin.author.toLowerCase());
     if (reason !== undefined) {
       const lastRelease = lastReleaseDate(plugin);
