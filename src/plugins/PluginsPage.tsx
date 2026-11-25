@@ -146,8 +146,8 @@ function CardTags({ p, now }: { p: Plugin; now: Date }) {
   );
 }
 
-/** compact:首页榜单用的紧凑卡片(一行放 5 个),只保留星标、下载、版本三项数字与前两个标签。 */
-export function PluginCard({ p, now, zv, onAuthor, compact = false }: { p: Plugin; now: Date; zv: number | null; onAuthor?: (a: string) => void; compact?: boolean }) {
+/** compact:首页榜单用的紧凑卡片(一行放 5 个),只保留星标、下载、版本三项数字与前两个标签。siteFirst:「下载最多(本站下载)」榜用,下载数显示本站下载(榜单按它排序),取不到时仍显示 GitHub 累计下载。 */
+export function PluginCard({ p, now, zv, onAuthor, compact = false, siteFirst = false }: { p: Plugin; now: Date; zv: number | null; onAuthor?: (a: string) => void; compact?: boolean; siteFirst?: boolean }) {
   const dl = pickDownload(p, zv ?? 10) ?? (zv === null ? ZV.map((v) => pickDownload(p, v)).find(Boolean) ?? null : null);
   const site = siteDownloadsOf(useSiteDownloads(), p.id, p.siteDl?.total);
   return (
@@ -163,7 +163,9 @@ export function PluginCard({ p, now, zv, onAuthor, compact = false }: { p: Plugi
         <p className="clamp2">{p.summary}</p>
         <div className="plugin-stats">
           <span title="GitHub 星标"><StarIcon size={13} /> {formatStars(p.stars)}</span>
-          {p.dl && p.dl.total > 0 && <span title="GitHub 累计下载次数"><DownloadIcon size={13} /> {formatCount(p.dl.total)}</span>}
+          {siteFirst && site !== null
+            ? <span title={SITE_DL_TITLE}><DownloadIcon size={13} /> 本站下载 {formatCount(site)} 次</span>
+            : p.dl && p.dl.total > 0 && <span title="GitHub 累计下载次数"><DownloadIcon size={13} /> {formatCount(p.dl.total)}</span>}
           {site !== null && !compact && <span title={SITE_DL_TITLE}>本站下载 {formatCount(site)} 次</span>}
           {p.latest && <span>v{p.latest.version}</span>}
           {!compact && <span title={speedText(p) ?? undefined}>{cadenceText(p)}</span>}

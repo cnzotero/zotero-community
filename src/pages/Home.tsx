@@ -71,7 +71,7 @@ export function Home() {
           ))}
         </div>
         <p className="meta home-note">{boardNote}</p>
-        <div className="grid plugin-grid home-grid">{top.map((p) => <PluginCard key={p.id} p={p} now={now} zv={null} compact />)}</div>
+        <div className="grid plugin-grid home-grid">{top.map((p) => <PluginCard key={p.id} p={p} now={now} zv={null} compact siteFirst={board === "downloads"} />)}</div>
       </section>
 
       <section className="section">
