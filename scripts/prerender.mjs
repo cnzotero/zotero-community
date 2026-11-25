@@ -61,6 +61,55 @@ export function head(meta, extra = "") {
   ].filter(Boolean).join("\n    ");
 }
 
+
+// 每种页面要用到的代码块与数据块(构建产物文件名 = 名字 + 内容哈希)。写进页面头部的 modulepreload,
+// 让浏览器一打开页面就把这些文件和主脚本并行下载;否则要等主脚本跑起来、再逐层发现下一批,多出几轮往返。
+const PLUGIN_DATA = ["_virtual_plugin-catalog"];
+const ROUTE_CHUNKS = {
+  home: ["Home"],
+  guides: ["GuidesPages", "content"],
+  guide: ["GuidesPages", "content"],
+  plugins: ["PluginsPage", ...PLUGIN_DATA],
+  plugin: ["PluginsPage", ...PLUGIN_DATA],
+  category: ["CategoryPage", "PluginsPage", ...PLUGIN_DATA],
+  compat: ["CompatPage", "PluginsPage", ...PLUGIN_DATA],
+  topic: ["TopicPage", "PluginsPage", ...PLUGIN_DATA],
+  charts: ["ChartsPage", "history", ...PLUGIN_DATA],
+  journals: ["JournalsPage"],
+  styles: ["StylesPage", "styles-index"],
+  rules: ["StaticPages", "_virtual_delisted"],
+  about: ["StaticPages"],
+  submission: ["StaticPages"],
+  openData: ["OpenDataPage"],
+  delisted: ["DelistedPage", "_virtual_delisted"],
+  official: ["OfficialPluginPage", "official"],
+};
+
+/** 页面路径 → 页面类型(与 src/router.ts 的 routeFromPath 对应;这里不引入它,免得把前端路由模块带进构建脚本)。 */
+function routeOf(path) {
+  const p = path.replace(/\/+$/, "") || "/";
+  const exact = { "/": "home", "/guides": "guides", "/plugins": "plugins", "/plugins/charts": "charts", "/journals": "journals", "/styles": "styles", "/rules": "rules", "/about": "about", "/submission": "submission", "/open-data": "openData", "/delisted": "delisted", "/plugin": "official" };
+  if (exact[p]) return exact[p];
+  if (/^\/guides\/[^/]+$/.test(p)) return "guide";
+  if (/^\/plugins\/[^/]+\/[^/]+$/.test(p)) return "plugin";
+  if (/^\/categories\/[^/]+$/.test(p)) return "category";
+  if (/^\/compat\/[^/]+$/.test(p)) return "compat";
+  if (/^\/topics\/[^/]+$/.test(p)) return "topic";
+  return null;
+}
+
+/** 某个页面路径需要预加载的构建产物(assets 目录下的 .js 文件名列表);没有对应文件的名字跳过。 */
+export function preloadFiles(path, assetFiles) {
+  const names = ROUTE_CHUNKS[routeOf(path)] ?? [];
+  return names.flatMap((n) => assetFiles.filter((f) => f.startsWith(`${n}-`) && f.endsWith(".js") && /^[-\w.]+$/.test(f)).slice(0, 1));
+}
+
+/** 把预加载标签写进页面头部。 */
+export function withPreloads(html, path, assetFiles) {
+  const links = preloadFiles(path, assetFiles).map((f) => `<link rel="modulepreload" crossorigin href="/assets/${f}" />`);
+  return links.length ? html.replace("</head>", () => `    ${links.join("\n    ")}\n  </head>`) : html;
+}
+
 /**
  * 把模板里已有的 title / description / OG 标签去掉,换成每页自己的;正文放进 #root。
  * data-ssr 记下这是哪个地址的预渲染结果,浏览器只在地址一致时接管;data-now 是渲染时用的日期。
@@ -404,8 +453,9 @@ export async function build(distDir, plugins, today = new Date().toISOString().s
 
   const render = await prepare({ generatedAt: opts.generatedAt ?? today, plugins, history: opts.history ?? {}, delisted: opts.delisted, now: today });
   const template = readFileSync(join(distDir, "index.html"), "utf8");
+  const assetFiles = existsSync(join(distDir, "assets")) ? readdirSync(join(distDir, "assets")) : [];
   const page = (meta, extra, file) => {
-    const html = applyTemplate(template, meta, extra, render(meta.path), today);
+    const html = withPreloads(applyTemplate(template, meta, extra, render(meta.path), today), meta.path, assetFiles);
     assertExternalLinks(html, meta.path);
     const out = file ?? (meta.path === "/" ? join(distDir, "index.html") : join(distDir, meta.path, "index.html"));
     mkdirSync(dirname(out), { recursive: true });
