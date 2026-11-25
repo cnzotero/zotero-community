@@ -13,6 +13,12 @@
 - 读不到在架目录时本次不处理(位置不前进),等下次再读,不丢计数。
 - 输出文件只有汇总数字,不含地址、不含任何访问者信息;脚本也不保存地址。
 - 「今日」按北京时间划分。
+
+外部汇总源(可选):插件作者或渠道方把「通过自己提供的下载入口(例如插件内的安装与更新)完成的下载」按插件汇总成
+累计与今日两个数字,本站定时去取,与按钮上报的数字相加后一起展示。同一口径对所有插件开放。
+    --feed-url <地址> --feed-token-file <令牌文件>   请求头 X-Feed-Token 带令牌;返回 {"plugins": {"owner/repo": {"total": N, "today": M}}}
+- 令牌只放在服务器文件里,不进仓库;取不到或格式不对时保留上一次取到的数字,不影响其它统计。
+- 汇总源给的是绝对累计数,只接受本站在架目录里的插件、非负整数;「今日」只在当天取到时才显示。
 """
 from __future__ import annotations
 
@@ -22,6 +28,7 @@ import os
 import re
 import sys
 import tempfile
+import urllib.request
 from datetime import datetime, timedelta, timezone
 from urllib.parse import parse_qs
 
@@ -104,7 +111,64 @@ def load_state(path: str) -> dict:
         "total": int(state.get("total") or 0),
         "days": dict(state.get("days") or {}),
         "plugins": plugins,
+        "feed": load_feed_state(state.get("feed")),
     }
+
+
+MAX_FEED_BYTES = 256 * 1024
+MAX_FEED_COUNT = 10**10
+
+
+def _count(v) -> int | None:
+    """非负整数(不接受布尔、小数、字符串),且不超过上限;否则 None。"""
+    if isinstance(v, bool) or not isinstance(v, int) or v < 0 or v > MAX_FEED_COUNT:
+        return None
+    return v
+
+
+def parse_feed(raw, listed: set[str]) -> dict[str, dict[str, int]] | None:
+    """校验汇总源返回的内容;整体格式不对返回 None,单个插件不合格只跳过那一个(未收录的插件也跳过)。"""
+    if not isinstance(raw, dict) or not isinstance(raw.get("plugins"), dict):
+        return None
+    out: dict[str, dict[str, int]] = {}
+    for pid, v in raw["plugins"].items():
+        if not isinstance(pid, str) or not PLUGIN_ID.fullmatch(pid) or pid not in listed or not isinstance(v, dict):
+            continue
+        total, today = _count(v.get("total")), _count(v.get("today"))
+        if total is None or today is None or today > total:
+            continue
+        out[pid] = {"total": total, "today": today}
+    return out
+
+
+def load_feed_state(raw) -> dict:
+    """状态文件里上次取到的汇总源数字:{"at": 取到的北京日期, "plugins": {id: {total, today}}}。"""
+    if not isinstance(raw, dict) or not isinstance(raw.get("plugins"), dict):
+        return {"at": "", "plugins": {}}
+    plugins = {}
+    for pid, v in raw["plugins"].items():
+        if isinstance(pid, str) and PLUGIN_ID.fullmatch(pid) and isinstance(v, dict):
+            total, today = _count(v.get("total")), _count(v.get("today"))
+            if total is not None and today is not None:
+                plugins[pid] = {"total": total, "today": today}
+    return {"at": str(raw.get("at") or ""), "plugins": plugins}
+
+
+def fetch_feed(url: str, token: str, listed: set[str], opener=urllib.request.urlopen, timeout: int = 20) -> dict[str, dict[str, int]] | None:
+    """取一次汇总源;网络出错、非 2xx、太大、不是 JSON、整体格式不对都返回 None(调用方保留上次的数字)。"""
+    if not url.startswith("https://") or not token:
+        return None
+    req = urllib.request.Request(url, headers={"X-Feed-Token": token, "User-Agent": "zotero-community-dl-stats"})
+    try:
+        with opener(req, timeout=timeout) as r:
+            if getattr(r, "status", 200) != 200:
+                return None
+            body = r.read(MAX_FEED_BYTES + 1)
+        if len(body) > MAX_FEED_BYTES:
+            return None
+        return parse_feed(json.loads(body.decode("utf-8")), listed)
+    except (OSError, ValueError):
+        return None
 
 
 def read_from(path: str, offset: int) -> tuple[list[str], int]:
@@ -187,15 +251,21 @@ def write_json(path: str, payload: dict) -> None:
 
 def public_stats(state: dict, now: datetime) -> dict:
     today = now.astimezone(BEIJING).strftime("%Y-%m-%d")
+    feed = state.get("feed") or {"at": "", "plugins": {}}
+    feed_fresh = feed["at"] == today  # 汇总源的「今日」只在当天取到时才算
+    ids = set(state["plugins"]) | set(feed["plugins"])
+    plugins = {}
+    for pid in sorted(ids):
+        p = state["plugins"].get(pid, {"total": 0, "day": "", "count": 0})
+        f = feed["plugins"].get(pid, {"total": 0, "today": 0})
+        total = p["total"] + f["total"]
+        if total > 0:
+            plugins[pid] = {"total": total, "today": (p["count"] if p["day"] == today else 0) + (f["today"] if feed_fresh else 0)}
     return {
         "generatedAt": now.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "total": state["total"],
-        "today": state["days"].get(today, 0),
-        "plugins": {
-            pid: {"total": p["total"], "today": p["count"] if p["day"] == today else 0}
-            for pid, p in sorted(state["plugins"].items())
-            if p["total"] > 0
-        },
+        "total": state["total"] + sum(f["total"] for f in feed["plugins"].values()),
+        "today": state["days"].get(today, 0) + (sum(f["today"] for f in feed["plugins"].values()) if feed_fresh else 0),
+        "plugins": plugins,
     }
 
 
@@ -205,6 +275,8 @@ def main() -> None:
     ap.add_argument("--state", required=True)
     ap.add_argument("--catalog", required=True, help="站点构建产物里的 data/catalog.json")
     ap.add_argument("--out", required=True)
+    ap.add_argument("--feed-url", help="外部汇总源地址(https);不给则不取")
+    ap.add_argument("--feed-token-file", help="存放汇总源令牌的文件(只读第一行)")
     args = ap.parse_args()
 
     try:
@@ -213,8 +285,21 @@ def main() -> None:
         print(f"读不到在架目录,本次不处理:{e}", file=sys.stderr)
         sys.exit(1)
     state = collect(args.log, load_state(args.state), listed)
+    now = datetime.now(timezone.utc)
+    if args.feed_url and args.feed_token_file:
+        try:
+            with open(args.feed_token_file, encoding="utf-8") as f:
+                token = f.readline().strip()
+        except OSError as e:
+            print(f"读不到汇总源令牌,沿用上次的数字:{e}", file=sys.stderr)
+            token = ""
+        got = fetch_feed(args.feed_url, token, listed)
+        if got is None:
+            print("汇总源这次没取到或格式不对,沿用上次的数字", file=sys.stderr)
+        else:
+            state["feed"] = {"at": now.astimezone(BEIJING).strftime("%Y-%m-%d"), "plugins": got}
     write_json(args.state, state)
-    write_json(args.out, public_stats(state, datetime.now(timezone.utc)))
+    write_json(args.out, public_stats(state, now))
 
 
 if __name__ == "__main__":

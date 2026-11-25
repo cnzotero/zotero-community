@@ -176,5 +176,75 @@ class Main(unittest.TestCase):
             self.assertEqual(public["plugins"]["a/b"]["total"], 1)
 
 
+
+class ExternalFeed(unittest.TestCase):
+    NOW = datetime(2026, 11, 26, 4, 0, tzinfo=timezone.utc)  # 北京时间 11-26 12:00
+
+    def test_parse_feed_is_strict_per_plugin(self):
+        raw = {"plugins": {
+            "a/b": {"total": 10, "today": 3},
+            "c/d": {"total": 5, "today": 9},  # 今日大于累计:不合格
+            "x/y": {"total": 1, "today": 0},  # 不在在架目录
+            "a/c": {"total": -1, "today": 0},
+            "A/B": {"total": 1, "today": 0},
+            "bad id": {"total": 1, "today": 0},
+        }}
+        self.assertEqual(ds.parse_feed(raw, LISTED | {"a/c"}), {"a/b": {"total": 10, "today": 3}})
+        for bad in [None, [], {}, {"plugins": []}, {"plugins": {"a/b": {"total": "1", "today": 0}}}, {"plugins": {"a/b": {"total": True, "today": 0}}}, {"plugins": {"a/b": {"total": 1.5, "today": 0}}}]:
+            self.assertIn(ds.parse_feed(bad, LISTED), (None, {}))
+
+    def test_fetch_feed_failures_return_none(self):
+        class R:
+            def __init__(self, body, status=200): self.body, self.status = body, status
+            def read(self, n=-1): return self.body[:n] if n >= 0 else self.body
+            def __enter__(self): return self
+            def __exit__(self, *a): return False
+        ok = json.dumps({"plugins": {"a/b": {"total": 2, "today": 1}}}).encode()
+        sent = {}
+        def opener(req, timeout):
+            sent["token"] = req.get_header("X-feed-token")
+            return R(ok)
+        self.assertEqual(ds.fetch_feed("https://h.example/f", "tok", LISTED, opener=opener), {"a/b": {"total": 2, "today": 1}})
+        self.assertEqual(sent["token"], "tok")
+        self.assertIsNone(ds.fetch_feed("http://h.example/f", "tok", LISTED, opener=opener))  # 只接受 https
+        self.assertIsNone(ds.fetch_feed("https://h.example/f", "", LISTED, opener=opener))  # 没有令牌
+        self.assertIsNone(ds.fetch_feed("https://h.example/f", "t", LISTED, opener=lambda r, timeout: R(ok, 503)))
+        self.assertIsNone(ds.fetch_feed("https://h.example/f", "t", LISTED, opener=lambda r, timeout: R(b"not json")))
+        self.assertIsNone(ds.fetch_feed("https://h.example/f", "t", LISTED, opener=lambda r, timeout: R(b" " * (ds.MAX_FEED_BYTES + 1))))
+        def boom(req, timeout): raise OSError("网络不通")
+        self.assertIsNone(ds.fetch_feed("https://h.example/f", "t", LISTED, opener=boom))
+
+    def test_public_stats_adds_feed_to_button_reports(self):
+        state = ds.load_state("/nonexistent")
+        ds.count(state, "a/b", "2026-11-26")
+        ds.count(state, "a/b", "2026-11-25")
+        state["feed"] = {"at": "2026-11-26", "plugins": {"a/b": {"total": 100, "today": 7}, "c/d": {"total": 50, "today": 2}}}
+        out = ds.public_stats(state, self.NOW)
+        self.assertEqual(out["plugins"]["a/b"], {"total": 102, "today": 8})
+        self.assertEqual(out["plugins"]["c/d"], {"total": 50, "today": 2})  # 只有汇总源数字的插件也展示
+        self.assertEqual((out["total"], out["today"]), (152, 10))
+
+    def test_stale_feed_keeps_total_but_not_today(self):
+        state = ds.load_state("/nonexistent")
+        state["feed"] = {"at": "2026-11-25", "plugins": {"a/b": {"total": 100, "today": 7}}}
+        out = ds.public_stats(state, self.NOW)
+        self.assertEqual(out["plugins"]["a/b"], {"total": 100, "today": 0})
+        self.assertEqual((out["total"], out["today"]), (100, 0))
+
+    def test_no_feed_output_unchanged(self):
+        state = ds.load_state("/nonexistent")
+        ds.count(state, "a/b", "2026-11-26")
+        out = ds.public_stats(state, self.NOW)
+        self.assertEqual(out["plugins"], {"a/b": {"total": 1, "today": 1}})
+
+    def test_feed_survives_state_roundtrip_and_ignores_garbage(self):
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, "s.json")
+            with open(path, "w") as f:
+                json.dump({"feed": {"at": "2026-11-26", "plugins": {"a/b": {"total": 5, "today": 1}, "bad": {"total": 1, "today": 1}, "c/d": {"total": "x", "today": 0}}}}, f)
+            self.assertEqual(ds.load_state(path)["feed"], {"at": "2026-11-26", "plugins": {"a/b": {"total": 5, "today": 1}}})
+            self.assertEqual(ds.load_state("/nonexistent")["feed"], {"at": "", "plugins": {}})
+
+
 if __name__ == "__main__":
     unittest.main()

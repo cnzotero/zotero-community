@@ -18,7 +18,7 @@ import {
 } from "./lib.ts";
 
 const PAGE = 24;
-const SITE_DL_TITLE = "从本站下载按钮发起的下载次数,不含从 GitHub 直接下载;从本站开始统计之日起累计";
+const SITE_DL_TITLE = "经本站发起的下载次数(本站下载按钮,以及作者通过自己的下载入口汇总给本站的数字),不含从 GitHub 直接下载;从本站开始统计之日起累计";
 const CATEGORY_LABEL = Object.fromEntries(CATEGORIES.map((c) => [c.key, c.label])) as Record<CategoryKey, string>;
 
 type Loaded = { state: "loading" } | { state: "error" } | { state: "ready"; data: PluginData };
