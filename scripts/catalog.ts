@@ -60,8 +60,9 @@ export function catalogOf(data: { generatedAt: string; plugins: Plugin[] }, day:
   const automaticDelisted = new Map(automatic.delisted.map((d) => [d.plugin.id, d]));
   const listed: Plugin[] = [];
   const delisted: DelistedPlugin[] = [];
+  let hiddenCount = 0;
   for (const plugin of data.plugins) {
-    if (hidden.has(plugin.id.toLowerCase())) continue; // 隐藏的插件:既不展示,也不出现在下架记录里
+    if (hidden.has(plugin.id.toLowerCase())) { hiddenCount++; continue; } // 隐藏的插件:既不展示,也不出现在下架记录里,也不计入总数
     const reason = pluginReasons.get(plugin.id.toLowerCase()) ?? authors.get(plugin.id.split("/")[0].toLowerCase()) ?? authors.get(plugin.author.toLowerCase());
     if (reason !== undefined) {
       const lastRelease = lastReleaseDate(plugin);
@@ -77,7 +78,7 @@ export function catalogOf(data: { generatedAt: string; plugins: Plugin[] }, day:
   }
   const ledger = updateDelistedLedger(oldLedger, delisted, day);
   const delistedData = { listed: listed.length, current: currentMajor, records: delistedRecords(delisted, ledger, day) };
-  return { day, generatedAt: data.generatedAt, total: data.plugins.length, listed, delisted, currentMajor, ledger, delistedData };
+  return { day, generatedAt: data.generatedAt, total: data.plugins.length - hiddenCount, listed, delisted, currentMajor, ledger, delistedData };
 }
 
 export function readDelistedLedger(file: string = DELISTED_FILE): DelistedLedger {

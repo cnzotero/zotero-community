@@ -41,6 +41,7 @@ test("隐藏:指定的插件既不展示,也不进下架记录;其它插件不�
   assert.deepEqual(c.listed.map((p) => p.id), ["a/two"]);
   assert.equal(c.delisted.length, 0);
   assert.equal(c.delistedData.records.length, 0);
+  assert.equal(c.total, 1); // 隐藏的不计入总数,在架 + 下架 = 总数
 });
 
 test("构建日期:环境变量里的合法日期优先,否则取当天(UTC);index.html 里的标记可读出、可去掉", () => {
