@@ -16,6 +16,7 @@ import { OfficialBox } from "../official/OfficialBox.tsx";
 /** 首页榜单:全部复用插件广场的同一套排序,不另设算法,说明文字与规则页第 4 条一致。 */
 const BOARDS: { key: HomeBoardKey; label: string; note: string }[] = [
   { key: "stars", label: "星标最多", note: "按 GitHub 星标排序,与插件广场的目录使用同一套规则,目录内的插件没有置顶或推荐位。" },
+  { key: "updated", label: "最近更新", note: "按最近一次发布的日期排序,刚发布新版本的插件排在最前;与插件广场「最近更新」同一套规则。" },
   { key: "cadence", label: "更新最勤", note: "按近一年有发布的天数排序,同一天发布多次只算一天;与插件广场「更新频率」同一套规则。" },
   { key: "downloads", label: "下载最多(本站下载)", note: SITE_DL_RANK_NOTE },
 ];

@@ -436,7 +436,7 @@ export function relatedPlugins(list: Plugin[], p: Plugin, n = 4): Plugin[] {
 }
 
 /** 首页三个榜单(与插件广场同一套排序,不另设算法);构建期算好,首页不必加载整份插件数据。 */
-export type HomeBoardKey = "stars" | "cadence" | "downloads";
+export type HomeBoardKey = "stars" | "updated" | "cadence" | "downloads";
 export type HomeBoards = Record<HomeBoardKey, Plugin[]>;
 
 /** 首页每个榜单默认显示的插件数:每行 5 个、共 3 行;点「展开」后显示到 HOME_BOARD_SIZE 个。 */
@@ -446,6 +446,7 @@ export const HOME_BOARD_SIZE = 30;
 export function homeBoards(list: Plugin[], n = HOME_BOARD_SIZE): HomeBoards {
   return {
     stars: sortPlugins(list, "stars").slice(0, n),
+    updated: sortPlugins(list.filter((p) => p.updated), "updated").slice(0, n),
     cadence: sortPlugins(list, "cadence").slice(0, n),
     downloads: sortPlugins(list.filter((p) => p.dl?.total != null || siteDlTotal(p) > 0), "downloads").slice(0, n),
   };

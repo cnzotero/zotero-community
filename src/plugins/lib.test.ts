@@ -243,6 +243,13 @@ test("下载量排序:本站下载为主键,GitHub 累计下载为次键,再按�
   assert.deepEqual(homeBoards([p1, p2, p3, p4, p5]).downloads.map((p) => p.id), ["s/c", "s/d", "s/b", "s/a"]);
 });
 
+test("首页「最近更新」榜单:按最近发布日期从新到旧,没有发布日期的不参与", () => {
+  const a = mk({ id: "u/a", name: "A", updated: "2026-11-01" });
+  const b = mk({ id: "u/b", name: "B", updated: "2026-11-20" });
+  const c = mk({ id: "u/c", name: "C", updated: "" });
+  assert.deepEqual(homeBoards([a, b, c]).updated.map((p) => p.id), ["u/b", "u/a"]);
+});
+
 test("下载量排序:所有插件本站下载都为 0(或没有)时,与只按 GitHub 累计下载的旧排序完全一致", () => {
   const oldSort = (list: Plugin[]) => {
     const byName = (a: Plugin, b: Plugin) => a.name.localeCompare(b.name, "zh-Hans-CN") || a.id.localeCompare(b.id);

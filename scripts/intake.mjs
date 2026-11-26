@@ -126,6 +126,7 @@ export async function evaluateRequest(form, ctx) {
   if (ref.host === "gitee.com") {
     return { status: "manual", code: "gitee", text: "目前自动收录只处理 GitHub 仓库(安装包下载直链要求在 github.com 的发布页)。这条申请留给维护者人工评估,请耐心等待。" };
   }
+  if ((moderation?.hiddenAuthors ?? []).some((a) => a.toLowerCase() === ref.owner.toLowerCase())) return reject("moderation", "按社区管理决定,该作者的插件暂不收录。如有异议,请在这里说明。");
   const id = `${ref.owner}/${ref.repo}`.toLowerCase();
   const known = plugins.find((p) => p.id.toLowerCase() === id);
   if (known) return { status: "exists", id: known.id };
