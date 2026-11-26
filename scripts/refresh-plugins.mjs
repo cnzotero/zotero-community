@@ -25,6 +25,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 import { releaseRejection } from "./catalog-feed.mjs";
+import { withoutHidden } from "./catalog.ts";
 import { MAX_XPI_BYTES, downloadXpi, readZipManifest } from "./import-addon-ids.mjs";
 import { ZOTERO_VERSIONS, compareVersions } from "../src/plugins/lib.ts";
 import { parseDlStats } from "../src/plugins/site-downloads.ts";
@@ -490,7 +491,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   data.plugins.sort((a, b) => b.stars - a.stars || a.id.localeCompare(b.id));
   data.generatedAt = today;
   writeFileSync(FILE, JSON.stringify(data));
-  writeFileSync(HISTORY, JSON.stringify(history));
+  writeFileSync(HISTORY, JSON.stringify(withoutHidden(history)));
   if (carried) writeFileSync(CARRYOVER, formatCarryover(carryover));
   console.log(`完成:${list.length} 个,失败 ${failed},有节奏 ${data.plugins.filter((p) => p.cadence).length},有下载数 ${data.plugins.filter((p) => p.dl).length}`);
 }

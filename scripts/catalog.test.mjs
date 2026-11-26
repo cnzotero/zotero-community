@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, readdirSync, statSync, writeFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { BUILD_DATE_ENV, buildDay, catalogOf, loadCatalog, readBuildDateMeta, stripBuildDateMeta } from "./catalog.ts";
+import { BUILD_DATE_ENV, buildDay, catalogOf, loadCatalog, readBuildDateMeta, stripBuildDateMeta, withoutHidden } from "./catalog.ts";
 import { build } from "./prerender.mjs";
 
 const root = new URL("..", import.meta.url).pathname;
@@ -42,6 +42,20 @@ test("隐藏:指定的插件既不展示,也不进下架记录;其它插件不�
   assert.equal(c.delisted.length, 0);
   assert.equal(c.delistedData.records.length, 0);
   assert.equal(c.total, 1); // 隐藏的不计入总数,在架 + 下架 = 总数
+});
+
+test("按作者隐藏:该作者的全部插件(含以后新增的)不展示、不进下架记录、不计入总数", () => {
+  const data = { generatedAt: "2026-11-09", plugins: [mk("Syt2/one", "2026-10-01", [10]), mk("syt2/two", "2026-10-01", [10]), mk("a/three", "2026-10-01", [10])] };
+  const c = catalogOf(data, "2026-11-10", {}, { authors: {}, hiddenAuthors: ["SYT2"] });
+  assert.deepEqual(c.listed.map((p) => p.id), ["a/three"]);
+  assert.equal(c.delisted.length, 0);
+  assert.equal(c.delistedData.records.length, 0);
+  assert.equal(c.total, 1);
+});
+
+test("历史数据:被隐藏的插件(单个或按作者)不留在里面", () => {
+  const h = { "a/one": [1], "Syt2/x": [2], "b/two": [3] };
+  assert.deepEqual(Object.keys(withoutHidden(h, { authors: {}, hidden: ["A/One"], hiddenAuthors: ["syt2"] })), ["b/two"]);
 });
 
 test("构建日期:环境变量里的合法日期优先,否则取当天(UTC);index.html 里的标记可读出、可去掉", () => {

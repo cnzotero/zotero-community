@@ -12,7 +12,7 @@ export const PLUGINS_FILE = fileURLToPath(new URL("../src/data/plugins.json", im
 export const DELISTED_FILE = fileURLToPath(new URL("../src/data/delisted.json", import.meta.url));
 
 /** 独立于每日公开数据刷新的管理决定;保留原始插件数据,解除决定后才允许恢复上架。 */
-export interface Moderation { authors: Record<string, string>; /** 按插件 id(小写)单个下架:id → 公开显示的原因 */ plugins?: Record<string, string>; /** 按插件 id 直接隐藏:不展示,也不进下架记录、不写原因 */ hidden?: string[] }
+export interface Moderation { authors: Record<string, string>; /** 按插件 id(小写)单个下架:id → 公开显示的原因 */ plugins?: Record<string, string>; /** 按插件 id 直接隐藏:不展示,也不进下架记录、不写原因 */ hidden?: string[]; /** 按作者(GitHub 用户名)整体隐藏:该作者的全部插件(含以后新增的)不展示,不进下架记录、不写原因 */ hiddenAuthors?: string[] }
 const MODERATION: Moderation = JSON.parse(readFileSync(new URL("../src/data/moderation.json", import.meta.url), "utf8"));
 
 /**
@@ -49,6 +49,13 @@ export interface Catalog {
   delistedData: DelistedData;
 }
 
+/** 去掉被隐藏的插件(单个或按作者)的历史数据,避免它们的编号留在公开的数据文件里。 */
+export function withoutHidden<T>(history: Record<string, T>, moderation: Moderation = MODERATION): Record<string, T> {
+  const ids = new Set((moderation.hidden ?? []).map((id) => id.toLowerCase()));
+  const authors = new Set((moderation.hiddenAuthors ?? []).map((a) => a.toLowerCase()));
+  return Object.fromEntries(Object.entries(history).filter(([id]) => !ids.has(id.toLowerCase()) && !authors.has(id.split("/")[0].toLowerCase())));
+}
+
 /** 由插件数据与旧的下架台账算出某一天的在架名单与下架记录。纯函数,便于测试。 */
 export function catalogOf(data: { generatedAt: string; plugins: Plugin[] }, day: string, oldLedger: DelistedLedger = {}, moderation: Moderation = MODERATION): Catalog {
   const now = new Date(day);
@@ -57,12 +64,13 @@ export function catalogOf(data: { generatedAt: string; plugins: Plugin[] }, day:
   const authors = new Map(Object.entries(moderation.authors).map(([author, reason]) => [author.toLowerCase(), reason]));
   const pluginReasons = new Map(Object.entries(moderation.plugins ?? {}).map(([id, reason]) => [id.toLowerCase(), reason]));
   const hidden = new Set((moderation.hidden ?? []).map((id) => id.toLowerCase()));
+  const hiddenAuthors = new Set((moderation.hiddenAuthors ?? []).map((a) => a.toLowerCase()));
   const automaticDelisted = new Map(automatic.delisted.map((d) => [d.plugin.id, d]));
   const listed: Plugin[] = [];
   const delisted: DelistedPlugin[] = [];
   let hiddenCount = 0;
   for (const plugin of data.plugins) {
-    if (hidden.has(plugin.id.toLowerCase())) { hiddenCount++; continue; } // 隐藏的插件:既不展示,也不出现在下架记录里,也不计入总数
+    if (hidden.has(plugin.id.toLowerCase()) || hiddenAuthors.has(plugin.id.split("/")[0].toLowerCase()) || hiddenAuthors.has(plugin.author.toLowerCase())) { hiddenCount++; continue; } // 隐藏的插件:既不展示,也不出现在下架记录里,也不计入总数
     const reason = pluginReasons.get(plugin.id.toLowerCase()) ?? authors.get(plugin.id.split("/")[0].toLowerCase()) ?? authors.get(plugin.author.toLowerCase());
     if (reason !== undefined) {
       const lastRelease = lastReleaseDate(plugin);

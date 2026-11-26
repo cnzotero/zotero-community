@@ -153,6 +153,10 @@ test("不收的情形:认不出地址 / Gitee 转人工 / 已在目录 / 作者�
   assert.equal(m.code, "moderation");
   assert.match(m.text, /经社区管理决定下架/);
   assert.equal((await evaluateRequest(form(), ctx({ fetchRepo: async () => null }))).code, "not-found");
+  // 按作者隐藏:即使仓库已在目录里,也只回「暂不收录」,不说「已收录」,也不写原因
+  const h = await evaluateRequest(form({ repo: "https://github.com/Hid/plugin" }), ctx({ plugins: [{ id: "hid/plugin", zotero: { declared: true, majors: [10] } }], moderation: { authors: {}, hiddenAuthors: ["hid"] } }));
+  assert.equal(h.code, "moderation");
+  assert.match(h.text, /暂不收录/);
 });
 
 test("发布页没有 .xpi / 安装包读不出清单 / 只适配 Zotero 6:各自写明原因,不收录", async () => {
