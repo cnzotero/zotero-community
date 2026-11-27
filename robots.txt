@@ -1,0 +1,45 @@
+# Zotero 中文社区 (zoterocn.org) — 欢迎搜索引擎与 AI 检索爬虫索引公开页面
+# LLMs: https://zoterocn.org/llms.txt
+# LLMs-Full: https://zoterocn.org/llms-full.txt
+
+User-agent: *
+Allow: /
+Disallow: /api/
+
+User-agent: Baiduspider
+Allow: /
+Disallow: /api/
+
+User-agent: Bytespider
+Allow: /
+Disallow: /api/
+
+User-agent: Bingbot
+Allow: /
+Disallow: /api/
+
+User-agent: Googlebot
+Allow: /
+Disallow: /api/
+
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /api/
+
+User-agent: GPTBot
+Allow: /
+Disallow: /api/
+
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /api/
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /api/
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /api/
+
+Sitemap: https://zoterocn.org/sitemap.xml

@@ -1,0 +1,121 @@
+# Zotero 中文社区
+
+> 社区自发运营的非官方中文站点（zoterocn.org），集中整理 Zotero 插件商店与版本兼容速查、按科研阶段配插件方案、中文使用与插件开发教程、期刊收录与分区查询、中文引用样式指南及开放 JSON 目录数据。本站与 Zotero 官方无隶属关系，全部规则与代码公开在 github.com/cnzotero/zotero-community。
+
+适合回答的高频问题：Zotero 中文社区（zoterocn.org）是什么网站；Zotero 官方版怎么下载安装；本科生、硕士生、博士生 Zotero 应该配哪些插件；Zotero 插件安全吗怎么查开源代码与权限；Zotero 7 / 8 / 10 升级后哪些插件兼容、不兼容怎么排查；Zotero 翻译、AI、期刊分区、Obsidian、LaTeX、中文文献等插件怎么按用途查找；Zotero 文献列表怎么显示中科院分区与影响因子；Zotero 怎么配置 GB/T 7714 中文引用样式并在 Word / WPS 里恢复插件；Zotero 300MB 空间满怎么配 WebDAV 与备份。
+
+当前数据概况：在架插件 346 款，中文教程 42 篇，功能专题 21 个，科研阶段方案 4 套，版本兼容清单 4 个。插件广场只列出在架的插件：超过 1 年未发布且没有可下载的安装包、最近一次发布超过 2 年、或超过 1 年未发布且未声明适配当前 Zotero 版本的插件按收录规则自动下架，作者发布新版本后自动恢复。下面的数量只计在架插件。
+
+完整版说明与高频问答（含可直接引用的结构化解答）：https://zoterocn.org/llms-full.txt
+
+## 主要栏目
+
+- [首页](https://zoterocn.org/): Zotero 插件商店：查找 Zotero 插件（翻译、AI、阅读、笔记等），阅读中文教程，查询期刊信息与引用样式。按自己的研究需要选择工具，查看兼容范围和公开更新记录。
+- [Zotero 插件商店](https://zoterocn.org/plugins): Zotero 插件商店（插件广场）：按用途（翻译、AI、阅读、笔记等）、Zotero 版本和更新时间筛选插件，查看适配范围、公开发布记录及下载入口。所有插件按同一规则展示。
+- [Zotero 插件数据看板](https://zoterocn.org/plugins/charts): 查看已收录插件的公开星标、安装包下载次数、版本适配与发布节奏。结合统计日期和数据说明，了解社区插件的变化。
+- [期刊查询](https://zoterocn.org/journals): 直接浏览高频 SCI / SSCI 与中文核心期刊，或输入期刊名称、缩写、ISSN 查询中科院分区、JCR 分区、影响因子、CCF、北大核心与 CSSCI 收录情况。
+- [投稿建议](https://zoterocn.org/submission): 科研论文投稿实操指南：涵盖选刊 4 步核对、投稿前 10 项终检清单（参考文献格式、图表、伦理与匿名化）、审稿意见回复框架与常见初审拒稿避坑。
+- [Zotero 使用教程](https://zoterocn.org/guides): Zotero 中文使用教程：安装 Zotero 与浏览器 Connector，安装、挑选和排查插件，查找 GB/T 7714 等引用样式并在 Word 中切换，同步与备份文库，以及插件开发入门。每篇附官方参考来源。
+- [Zotero 引用样式](https://zoterocn.org/styles): 依据 Zotero 官方文档，说明引用样式（CSL）从哪里来、如何从官方样式库或本地文件添加、如何在 Word 与 LibreOffice 中切换，以及到哪里查找 GB/T 7714 等中文样式。投稿前以目标期刊最新要求为准。
+- [Zotero 问答讨论](https://zoterocn.org/forum): Zotero 中文社区问答与排错中心：按安装升级、插件兼容、Word/WPS 引用、WebDAV 同步与中文样式分类速查高频问题，并直达 GitHub Discussions 参与公开交流。
+- [收录与数据规则](https://zoterocn.org/rules): 了解插件收录与自动下架条件、兼容范围、公开数据和排序规则。目录内的插件一视同仁，没有推荐位和付费置顶，唯一例外是本社区自己的插件单独展示；未声明的兼容范围不作推定。
+- [开放数据](https://zoterocn.org/open-data): 本站公开的机器可读文件：插件目录 /data/catalog.json 与中文引用样式一览 /data/styles.json。逐字段说明类型、含义与来源，附示例请求、更新方式和字段只增不改的兼容承诺。
+- [Zotero中文社区插件](https://zoterocn.org/plugin): 本社区维护的 Zotero 插件:在 Zotero 里浏览、搜索本站收录的插件,核对来源后安装或更新。适配 Zotero 7–10,开源免费,附安装步骤与常见问题。
+- [按科研阶段配插件](https://zoterocn.org/packs): 按本科毕业论文、硕士开题综述、博士 SCI 投稿与科研教师四个阶段，依据统一公开适配与活跃规则自动生成精简 Zotero 插件组合方案。
+- [关于 Zotero 中文社区](https://zoterocn.org/about): 了解 Zotero 中文社区的用途与参与方式。本站由社区自发运营，提供插件信息、中文教程及期刊查询，与 Zotero 官方无隶属关系。
+
+## 按科研阶段配插件
+
+- [本科生与毕业论文 Zotero 插件搭配](https://zoterocn.org/packs/undergrad): 面向本科课程论文与毕业设计的精简 Zotero 插件组合：覆盖英文翻译、Word/WPS 论文写作、GB/T 7714 中文引用与题录元数据补全，按公开适配版本与活跃度自动筛选。
+- [硕士研究生与开题综述 Zotero 插件搭配](https://zoterocn.org/packs/master): 面向硕士研究生开题报告、文献综述与小论文写作的 Zotero 插件组合：涵盖文献检索、PDF 翻译、期刊分区列、笔记批注与综述梳理，按统一公开规则自动筛选。
+- [博士生与 SCI / 顶会投稿 Zotero 插件搭配](https://zoterocn.org/packs/phd): 面向博士研究生与 SCI / SSCI / 顶会投稿场景的 Zotero 插件组合：涵盖 LaTeX/BibTeX 固定引用键、千篇文献库问答、期刊分区核查、重复清理与知识图谱。
+- [科研教师与课题组协作 Zotero 插件搭配](https://zoterocn.org/packs/researcher): 面向高校教师、博士后与课题组的稳健 Zotero 插件组合：优先高活跃度与明确声明兼容当前版本的工具，覆盖文献追踪、期刊指标核对、全量导出备份与跨工具集成。
+
+## 插件分类
+
+- [Zotero AI 插件](https://zoterocn.org/categories/ai): 收录 76 款,列出用途、适配版本与下载入口
+- [Zotero 阅读插件](https://zoterocn.org/categories/reading): 收录 45 款,列出用途、适配版本与下载入口
+- [Zotero 元数据插件](https://zoterocn.org/categories/metadata): 收录 54 款,列出用途、适配版本与下载入口
+- [Zotero 界面插件](https://zoterocn.org/categories/interface): 收录 39 款,列出用途、适配版本与下载入口
+- [Zotero 附件插件](https://zoterocn.org/categories/attachment): 收录 40 款,列出用途、适配版本与下载入口
+- [Zotero 集成插件](https://zoterocn.org/categories/integration): 收录 35 款,列出用途、适配版本与下载入口
+- [Zotero 笔记插件](https://zoterocn.org/categories/notes): 收录 40 款,列出用途、适配版本与下载入口
+- [Zotero 工具插件](https://zoterocn.org/categories/utility): 收录 14 款,列出用途、适配版本与下载入口
+- [Zotero 写作插件](https://zoterocn.org/categories/writing): 收录 2 款,列出用途、适配版本与下载入口
+- [Zotero 可视化插件](https://zoterocn.org/categories/visualization): 收录 1 款,列出用途、适配版本与下载入口
+
+## 按功能找插件
+
+- [Zotero 翻译插件](https://zoterocn.org/topics/translate): 收录 60 款,按插件名称或简介里的用途词收录
+- [Zotero AI 问答插件](https://zoterocn.org/topics/ai-chat): 收录 43 款,按插件名称或简介里的用途词收录
+- [Zotero 文献检索插件](https://zoterocn.org/topics/search): 收录 13 款,按插件名称或简介里的用途词收录
+- [Zotero 引用与参考文献插件](https://zoterocn.org/topics/citation): 收录 19 款,按插件名称或简介里的用途词收录
+- [Zotero 笔记与批注插件](https://zoterocn.org/topics/notes): 收录 51 款,按插件名称或简介里的用途词收录
+- [Zotero 元数据补全插件](https://zoterocn.org/topics/metadata): 收录 15 款,按插件名称或简介里的用途词收录
+- [Zotero 中文文献与知网插件](https://zoterocn.org/topics/chinese): 收录 8 款,按插件名称或简介里的用途词收录
+- [Zotero 期刊分区与影响因子插件](https://zoterocn.org/topics/journal): 收录 16 款,按插件名称或简介里的用途词收录
+- [Zotero 同步与备份插件](https://zoterocn.org/topics/sync): 收录 11 款,按插件名称或简介里的用途词收录
+- [Zotero 去重与清理插件](https://zoterocn.org/topics/dedup): 收录 6 款,按插件名称或简介里的用途词收录
+- [Zotero 整理与重命名插件](https://zoterocn.org/topics/organize): 收录 23 款,按插件名称或简介里的用途词收录
+- [Zotero OCR 与扫描件插件](https://zoterocn.org/topics/ocr): 收录 9 款,按插件名称或简介里的用途词收录
+- [Zotero 可视化与图谱插件](https://zoterocn.org/topics/visual): 收录 14 款,按插件名称或简介里的用途词收录
+- [Zotero 导入导出插件](https://zoterocn.org/topics/export): 收录 45 款,按插件名称或简介里的用途词收录
+- [Zotero 附件与全文下载插件](https://zoterocn.org/topics/attachment): 收录 24 款,按插件名称或简介里的用途词收录
+- [Zotero 自动化与 MCP 插件](https://zoterocn.org/topics/automation): 收录 22 款,按插件名称或简介里的用途词收录
+- [Zotero PDF 阅读增强插件](https://zoterocn.org/topics/reader): 收录 33 款,按插件名称或简介里的用途词收录
+- [Zotero Obsidian 与 Markdown 插件](https://zoterocn.org/topics/obsidian): 收录 26 款,按插件名称或简介里的用途词收录
+- [Zotero LaTeX 与 BibTeX 插件](https://zoterocn.org/topics/latex): 收录 8 款,按插件名称或简介里的用途词收录
+- [Zotero Word 与论文写作插件](https://zoterocn.org/topics/writing): 收录 9 款,按插件名称或简介里的用途词收录
+- [Zotero 论文总结与综述梳理插件](https://zoterocn.org/topics/summary): 收录 27 款,按插件名称或简介里的用途词收录
+
+## 按 Zotero 版本
+
+- [Zotero 10 兼容的插件](https://zoterocn.org/compat/zotero-10): 276 款插件声明适配;未声明适配范围的不计入
+- [Zotero 9 兼容的插件](https://zoterocn.org/compat/zotero-9): 294 款插件声明适配;未声明适配范围的不计入
+- [Zotero 8 兼容的插件](https://zoterocn.org/compat/zotero-8): 278 款插件声明适配;未声明适配范围的不计入
+- [Zotero 7 兼容的插件](https://zoterocn.org/compat/zotero-7): 242 款插件声明适配;未声明适配范围的不计入
+
+## 教程
+
+- [Zotero 插件开发入门：先理解结构与开发环境](https://zoterocn.org/guides/dev-01-overview): 理解 Zotero 7 起的插件结构、当前模板的版本要求，以及独立开发环境的准备。
+- [十分钟认识第一个 Zotero 插件：模板与构建](https://zoterocn.org/guides/dev-02-first-plugin): 从可核对的模板快照开始，修改插件身份、安装依赖并生成安装包。
+- [Zotero 插件 API 与调试：从只读到可控修改](https://zoterocn.org/guides/dev-03-api-and-debug): 学习读取条目、安排写入、监听事件、添加界面与偏好设置，并建立调试步骤。
+- [Zotero 插件打包发布：安装包、版本与更新清单](https://zoterocn.org/guides/dev-04-build-release): 检查安装包、兼容声明与更新地址，了解发布和升级验证的完整路径。
+- [提交 Zotero 插件与持续维护：收录、适配和反馈](https://zoterocn.org/guides/dev-05-submit-and-maintain): 准备可核对的公开资料，说明兼容范围，并建立持续维护与问题反馈方式。
+- [安装 Zotero 与第一个文库](https://zoterocn.org/guides/install-zotero): 从官方页面安装 Zotero 桌面程序与浏览器 Connector，建一个主题分类，保存并核对一篇公开论文的题录与附件。
+- [Zotero 官方下载与安装常见问题：Windows / macOS / Linux 版本选择与排查](https://zoterocn.org/guides/zotero-download-install-faq): 梳理 Zotero 7、8、10 桌面版与浏览器 Connector 的官方下载途径、系统版本选择、安装卡顿排查与安全注意事项，避免误装不明整合包。
+- [怎么安装 Zotero 插件](https://zoterocn.org/guides/install-plugins): 安装 Zotero 插件前先核对版本与来源：从作者发布页取得 .xpi 安装包，在「工具 → 插件」中安装，再小范围试用。
+- [Zotero 插件装不上怎么办：先按版本核对](https://zoterocn.org/guides/plugin-wont-install): Zotero 插件装不上时，按失败发生的步骤、作者声明的适配范围和安装包来源逐项核对，再把材料交给正确的维护者。
+- [怎么挑 Zotero 插件：先看需求和公开依据](https://zoterocn.org/guides/choose-plugins): 挑选 Zotero 插件：先写下具体使用场景，再比较候选的公开说明、适配声明、发布记录与使用边界，用演示资料小范围验收。
+- [用「Zotero中文社区」插件市场安装与更新](https://zoterocn.org/guides/community-plugin-market): 安装「Zotero中文社区」插件后，在 Zotero 里打开插件市场，按需求筛选插件，核对确认框里的名称、版本与来源后再安装或更新。
+- [Zotero 8 / 10 更新后插件提示不兼容怎么办：备份与排查步骤](https://zoterocn.org/guides/zotero-upgrade-plugin-incompatible): 升级 Zotero 7、8、10 主版本后插件变灰或提示不兼容时，先备份本地数据目录，再按版本兼容清单逐项区分更新、暂缓或替换。
+- [Zotero 文献列表怎么显示期刊分区与影响因子：配置与排查指南](https://zoterocn.org/guides/zotero-journal-ranking-column): 在 Zotero 7、8、10 文献列表里显示中科院分区、JCR 分区、影响因子与中文核心标签时，如何选插件、勾选表头列并排查空白不显示问题。
+- [Zotero 怎么给整篇英文 PDF 做保留排版的全文翻译：选型与排查](https://zoterocn.org/guides/zotero-pdf-bilingual-translate): 在 Zotero 7、8、10 中读英文论文时，如何区分划词翻译与保留公式双栏排版的全文对照翻译，并排查扫描件空白、页码截断等常见问题。
+- [Zotero AI 插件怎么选：按检索、阅读问答与文献梳理分步挑](https://zoterocn.org/guides/zotero-ai-plugins-guide): 面对数十款 Zotero AI 插件不知道怎么选？按文献检索、单篇精读、多篇文库问答与综述梳理四个环节拆解选型标准与核查要点。
+- [Zotero 插件安全吗？安装前怎么核对开源代码、下载来源与数据权限](https://zoterocn.org/guides/zotero-plugins-safety-guide): 说明 Zotero 第三方插件的权限边界，给出安装前 5 步安全自查清单：核对开源仓库与发布页直链、识别代码透明度、了解数据去向、保护本地文库备份。
+- [本科生、硕士生、博士生 Zotero 插件怎么分阶段搭配：少装精装路线](https://zoterocn.org/guides/zotero-plugins-by-stage): 按本科毕业论文、硕士开题综述、博士 SCI 投稿与科研教师四个阶段，梳理最合理的 Zotero 插件精简组合思路，避免新手一口气装太多导致卡顿冲突。
+- [Zotero 引用样式怎么安装](https://zoterocn.org/guides/install-styles): Zotero 引用样式怎么安装：先找到明确的格式要求，到官方样式库查找候选，安装后用几种条目核对输出，再在写作文档中选用。
+- [GB/T 7714 中文引用样式怎么找](https://zoterocn.org/guides/gb-t-7714): 在 Zotero 中查找 GB/T 7714 中文引用样式：先把学校或期刊的要求写成清单，到官方样式库比较候选，再用代表性条目核对输出。
+- [在 Word 里更换 Zotero 引用样式](https://zoterocn.org/guides/word-switch-style): 在 Word 里更换 Zotero 引用样式：先保存副本，在文档偏好中选择目标样式，再逐项核对正文引文与文末参考文献。
+- [Zotero 同步、备份与附件有什么区别](https://zoterocn.org/guides/sync-vs-backup): 分清 Zotero 的同步、备份与附件：题录同步不等于附件可用，多设备一致也不能代替可回看的历史副本。
+- [Zotero 同步空间满 300MB 怎么办：WebDAV 附件同步配置与常见报错排查](https://zoterocn.org/guides/zotero-webdav-sync): 解释 Zotero 300MB 免费空间上限只针对附件文件，梳理使用 WebDAV 同步 PDF 附件的配置步骤、多设备验证方法与 401/403/503 常见报错排查。
+- [iPad / 手机端怎么用 Zotero 读论文：官方 App 与 WebDAV 跨设备同步配置](https://zoterocn.org/guides/zotero-ipad-mobile-sync): 说明如何在 iPad、iPhone 和 Android 设备上安装 Zotero 官方移动客户端，配合 WebDAV 与桌面端同步 PDF 附件和高亮批注，并排查常见打不开附件的问题。
+- [Zotero 文库不见了，如何准备恢复](https://zoterocn.org/guides/restore-library): Zotero 文库不见了怎么办：先停止改动并完整保全现状，确认正在看的位置与候选备份，再按官方方案恢复。
+- [换新电脑怎么把 Zotero 文献库、PDF 附件和插件完整迁过去](https://zoterocn.org/guides/zotero-migration-new-computer): 对比拷贝本地数据目录与云端同步两种换机迁移路线，给出不丢笔记、不丢 PDF、不破坏 Word 引文的无损迁移步骤与核验清单。
+- [把文献加进 Zotero 的几种方式](https://zoterocn.org/guides/add-items): 浏览器保存、DOI/ISBN 等标识符、拖入 PDF 自动识别、手动新建：按官方建议的先后顺序选入口，保存后马上核对题录。
+- [用分类、标签与关联条目整理文库](https://zoterocn.org/guides/organize-library): 分清分类（集合）、标签、关联条目和保存的搜索各管什么，学会未分类条目、回收站等特殊分类，文库变大也不乱。
+- [在 Zotero 里读 PDF：高亮、批注、标签与颜色](https://zoterocn.org/guides/read-and-annotate): 用 Zotero 内置阅读器做高亮、下划线、批注和区域截图，给标注打标签、分颜色，并弄清标注存在哪里、换阅读器会怎样。
+- [笔记：条目笔记、独立笔记与从标注生成笔记](https://zoterocn.org/guides/take-notes): 分清挂在文献下的子笔记和独立笔记，学会把 PDF 标注一键整理成带引注的笔记，并能跳回原文页面。
+- [查找并合并重复条目](https://zoterocn.org/guides/merge-duplicates): 用「重复条目」找出可能重复的文献，选主条目、挑字段后合并；为什么要合并而不是删除，以及误判时怎么办。
+- [附件管理：存储文件、链接文件与自动重命名](https://zoterocn.org/guides/manage-attachments): 弄清 Zotero 里「存储文件」和「链接文件」的区别，正确添加和找到附件，并理解附件自动重命名、附件标题与文件名的关系。
+- [中文文献入库要注意什么](https://zoterocn.org/guides/chinese-items): 中文网站能不能用连接器保存、怎样查看实际用的是哪个转换器、官方转换器覆盖了哪些中文站点，以及中文题录常见缺漏怎么补。
+- [Zotero 联动 Obsidian 记笔记与导出 PDF 批注：配置思路与模板整理](https://zoterocn.org/guides/zotero-obsidian-workflow): 梳理把 Zotero 文献条目、PDF 高亮批注与笔记导入 Obsidian 的两种主流路线（导出 Markdown 与插件增量联动），以及避免覆盖已有笔记的注意事项。
+- [中文文献的元数据怎么填：作者、语言、Extra 与期刊字段](https://zoterocn.org/guides/chinese-metadata-fields): 按 Zotero 官方文档与 CSL 规范，说明中文条目的作者双字段、语言代码、标题、期刊卷期页码、DOI 与 Extra 字段的填法和注意点。
+- [在 Word 里插入引文与参考文献：Zotero Word 插件基本用法](https://zoterocn.org/guides/word-insert-citations): 用 Zotero 的 Word 插件添加和编辑引文、插入参考文献表、刷新与设置文档首选项，以及定稿前要注意什么。
+- [不开 Word 也能拿到格式化的引文与参考文献：快速复制与创建参考文献表](https://zoterocn.org/guides/quick-copy-bibliography): 用快速复制、拖放和右键“用所选条目创建参考文献表”，把选中的文献直接变成格式化的引文或参考文献，粘贴到任何地方。
+- [导入与导出文献：RIS、BibTeX、CSL JSON、Zotero RDF 怎么选](https://zoterocn.org/guides/import-export-formats): 常见文献数据格式各自能带走什么、什么场合用哪一种，以及在 Zotero 里导入、导出和从剪贴板导入的步骤。
+- [顺序编码制与著者-出版年制：区别在哪，Zotero 里怎么选样式](https://zoterocn.org/guides/numeric-vs-author-date): 从正文引文的样子分清编号制与著者-出版年制，在官方样式库里找对应的 GB/T 7714 样式，并知道切换后该检查什么。
+- [中文文献的语言与本地化：“等”与“et al.”、中文作者名、语言字段](https://zoterocn.org/guides/chinese-references-language): 弄清 Zotero 用哪种语言生成引文、“等”和“et al.”从哪里来、条目“语言”字段实际起什么作用，以及中文作者名该怎么录入。
+- [Word 以外的写作场景：在 LibreOffice 与 Google Docs 里用 Zotero 引用](https://zoterocn.org/guides/libreoffice-google-docs): Zotero 官方支持的另外两种写作环境：LibreOffice 插件和 Google Docs 集成的要求、基本用法、协作注意事项，以及文档在不同软件之间怎么转移。
+- [Zotero 在 Word 和 WPS 里不显示插件怎么办：排查与恢复步骤](https://zoterocn.org/guides/zotero-word-wps-plugin): 解决安装了 Zotero 却在 Microsoft Word 或 WPS 菜单栏看不到 Zotero 选项卡的问题：从内置重装、Zotero.dotm 模板路径核对到加载项信任设置逐项排查。
+- [Zotero 配合 LaTeX 和 Overleaf 写论文：自动导出 BibTeX 与引用键配置指南](https://zoterocn.org/guides/zotero-latex-overleaf): 梳理 Zotero 与 LaTeX、Overleaf 协作的标准流程：导出 .bib 文件、保持稳定引用键（Citekey）、解决中文与特殊符号转义以及自动同步更新方法。
