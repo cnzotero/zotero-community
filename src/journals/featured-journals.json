@@ -1,0 +1,767 @@
+{
+  "dataVersion": "v2026.8",
+  "items": [
+    {
+      "group": "综合顶刊",
+      "record": {
+        "key": "nature",
+        "name": "NATURE",
+        "issn": "0028-0836",
+        "eissn": "1476-4687",
+        "categories": [
+          "MULTIDISCIPLINARY SCIENCES"
+        ],
+        "jcr": {
+          "quartile": "Q1",
+          "rank": "1/140",
+          "impactFactor": 56.1,
+          "fiveYearImpactFactor": 56.7,
+          "jci": 10.84,
+          "scie": true,
+          "ssci": false
+        },
+        "cas": {
+          "zone": 1,
+          "top": true,
+          "basicZone": 1,
+          "basicTop": true
+        },
+        "lists": {
+          "ei": false,
+          "ccf": null,
+          "ajg": null,
+          "ft50": false,
+          "utd24": false,
+          "chinese": []
+        },
+        "abbreviations": []
+      }
+    },
+    {
+      "group": "综合顶刊",
+      "record": {
+        "key": "science",
+        "name": "SCIENCE",
+        "issn": "0036-8075",
+        "eissn": "1095-9203",
+        "categories": [
+          "MULTIDISCIPLINARY SCIENCES"
+        ],
+        "jcr": {
+          "quartile": "Q1",
+          "rank": "3/140",
+          "impactFactor": 47.3,
+          "fiveYearImpactFactor": 51.6,
+          "jci": 8.74,
+          "scie": true,
+          "ssci": false
+        },
+        "cas": {
+          "zone": 1,
+          "top": true,
+          "basicZone": 1,
+          "basicTop": true
+        },
+        "lists": {
+          "ei": false,
+          "ccf": null,
+          "ajg": null,
+          "ft50": false,
+          "utd24": false,
+          "chinese": []
+        },
+        "abbreviations": []
+      }
+    },
+    {
+      "group": "综合顶刊",
+      "record": {
+        "key": "nature communications",
+        "name": "Nature Communications",
+        "issn": "",
+        "eissn": "2041-1723",
+        "categories": [
+          "MULTIDISCIPLINARY SCIENCES"
+        ],
+        "jcr": {
+          "quartile": "Q1",
+          "rank": "8/140",
+          "impactFactor": 18.1,
+          "fiveYearImpactFactor": 18.9,
+          "jci": 3.47,
+          "scie": true,
+          "ssci": false
+        },
+        "cas": {
+          "zone": 1,
+          "top": true,
+          "basicZone": 1,
+          "basicTop": true
+        },
+        "lists": {
+          "ei": false,
+          "ccf": null,
+          "ajg": null,
+          "ft50": false,
+          "utd24": false,
+          "chinese": []
+        },
+        "abbreviations": [
+          "nat commun",
+          "nat. commun."
+        ]
+      }
+    },
+    {
+      "group": "综合顶刊",
+      "record": {
+        "key": "pnas nexus",
+        "name": "PNAS Nexus",
+        "issn": "",
+        "eissn": "2752-6542",
+        "categories": [
+          "MULTIDISCIPLINARY SCIENCES",
+          "SOCIAL SCIENCES, INTERDISCIPLINARY"
+        ],
+        "jcr": {
+          "quartile": "Q1",
+          "rank": "9/275",
+          "impactFactor": 4.8,
+          "fiveYearImpactFactor": 4.8,
+          "jci": 2.02,
+          "scie": false,
+          "ssci": false
+        },
+        "cas": {
+          "zone": 2,
+          "top": false,
+          "basicZone": 3,
+          "basicTop": false
+        },
+        "lists": {
+          "ei": false,
+          "ccf": null,
+          "ajg": null,
+          "ft50": false,
+          "utd24": false,
+          "chinese": []
+        },
+        "abbreviations": []
+      }
+    },
+    {
+      "group": "计算机与 AI",
+      "record": {
+        "key": "nature machine intelligence",
+        "name": "Nature Machine Intelligence",
+        "issn": "",
+        "eissn": "2522-5839",
+        "categories": [
+          "COMPUTER SCIENCE, ARTIFICIAL INTELLIGENCE",
+          "COMPUTER SCIENCE, INTERDISCIPLINARY APPLICATIONS"
+        ],
+        "jcr": {
+          "quartile": "Q1",
+          "rank": "1/185",
+          "impactFactor": 29.8,
+          "fiveYearImpactFactor": 36.0,
+          "jci": 4.19,
+          "scie": true,
+          "ssci": false
+        },
+        "cas": {
+          "zone": 1,
+          "top": true,
+          "basicZone": 1,
+          "basicTop": true
+        },
+        "lists": {
+          "ei": true,
+          "ccf": null,
+          "ajg": null,
+          "ft50": false,
+          "utd24": false,
+          "chinese": []
+        },
+        "abbreviations": [
+          "nat mach intell"
+        ]
+      }
+    },
+    {
+      "group": "计算机与 AI",
+      "record": {
+        "key": "ieee transactions on pattern analysis and machine intelligence",
+        "name": "IEEE TRANSACTIONS ON PATTERN ANALYSIS AND MACHINE INTELLIGENCE",
+        "issn": "0162-8828",
+        "eissn": "1939-3539",
+        "categories": [
+          "COMPUTER SCIENCE, ARTIFICIAL INTELLIGENCE",
+          "ENGINEERING, ELECTRICAL & ELECTRONIC"
+        ],
+        "jcr": {
+          "quartile": "Q1",
+          "rank": "4/369",
+          "impactFactor": 20.4,
+          "fiveYearImpactFactor": 22.6,
+          "jci": 3.93,
+          "scie": true,
+          "ssci": false
+        },
+        "cas": {
+          "zone": 1,
+          "top": true,
+          "basicZone": 1,
+          "basicTop": true
+        },
+        "lists": {
+          "ei": true,
+          "ccf": "A",
+          "ajg": null,
+          "ft50": false,
+          "utd24": false,
+          "chinese": []
+        },
+        "abbreviations": [
+          "ieee t pattern anal",
+          "ieee trans. pattern anal. mach. intell."
+        ]
+      }
+    },
+    {
+      "group": "计算机与 AI",
+      "record": {
+        "key": "ieee transactions on knowledge and data engineering",
+        "name": "IEEE TRANSACTIONS ON KNOWLEDGE AND DATA ENGINEERING",
+        "issn": "1041-4347",
+        "eissn": "1558-2191",
+        "categories": [
+          "COMPUTER SCIENCE, ARTIFICIAL INTELLIGENCE",
+          "COMPUTER SCIENCE, INFORMATION SYSTEMS",
+          "ENGINEERING, ELECTRICAL & ELECTRONIC"
+        ],
+        "jcr": {
+          "quartile": "Q1",
+          "rank": "6/266",
+          "impactFactor": 11.6,
+          "fiveYearImpactFactor": 10.9,
+          "jci": 2.4,
+          "scie": true,
+          "ssci": false
+        },
+        "cas": {
+          "zone": 2,
+          "top": true,
+          "basicZone": 1,
+          "basicTop": true
+        },
+        "lists": {
+          "ei": true,
+          "ccf": "A",
+          "ajg": null,
+          "ft50": false,
+          "utd24": false,
+          "chinese": []
+        },
+        "abbreviations": [
+          "ieee t knowl data en",
+          "ieee trans. knowl. data eng."
+        ]
+      }
+    },
+    {
+      "group": "医学与生命科学",
+      "record": {
+        "key": "lancet",
+        "name": "LANCET",
+        "issn": "0140-6736",
+        "eissn": "1474-547X",
+        "categories": [
+          "MEDICINE, GENERAL & INTERNAL"
+        ],
+        "jcr": {
+          "quartile": "Q1",
+          "rank": "1/336",
+          "impactFactor": 109.0,
+          "fiveYearImpactFactor": 115.4,
+          "jci": 23.89,
+          "scie": true,
+          "ssci": false
+        },
+        "cas": {
+          "zone": 1,
+          "top": true,
+          "basicZone": 1,
+          "basicTop": true
+        },
+        "lists": {
+          "ei": false,
+          "ccf": null,
+          "ajg": null,
+          "ft50": false,
+          "utd24": false,
+          "chinese": []
+        },
+        "abbreviations": []
+      }
+    },
+    {
+      "group": "医学与生命科学",
+      "record": {
+        "key": "new england journal of medicine",
+        "name": "NEW ENGLAND JOURNAL OF MEDICINE",
+        "issn": "0028-4793",
+        "eissn": "1533-4406",
+        "categories": [
+          "MEDICINE, GENERAL & INTERNAL"
+        ],
+        "jcr": {
+          "quartile": "Q1",
+          "rank": "2/336",
+          "impactFactor": 84.5,
+          "fiveYearImpactFactor": 86.6,
+          "jci": 20.92,
+          "scie": true,
+          "ssci": false
+        },
+        "cas": {
+          "zone": 1,
+          "top": true,
+          "basicZone": 1,
+          "basicTop": true
+        },
+        "lists": {
+          "ei": false,
+          "ccf": null,
+          "ajg": null,
+          "ft50": false,
+          "utd24": false,
+          "chinese": []
+        },
+        "abbreviations": [
+          "n. engl. j. med.",
+          "new engl j med"
+        ]
+      }
+    },
+    {
+      "group": "医学与生命科学",
+      "record": {
+        "key": "cell",
+        "name": "CELL",
+        "issn": "0092-8674",
+        "eissn": "1097-4172",
+        "categories": [
+          "BIOCHEMISTRY & MOLECULAR BIOLOGY",
+          "CELL BIOLOGY"
+        ],
+        "jcr": {
+          "quartile": "Q1",
+          "rank": "3/328",
+          "impactFactor": 45.1,
+          "fiveYearImpactFactor": 50.7,
+          "jci": 6.92,
+          "scie": true,
+          "ssci": false
+        },
+        "cas": {
+          "zone": 1,
+          "top": true,
+          "basicZone": 1,
+          "basicTop": true
+        },
+        "lists": {
+          "ei": false,
+          "ccf": null,
+          "ajg": null,
+          "ft50": false,
+          "utd24": false,
+          "chinese": []
+        },
+        "abbreviations": []
+      }
+    },
+    {
+      "group": "工程与材料",
+      "record": {
+        "key": "advanced materials",
+        "name": "ADVANCED MATERIALS",
+        "issn": "0935-9648",
+        "eissn": "1521-4095",
+        "categories": [
+          "CHEMISTRY, MULTIDISCIPLINARY",
+          "CHEMISTRY, PHYSICAL",
+          "MATERIALS SCIENCE, MULTIDISCIPLINARY",
+          "NANOSCIENCE & NANOTECHNOLOGY",
+          "PHYSICS, APPLIED",
+          "PHYSICS, CONDENSED MATTER"
+        ],
+        "jcr": {
+          "quartile": "Q1",
+          "rank": "4/191",
+          "impactFactor": 29.1,
+          "fiveYearImpactFactor": 29.6,
+          "jci": 3.56,
+          "scie": true,
+          "ssci": false
+        },
+        "cas": {
+          "zone": 1,
+          "top": true,
+          "basicZone": 1,
+          "basicTop": true
+        },
+        "lists": {
+          "ei": true,
+          "ccf": null,
+          "ajg": null,
+          "ft50": false,
+          "utd24": false,
+          "chinese": []
+        },
+        "abbreviations": [
+          "adv mater",
+          "adv. mater."
+        ]
+      }
+    },
+    {
+      "group": "工程与材料",
+      "record": {
+        "key": "journal of the american chemical society",
+        "name": "Journal of the American Chemical Society",
+        "issn": "0002-7863",
+        "eissn": "1520-5126",
+        "categories": [
+          "CHEMISTRY, MULTIDISCIPLINARY"
+        ],
+        "jcr": {
+          "quartile": "Q1",
+          "rank": "19/250",
+          "impactFactor": 16.6,
+          "fiveYearImpactFactor": 16.1,
+          "jci": 2.55,
+          "scie": true,
+          "ssci": false
+        },
+        "cas": {
+          "zone": 1,
+          "top": true,
+          "basicZone": 1,
+          "basicTop": true
+        },
+        "lists": {
+          "ei": true,
+          "ccf": null,
+          "ajg": null,
+          "ft50": false,
+          "utd24": false,
+          "chinese": []
+        },
+        "abbreviations": [
+          "j am chem soc"
+        ]
+      }
+    },
+    {
+      "group": "经管与社科",
+      "record": {
+        "key": "academy of management journal",
+        "name": "ACADEMY OF MANAGEMENT JOURNAL",
+        "issn": "0001-4273",
+        "eissn": "1948-0989",
+        "categories": [
+          "BUSINESS",
+          "MANAGEMENT"
+        ],
+        "jcr": {
+          "quartile": "Q1",
+          "rank": "9/426",
+          "impactFactor": 12.8,
+          "fiveYearImpactFactor": 14.3,
+          "jci": 2.55,
+          "scie": false,
+          "ssci": true
+        },
+        "cas": {
+          "zone": 1,
+          "top": true,
+          "basicZone": 1,
+          "basicTop": true
+        },
+        "lists": {
+          "ei": false,
+          "ccf": null,
+          "ajg": {
+            "rating": "4*",
+            "ft50": true
+          },
+          "ft50": true,
+          "utd24": true,
+          "chinese": []
+        },
+        "abbreviations": [
+          "acad manage j",
+          "acad. manage. j."
+        ]
+      }
+    },
+    {
+      "group": "经管与社科",
+      "record": {
+        "key": "american economic review",
+        "name": "AMERICAN ECONOMIC REVIEW",
+        "issn": "0002-8282",
+        "eissn": "1944-7981",
+        "categories": [
+          "ECONOMICS"
+        ],
+        "jcr": {
+          "quartile": "Q1",
+          "rank": "11/626",
+          "impactFactor": 9.5,
+          "fiveYearImpactFactor": 18.5,
+          "jci": 3.54,
+          "scie": false,
+          "ssci": true
+        },
+        "cas": {
+          "zone": 1,
+          "top": true,
+          "basicZone": 1,
+          "basicTop": true
+        },
+        "lists": {
+          "ei": false,
+          "ccf": null,
+          "ajg": {
+            "rating": "4*",
+            "ft50": true
+          },
+          "ft50": true,
+          "utd24": false,
+          "chinese": []
+        },
+        "abbreviations": [
+          "am econ rev",
+          "am. econ. rev."
+        ]
+      }
+    },
+    {
+      "group": "经管与社科",
+      "record": {
+        "key": "mis quarterly",
+        "name": "MIS QUARTERLY",
+        "issn": "0276-7783",
+        "eissn": "",
+        "categories": [
+          "COMPUTER SCIENCE, INFORMATION SYSTEMS",
+          "INFORMATION SCIENCE & LIBRARY SCIENCE",
+          "MANAGEMENT"
+        ],
+        "jcr": {
+          "quartile": "Q1",
+          "rank": "15/172",
+          "impactFactor": 7.3,
+          "fiveYearImpactFactor": 11.9,
+          "jci": 1.46,
+          "scie": true,
+          "ssci": true
+        },
+        "cas": {
+          "zone": 1,
+          "top": true,
+          "basicZone": 2,
+          "basicTop": false
+        },
+        "lists": {
+          "ei": false,
+          "ccf": null,
+          "ajg": null,
+          "ft50": true,
+          "utd24": true,
+          "chinese": []
+        },
+        "abbreviations": [
+          "mis quart",
+          "mis quart."
+        ]
+      }
+    },
+    {
+      "group": "经管与社科",
+      "record": {
+        "key": "management science",
+        "name": "MANAGEMENT SCIENCE",
+        "issn": "0025-1909",
+        "eissn": "1526-5501",
+        "categories": [
+          "MANAGEMENT",
+          "OPERATIONS RESEARCH & MANAGEMENT SCIENCE"
+        ],
+        "jcr": {
+          "quartile": "Q1",
+          "rank": "19/109",
+          "impactFactor": 5.7,
+          "fiveYearImpactFactor": 7.6,
+          "jci": 1.04,
+          "scie": true,
+          "ssci": true
+        },
+        "cas": {
+          "zone": 1,
+          "top": true,
+          "basicZone": 2,
+          "basicTop": false
+        },
+        "lists": {
+          "ei": true,
+          "ccf": null,
+          "ajg": {
+            "rating": "4*",
+            "ft50": true
+          },
+          "ft50": true,
+          "utd24": true,
+          "chinese": []
+        },
+        "abbreviations": [
+          "manage sci"
+        ]
+      }
+    },
+    {
+      "group": "中文核心",
+      "record": {
+        "key": "chinese science bulletin-chinese",
+        "name": "Chinese Science Bulletin-Chinese",
+        "issn": "0023-074X",
+        "eissn": "2095-9419",
+        "categories": [
+          "MULTIDISCIPLINARY SCIENCES"
+        ],
+        "jcr": {
+          "quartile": "Q3",
+          "rank": "83/140",
+          "impactFactor": 1.2,
+          "fiveYearImpactFactor": 1.3,
+          "jci": 0.24,
+          "scie": false,
+          "ssci": false
+        },
+        "cas": {
+          "zone": 1,
+          "top": true,
+          "basicZone": 1,
+          "basicTop": true
+        },
+        "lists": {
+          "ei": false,
+          "ccf": null,
+          "ajg": null,
+          "ft50": false,
+          "utd24": false,
+          "chinese": []
+        },
+        "abbreviations": [
+          "chin sci b-chin"
+        ]
+      }
+    },
+    {
+      "group": "中文核心",
+      "record": {
+        "key": "心理学报",
+        "name": "心理学报",
+        "issn": "",
+        "eissn": "",
+        "categories": [],
+        "jcr": null,
+        "cas": null,
+        "lists": {
+          "ei": false,
+          "ccf": null,
+          "ajg": null,
+          "ft50": false,
+          "utd24": false,
+          "chinese": [
+            {
+              "type": "CSCD",
+              "detail": "CSCD核心"
+            },
+            {
+              "type": "CSSCI",
+              "detail": "南核"
+            },
+            {
+              "type": "北核",
+              "detail": "北核"
+            }
+          ]
+        },
+        "abbreviations": []
+      }
+    },
+    {
+      "group": "中文核心",
+      "record": {
+        "key": "计算机学报",
+        "name": "计算机学报",
+        "issn": "",
+        "eissn": "",
+        "categories": [],
+        "jcr": null,
+        "cas": null,
+        "lists": {
+          "ei": false,
+          "ccf": null,
+          "ajg": null,
+          "ft50": false,
+          "utd24": false,
+          "chinese": [
+            {
+              "type": "CSCD",
+              "detail": "CSCD核心"
+            },
+            {
+              "type": "北核",
+              "detail": "北核"
+            }
+          ]
+        },
+        "abbreviations": []
+      }
+    },
+    {
+      "group": "中文核心",
+      "record": {
+        "key": "软件学报",
+        "name": "软件学报",
+        "issn": "",
+        "eissn": "",
+        "categories": [],
+        "jcr": null,
+        "cas": null,
+        "lists": {
+          "ei": false,
+          "ccf": null,
+          "ajg": null,
+          "ft50": false,
+          "utd24": false,
+          "chinese": [
+            {
+              "type": "CSCD",
+              "detail": "CSCD核心"
+            },
+            {
+              "type": "北核",
+              "detail": "北核"
+            }
+          ]
+        },
+        "abbreviations": []
+      }
+    }
+  ]
+}

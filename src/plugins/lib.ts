@@ -439,8 +439,8 @@ export function relatedPlugins(list: Plugin[], p: Plugin, n = 4): Plugin[] {
 export type HomeBoardKey = "stars" | "updated" | "cadence" | "downloads";
 export type HomeBoards = Record<HomeBoardKey, Plugin[]>;
 
-/** 首页每个榜单默认显示的插件数:每行 5 个、共 3 行;点「展开」后显示到 HOME_BOARD_SIZE 个。 */
-export const HOME_BOARD_VISIBLE = 15;
+/** 首页每个榜单默认显示的插件数:每行 6 个、共 3 行;点「展开」后显示到 HOME_BOARD_SIZE 个。 */
+export const HOME_BOARD_VISIBLE = 18;
 export const HOME_BOARD_SIZE = 30;
 
 export function homeBoards(list: Plugin[], n = HOME_BOARD_SIZE): HomeBoards {

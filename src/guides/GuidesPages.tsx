@@ -26,10 +26,12 @@ function InlineView({ inline }: { inline: Inline[] }) {
   );
 }
 
-function BlockView({ b }: { b: Block }) {
-  if (b.t === "h2") return <h2><InlineView inline={b.inline} /></h2>;
+const inlinePlain = (inline: Inline[]): string => inline.map((x) => x.v).join("").trim();
+
+function BlockView({ b, headingId, highlight }: { b: Block; headingId?: string; highlight?: boolean }) {
+  if (b.t === "h2") return <>{headingId ? <span id={headingId} className="toc-anchor" /> : null}<h2><InlineView inline={b.inline} /></h2></>;
   if (b.t === "h3") return <h3><InlineView inline={b.inline} /></h3>;
-  if (b.t === "p") return <p><InlineView inline={b.inline} /></p>;
+  if (b.t === "p") return <p className={highlight ? "callout-lead" : undefined}><InlineView inline={b.inline} /></p>;
   if (b.t === "quote") return <blockquote><InlineView inline={b.inline} /></blockquote>;
   if (b.t === "code") return <pre className="codeblock"><code>{b.v}</code></pre>;
   const items = b.items.map((it, i) => <li key={i}><InlineView inline={it} /></li>);
@@ -93,44 +95,64 @@ export function GuideArticle() {
   const next = group[i + 1];
   const others = group.filter((x) => x.slug !== a.slug);
   const label = guideCategoryLabel(a.category);
+  const toc: { id: string; text: string }[] = [];
+  const headingIds = new Map<number, string>();
+  const highlightIdx = new Set<number>();
+  a.blocks.forEach((b, k) => {
+    if (b.t === "h2") {
+      const id = `sec-${toc.length + 1}`;
+      const text = inlinePlain(b.inline);
+      toc.push({ id, text });
+      headingIds.set(k, id);
+      if ((text === "一句话结论" || text === "你要解决什么") && a.blocks[k + 1]?.t === "p") {
+        highlightIdx.add(k + 1);
+      }
+    }
+  });
   return (
-    <article className="section prose article">
-      <nav aria-label="面包屑" className="crumbs">
-        <Link to="/">首页</Link>
-        <span aria-hidden> › </span>
-        <Link to="/guides">教程</Link>
-        <span aria-hidden> › </span>
-        <span aria-current="page">{a.title}</span>
-      </nav>
-      <Link to="/guides" className="more">← 返回教程</Link>
-      <h1 className="page-title">{a.title}</h1>
-      <p className="meta">
-        <Link to={`/guides#${categoryAnchor(a.category ?? "other")}`} className="inline-link">{label}</Link> · 第 {i + 1} 篇 / 共 {group.length} 篇 · 约 {minutes(a)} 分钟读完
-      </p>
-      {(a.published || a.updated) && (
-        <p className="meta">
-          {a.published && <>发布于 <time dateTime={a.published}>{a.published}</time></>}
-          {a.published && a.updated && " · "}
-          {a.updated && <>更新于 <time dateTime={a.updated}>{a.updated}</time></>}
-        </p>
-      )}
-      {a.blocks.map((b, k) => <BlockView key={k} b={b} />)}
-      <section className="sources" aria-labelledby="src-title">
-        <h2 id="src-title">参考来源</h2>
-        <ul>{a.sources.map((s) => <li key={s}><a href={s} target="_blank" rel="noopener noreferrer" className="inline-link">{s}</a></li>)}</ul>
-        <p className="data-note">教程由社区整理,以官方文档为准;标注「待核实」「未实测」的步骤尚未在目标版本上验证,请自行确认后再使用。发现错误欢迎在公开仓库提 Issue。</p>
-      </section>
-      {others.length > 0 && (
-        <section className="related-guides" aria-labelledby="related-title">
-          <h2 id="related-title">同分类的其他教程</h2>
-          <ul>{others.map((o) => <li key={o.slug}><Link to={articlePath(o.slug)} className="inline-link">{o.title}</Link></li>)}</ul>
+    <div className={toc.length >= 2 ? "article-layout" : "article-layout article-layout-single"}>
+      <article className="section prose article article-paper">
+        <nav aria-label="面包屑" className="crumbs">
+          <Link to="/">首页</Link>
+          <span aria-hidden> › </span>
+          <Link to="/guides">教程</Link>
+          <span aria-hidden> › </span>
+          <span aria-current="page">{a.title}</span>
+        </nav>
+        <h1 className="page-title">{a.title}</h1>
+        <div className="article-meta-bar">
+          <Link to={`/guides#${categoryAnchor(a.category ?? "other")}`} className="meta-pill">{label}</Link>
+          <span>第 {i + 1} 篇 / 共 {group.length} 篇</span>
+          <span>约 {minutes(a)} 分钟读完</span>
+          {a.published && <span>发布于 <time dateTime={a.published}>{a.published}</time></span>}
+          {a.updated && <span>更新于 <time dateTime={a.updated}>{a.updated}</time></span>}
+        </div>
+        {a.blocks.map((b, k) => <BlockView key={k} b={b} headingId={headingIds.get(k)} highlight={highlightIdx.has(k)} />)}
+        <section className="sources" aria-labelledby="src-title">
+          <h2 id="src-title">参考来源</h2>
+          <ul>{a.sources.map((s) => <li key={s}><a href={s} target="_blank" rel="noopener noreferrer" className="inline-link">{s}</a></li>)}</ul>
+          <p className="data-note">教程由社区整理，以官方文档为准；标注「待核实」「未实测」的步骤尚未在目标版本上验证，请自行确认后再使用。发现错误欢迎在公开仓库提 Issue。</p>
         </section>
+        {others.length > 0 && (
+          <section className="related-guides" aria-labelledby="related-title">
+            <h2 id="related-title">同分类的其他教程</h2>
+            <ul>{others.map((o) => <li key={o.slug}><Link to={articlePath(o.slug)} className="inline-link">{o.title}</Link></li>)}</ul>
+          </section>
+        )}
+        <nav className="article-nav" aria-label="上一篇下一篇">
+          {prev ? <Link to={articlePath(prev.slug)} className="btn btn-ghost btn-sm">← {prev.title}</Link> : <span />}
+          {next ? <Link to={articlePath(next.slug)} className="btn btn-ghost btn-sm">{next.title} →</Link> : <span />}
+        </nav>
+      </article>
+      {toc.length >= 2 && (
+        <aside className="article-toc" aria-label="本页目录">
+          <p className="toc-title">本页目录</p>
+          <ol>
+            {toc.map((item) => <li key={item.id}><a href={`#${item.id}`}>{item.text}</a></li>)}
+          </ol>
+        </aside>
       )}
-      <nav className="article-nav" aria-label="上一篇下一篇">
-        {prev ? <Link to={articlePath(prev.slug)} className="btn btn-ghost btn-sm">← {prev.title}</Link> : <span />}
-        {next ? <Link to={articlePath(next.slug)} className="btn btn-ghost btn-sm">{next.title} →</Link> : <span />}
-      </nav>
-    </article>
+    </div>
   );
 }
 

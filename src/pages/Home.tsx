@@ -49,16 +49,24 @@ export function Home() {
   };
   return (
     <>
-      <section className="hero">
+      <section className="hero hero-stage">
+        <p className="hero-eyebrow">Zotero 中文开源社区 · zoterocn.org</p>
         <h1>{pageMeta("/").h1}</h1>
-        <p>查找适合自己的插件,核对 Zotero 版本与更新记录;阅读中文教程,查询期刊与引用样式,按研究需要选择工具。</p>
+        <p className="hero-lead">查找适配 Zotero 7–10 的开源插件与更新记录，阅读系统中文教程，查询期刊分区与引用样式。</p>
         <form onSubmit={submit} role="search" className="hero-search">
-          <input className="search" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="搜索插件,例如:翻译、Word、标签" aria-label="搜索插件" data-early="home-q" />
+          <input className="search" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="搜索插件名称、作者或用途，例如：翻译、AI、期刊分区、Obsidian" aria-label="搜索插件" data-early="home-q" />
         </form>
         <p className="hero-cta">
-          <Link to="/plugins" className="btn">查找插件</Link>
-          <Link to="/guides" className="btn btn-ghost">阅读教程</Link>
+          <Link to="/plugins" className="btn">浏览插件广场</Link>
+          <Link to="/guides" className="btn btn-ghost">阅读中文教程</Link>
+          <Link to="/journals" className="btn btn-ghost">查询期刊分区</Link>
         </p>
+        <ul className="trust-pills" aria-label="站点特性">
+          <li>适配 Zotero 7–10</li>
+          <li>公开收录规则</li>
+          <li>安装包直链作者仓库</li>
+          <li>代码与目录完全开源</li>
+        </ul>
       </section>
 
       <OfficialBox compact />
@@ -96,7 +104,7 @@ export function Home() {
             <h2>按功能找插件</h2>
           </div>
           <nav className="chips" aria-label="按功能找插件">
-            {topics.map((t) => <Link key={t.key} to={topicPath(t.key)} className="chip">{t.label}({t.count} 款)</Link>)}
+            {topics.map((t) => <Link key={t.key} to={topicPath(t.key)} className="chip">{t.label}<span className="chip-count">{t.count}</span></Link>)}
           </nav>
           <p className="meta home-note">按插件名称或简介里写明的用途归入专题，一个插件可以出现在多个专题。</p>
         </section>
@@ -108,7 +116,7 @@ export function Home() {
             <h2>按 Zotero 版本找插件</h2>
           </div>
           <nav className="chips" aria-label="按 Zotero 版本">
-            {compat.map((c) => <Link key={c.major} to={compatPath(c.major)} className="chip">Zotero {c.major}({c.count} 款)</Link>)}
+            {compat.map((c) => <Link key={c.major} to={compatPath(c.major)} className="chip">Zotero {c.major}<span className="chip-count">{c.count} 款</span></Link>)}
           </nav>
           <p className="meta home-note">{COMPAT_SCOPE}</p>
         </section>
@@ -138,14 +146,19 @@ export function Home() {
         </div>
       </section>
 
-      <section className="section prose" aria-labelledby="home-faq-title">
-        <h2 id="home-faq-title">常见问题</h2>
-        {HOME_FAQS.map((item) => (
-          <div key={item.q}>
-            <h3>{item.q}</h3>
-            <p>{item.a}</p>
-          </div>
-        ))}
+      <section className="section faq-section" aria-labelledby="home-faq-title">
+        <div className="section-head">
+          <h2 id="home-faq-title">常见问题</h2>
+          <Link to="/rules" className="more">查看完整规则</Link>
+        </div>
+        <div className="faq-list">
+          {HOME_FAQS.map((item, idx) => (
+            <details key={item.q} className="faq-item" open={idx === 0}>
+              <summary className="faq-q">{item.q}</summary>
+              <p className="faq-a">{item.a}</p>
+            </details>
+          ))}
+        </div>
       </section>
       <p className="data-note">插件信息整理自各项目公开资料,收录不代表对安全性或质量的背书。所有插件按同一套规则展示。</p>
     </>
