@@ -439,3 +439,45 @@ test("预加载:每种页面预加载自己要用的代码块与数据块,没有
   assert.match(html, /href="\/assets\/content-c2\.js"/);
   assert.equal(withPreloads("<head></head>", "/rules", ["index-AAA.js"]), "<head></head>");
 });
+
+test("SEO/GEO 全面增强:llms-full.txt、FAQPage/Dataset 结构化数据、article OG、sitemap/llms head 发现与爬虫放行", async () => {
+  const { dir } = await run(PLUGINS, ARTICLES);
+  const full = readFileSync(join(dir, "llms-full.txt"), "utf8");
+  assert.match(full, /^# Zotero 中文社区（zoterocn\.org）完整说明/);
+  assert.match(full, /当前在架插件：3 款/);
+  assert.match(full, /https:\/\/zoterocn\.org\/data\/catalog\.json/);
+  assert.ok(!/ai4paper|阅读宇宙|\/Users\//i.test(full), "llms-full.txt 严禁出现敏感或关联品牌字样");
+
+  // 首页:WebSite + Organization(sameAs) + FAQPage + head 发现链接
+  const home = read(dir, "/");
+  assert.match(home, /<link rel="sitemap" type="application\/xml" title="Sitemap" href="https:\/\/zoterocn\.org\/sitemap\.xml" \/>/);
+  assert.match(home, /<link rel="alternate" type="text\/plain" title="LLMs" href="https:\/\/zoterocn\.org\/llms\.txt" \/>/);
+  const homeLd = jsonLd(home);
+  assert.ok(homeLd.some((j) => j["@type"] === "Organization" && Array.isArray(j.sameAs) && j.sameAs.includes("https://github.com/cnzotero/zotero-community")));
+  assert.ok(homeLd.some((j) => j["@type"] === "FAQPage" && j.mainEntity.length >= 4));
+
+  // /plugin、/journals、/styles 均有 FAQPage;/open-data 有 Dataset;/plugins 有 CollectionPage
+  for (const p of ["/plugin", "/journals", "/styles"]) {
+    assert.ok(jsonLd(read(dir, p)).some((j) => j["@type"] === "FAQPage" && j.mainEntity.length >= 3), `${p} 缺 FAQPage`);
+  }
+  assert.ok(jsonLd(read(dir, "/open-data")).some((j) => j["@type"] === "Dataset" && j.distribution.length === 2));
+  assert.ok(jsonLd(read(dir, "/plugins")).some((j) => j["@type"] === "CollectionPage" && j.mainEntity.numberOfItems === 3));
+
+  // 插件详情页含 softwareRequirements
+  const app = jsonLd(read(dir, "/plugins/a/evil")).find((j) => j["@type"] === "SoftwareApplication");
+  assert.equal(app.softwareRequirements, "Zotero 7, Zotero 8, Zotero 9, Zotero 10");
+
+  // 教程页:og:type=article + article:published_time + 自动提取的 FAQPage + 可见面包屑
+  const gHtml = read(dir, `/guides/${ARTICLES[0].slug}`);
+  assert.match(gHtml, /property="og:type" content="article"/);
+  assert.match(gHtml, /property="article:published_time"/);
+  assert.match(gHtml, /<nav aria-label="面包屑" class="crumbs">/);
+  const faqGuide = ARTICLES.find((a) => a.slug === "install-zotero");
+  assert.ok(jsonLd(read(dir, `/guides/${faqGuide.slug}`)).some((j) => j["@type"] === "FAQPage" && j.mainEntity.length >= 2));
+
+  // robots.txt 放行主流搜索与 AI 爬虫
+  const robots = readFileSync(join(dir, "robots.txt"), "utf8");
+  for (const bot of ["Baiduspider", "Bytespider", "Bingbot", "Googlebot", "OAI-SearchBot", "PerplexityBot"]) {
+    assert.ok(robots.includes(`User-agent: ${bot}`), `robots.txt 缺少 ${bot}`);
+  }
+});

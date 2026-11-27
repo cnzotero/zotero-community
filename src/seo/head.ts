@@ -19,12 +19,17 @@ const meta = (key: "name" | "property", name: string) => () => {
 
 export function applyMeta(m: PageMeta): void {
   const url = pageUrl(m.path);
+  const img = ogImage(m.kind);
   document.title = m.title;
   upsert('meta[name="description"]', meta("name", "description"), "content", m.description);
   upsert('link[rel="canonical"]', () => Object.assign(document.createElement("link"), { rel: "canonical" }), "href", url);
   upsert('meta[name="robots"]', meta("name", "robots"), "content", isIndexable(m) ? "index,follow,max-image-preview:large" : "noindex,follow");
+  upsert('meta[property="og:type"]', meta("property", "og:type"), "content", m.kind === "guide" ? "article" : "website");
   upsert('meta[property="og:title"]', meta("property", "og:title"), "content", m.title);
   upsert('meta[property="og:description"]', meta("property", "og:description"), "content", m.description);
   upsert('meta[property="og:url"]', meta("property", "og:url"), "content", url);
-  upsert('meta[property="og:image"]', meta("property", "og:image"), "content", ogImage(m.kind));
+  upsert('meta[property="og:image"]', meta("property", "og:image"), "content", img);
+  upsert('meta[name="twitter:title"]', meta("name", "twitter:title"), "content", m.title);
+  upsert('meta[name="twitter:description"]', meta("name", "twitter:description"), "content", m.description);
+  upsert('meta[name="twitter:image"]', meta("name", "twitter:image"), "content", img);
 }

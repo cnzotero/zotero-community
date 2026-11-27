@@ -95,6 +95,13 @@ export function GuideArticle() {
   const label = guideCategoryLabel(a.category);
   return (
     <article className="section prose article">
+      <nav aria-label="面包屑" className="crumbs">
+        <Link to="/">首页</Link>
+        <span aria-hidden> › </span>
+        <Link to="/guides">教程</Link>
+        <span aria-hidden> › </span>
+        <span aria-current="page">{a.title}</span>
+      </nav>
       <Link to="/guides" className="more">← 返回教程</Link>
       <h1 className="page-title">{a.title}</h1>
       <p className="meta">

@@ -63,6 +63,13 @@ export function CompatPage() {
               </nav>
             </>
           )}
+          <h2>升级与插件安装排错教程</h2>
+          <ul>
+            <li><Link to="/guides/zotero-upgrade-plugin-incompatible" className="inline-link">Zotero 8 / 10 更新后插件提示不兼容怎么办：备份与排查步骤</Link></li>
+            <li><Link to="/guides/zotero-download-install-faq" className="inline-link">Zotero 官方下载与安装常见问题：Windows / macOS / Linux 版本选择与排查</Link></li>
+            <li><Link to="/guides/install-plugins" className="inline-link">怎么安装 Zotero 插件</Link></li>
+            <li><Link to="/guides/plugin-wont-install" className="inline-link">Zotero 插件装不上怎么办：先按版本核对</Link></li>
+          </ul>
           <p className="data-note">「适配」指作者声明的范围,未声明不等于不兼容,请到项目主页确认。数据整理自各项目公开信息,收录不代表安全性或质量背书,详见<Link to="/rules" className="inline-link">收录规则</Link>。</p>
         </>
       )}

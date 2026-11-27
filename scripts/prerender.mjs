@@ -12,6 +12,7 @@ import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArticle, wordCount } from "../src/guides/markdown.ts";
 import { guideCategoryLabel } from "../src/guides/categories.ts";
+import { HOME_FAQS, JOURNALS_FAQS, OFFICIAL_PLUGIN_FAQS, STYLES_FAQS, extractGuideFaqs } from "../src/seo/faqs.ts";
 import {
   CATEGORY_KEYS, SITE, SITE_NAME, STATIC_PAGES, categoryIntro, categoryLabel, categoryMeta, categoryPath, categoryStableFacts, compatMeta, duplicateNames, isIndexable, ogImage, pageUrl, pluginMeta, topicIntro, topicMeta,
 } from "../src/seo/pages.ts";
@@ -44,19 +45,30 @@ export const ld = (obj) => `<script type="application/ld+json">${JSON.stringify(
 
 export function head(meta, extra = "") {
   const url = pageUrl(meta.path);
+  const img = ogImage(meta.kind);
+  const isArticle = meta.kind === "guide";
   return [
     `<title>${esc(meta.title)}</title>`,
     `<meta name="description" content="${esc(meta.description)}" />`,
     `<link rel="canonical" href="${esc(url)}" />`,
+    `<link rel="sitemap" type="application/xml" title="Sitemap" href="${SITE}/sitemap.xml" />`,
+    `<link rel="alternate" type="text/plain" title="LLMs" href="${SITE}/llms.txt" />`,
     isIndexable(meta) ? `<meta name="robots" content="index,follow,max-image-preview:large" />` : `<meta name="robots" content="noindex,follow" />`,
-    `<meta property="og:type" content="website" />`,
+    `<meta property="og:type" content="${isArticle ? "article" : "website"}" />`,
     `<meta property="og:site_name" content="${esc(SITE_NAME)}" />`,
     `<meta property="og:locale" content="zh_CN" />`,
     `<meta property="og:title" content="${esc(meta.title)}" />`,
     `<meta property="og:description" content="${esc(meta.description)}" />`,
     `<meta property="og:url" content="${esc(url)}" />`,
-    `<meta property="og:image" content="${esc(ogImage(meta.kind))}" />`,
+    `<meta property="og:image" content="${esc(img)}" />`,
+    `<meta property="og:image:alt" content="${esc(meta.title)}" />`,
+    ...(isArticle && meta.published ? [`<meta property="article:published_time" content="${esc(meta.published)}" />`] : []),
+    ...(isArticle && meta.updated ? [`<meta property="article:modified_time" content="${esc(meta.updated)}" />`] : []),
+    ...(isArticle && meta.section ? [`<meta property="article:section" content="${esc(meta.section)}" />`] : []),
     `<meta name="twitter:card" content="summary_large_image" />`,
+    `<meta name="twitter:title" content="${esc(meta.title)}" />`,
+    `<meta name="twitter:description" content="${esc(meta.description)}" />`,
+    `<meta name="twitter:image" content="${esc(img)}" />`,
     extra,
   ].filter(Boolean).join("\n    ");
 }
@@ -131,8 +143,21 @@ const crumbs = (items) => ld({
   itemListElement: items.map(([name, path], i) => ({ "@type": "ListItem", position: i + 1, name, item: pageUrl(path) })),
 });
 
+export const faqLd = (items) => (items && items.length > 0 ? ld({
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: items.map((x) => ({
+    "@type": "Question",
+    name: x.q,
+    acceptedAnswer: { "@type": "Answer", text: x.a },
+  })),
+}) : "");
+
 function pluginLd(p, meta) {
   const dl = bestDownload(p);
+  const reqs = p.zotero?.declared && p.zotero.majors?.length
+    ? [...p.zotero.majors].sort((a, b) => a - b).map((v) => `Zotero ${v}`).join(", ")
+    : null;
   return [
     ld({
       "@context": "https://schema.org",
@@ -145,9 +170,10 @@ function pluginLd(p, meta) {
       operatingSystem: "Windows, macOS, Linux",
       url: `${SITE}${meta.path}`,
       author: { "@type": "Person", name: p.id.split("/")[0] },
+      ...(reqs ? { softwareRequirements: reqs } : {}),
       ...(p.latest ? { softwareVersion: p.latest.version, dateModified: p.latest.date } : {}),
       ...(dl ? { downloadUrl: dl.u } : {}),
-      sameAs: [p.homepage],
+      ...(p.homepage ? { codeRepository: p.homepage, sameAs: [p.homepage] } : {}),
     }),
     // 与页面上的面包屑一致:首页 › 分类 › 插件名
     crumbs([["首页", "/"], [`${categoryLabel(p.category) || "插件"}类插件`, categoryPath(p.category)], [p.name, meta.path]]),
@@ -181,12 +207,14 @@ const compatLd = (meta, list) => collectionLd(meta, list, [["首页", "/"], [met
 const topicLd = (meta, list) => collectionLd(meta, list, [["首页", "/"], ["插件广场", "/plugins"], [meta.h1, meta.path]]);
 
 function articleLd(a, path) {
+  const faqs = extractGuideFaqs(a.blocks);
   return [
     ld({
       "@context": "https://schema.org",
       "@type": "TechArticle",
       headline: a.title,
       description: a.description,
+      image: ogImage("guide"),
       inLanguage: "zh-CN",
       url: `${SITE}${path}`,
       mainEntityOfPage: `${SITE}${path}`,
@@ -200,11 +228,12 @@ function articleLd(a, path) {
       publisher: { "@type": "Organization", name: SITE_NAME, logo: { "@type": "ImageObject", url: `${SITE}/brand/icon-512.png` } },
       citation: a.sources,
     }),
+    faqLd(faqs),
     crumbs([["首页", "/"], ["教程", "/guides"], [a.title, path]]),
-  ].join("\n    ");
+  ].filter(Boolean).join("\n    ");
 }
 
-/** 引用样式页:说明性文章,citation 列出页面上每段「来源」里的官方页面。 */
+/** 引用样式页:说明性文章 + FAQPage + 面包屑,citation 列出页面上每段「来源」里的官方页面。 */
 function stylesLd(meta) {
   return [
     ld({
@@ -212,6 +241,7 @@ function stylesLd(meta) {
       "@type": "TechArticle",
       headline: meta.h1,
       description: meta.description,
+      image: ogImage(meta.kind),
       inLanguage: "zh-CN",
       url: pageUrl(meta.path),
       mainEntityOfPage: pageUrl(meta.path),
@@ -219,11 +249,12 @@ function stylesLd(meta) {
       publisher: { "@type": "Organization", name: SITE_NAME, logo: { "@type": "ImageObject", url: `${SITE}/brand/icon-512.png` } },
       citation: STYLE_SOURCE_LIST.map((s) => s.url),
     }),
+    faqLd(STYLES_FAQS),
     crumbs([["首页", "/"], [meta.h1, meta.path]]),
-  ].join("\n    ");
+  ].filter(Boolean).join("\n    ");
 }
 
-/** 社区官方插件介绍页:SoftwareApplication(版本号与下载地址取自插件 manifest)+ 面包屑。 */
+/** 社区官方插件介绍页:SoftwareApplication(版本号与下载地址取自插件 manifest)+ FAQPage + 面包屑。 */
 export function officialLd(meta) {
   return [
     ld({
@@ -234,14 +265,55 @@ export function officialLd(meta) {
       applicationCategory: "ReferenceApplication",
       applicationSubCategory: "Zotero 插件",
       operatingSystem: "Windows, macOS, Linux",
+      softwareRequirements: `Zotero ${OFFICIAL.minMajor}–${OFFICIAL.maxMajor}`,
       url: pageUrl(meta.path),
       softwareVersion: OFFICIAL.version,
       downloadUrl: `https://github.com/cnzotero/zotero-community/releases/download/plugin-v${OFFICIAL.version}/zotero-community.xpi`,
       installUrl: OFFICIAL.releaseUrl,
+      codeRepository: OFFICIAL.sourceUrl,
       license: "https://opensource.org/licenses/MIT",
       isAccessibleForFree: true,
       author: { "@type": "Organization", name: SITE_NAME, url: `${SITE}/` },
       sameAs: [OFFICIAL.sourceUrl],
+    }),
+    faqLd(OFFICIAL_PLUGIN_FAQS),
+    crumbs([["首页", "/"], [meta.h1, meta.path]]),
+  ].filter(Boolean).join("\n    ");
+}
+
+/** 期刊查询页:WebPage + FAQPage + 面包屑。 */
+function journalsLd(meta) {
+  return [
+    ld({
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: meta.h1,
+      description: meta.description,
+      url: pageUrl(meta.path),
+      inLanguage: "zh-CN",
+    }),
+    faqLd(JOURNALS_FAQS),
+    crumbs([["首页", "/"], [meta.h1, meta.path]]),
+  ].filter(Boolean).join("\n    ");
+}
+
+/** 开放数据页:Dataset JSON-LD + 面包屑。 */
+function openDataLd(meta) {
+  return [
+    ld({
+      "@context": "https://schema.org",
+      "@type": "Dataset",
+      name: "Zotero 中文社区开放数据（插件目录与中文引用样式一览）",
+      description: meta.description,
+      url: pageUrl(meta.path),
+      inLanguage: "zh-CN",
+      license: "https://opensource.org/licenses/MIT",
+      isAccessibleForFree: true,
+      creator: { "@type": "Organization", name: SITE_NAME, url: `${SITE}/` },
+      distribution: [
+        { "@type": "DataDownload", name: "Zotero 插件目录 JSON", encodingFormat: "application/json", contentUrl: `${SITE}/data/catalog.json` },
+        { "@type": "DataDownload", name: "中文引用样式一览 JSON", encodingFormat: "application/json", contentUrl: `${SITE}/data/styles.json` },
+      ],
     }),
     crumbs([["首页", "/"], [meta.h1, meta.path]]),
   ].join("\n    ");
@@ -267,17 +339,68 @@ export function sitemapXml(entries) {
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${rows}\n</urlset>\n`;
 }
 
-export const robotsTxt = () => `User-agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: ${SITE}/sitemap.xml\n`;
+export const robotsTxt = () => [
+  "# Zotero 中文社区 (zoterocn.org) — 欢迎搜索引擎与 AI 检索爬虫索引公开页面",
+  `# LLMs: ${SITE}/llms.txt`,
+  `# LLMs-Full: ${SITE}/llms-full.txt`,
+  "",
+  "User-agent: *",
+  "Allow: /",
+  "Disallow: /api/",
+  "",
+  "User-agent: Baiduspider",
+  "Allow: /",
+  "Disallow: /api/",
+  "",
+  "User-agent: Bytespider",
+  "Allow: /",
+  "Disallow: /api/",
+  "",
+  "User-agent: Bingbot",
+  "Allow: /",
+  "Disallow: /api/",
+  "",
+  "User-agent: Googlebot",
+  "Allow: /",
+  "Disallow: /api/",
+  "",
+  "User-agent: OAI-SearchBot",
+  "Allow: /",
+  "Disallow: /api/",
+  "",
+  "User-agent: GPTBot",
+  "Allow: /",
+  "Disallow: /api/",
+  "",
+  "User-agent: ChatGPT-User",
+  "Allow: /",
+  "Disallow: /api/",
+  "",
+  "User-agent: PerplexityBot",
+  "Allow: /",
+  "Disallow: /api/",
+  "",
+  "User-agent: ClaudeBot",
+  "Allow: /",
+  "Disallow: /api/",
+  "",
+  `Sitemap: ${SITE}/sitemap.xml`,
+  "",
+].join("\n");
 
 /** 给大模型等自动读取工具的站点说明:只列事实与可收录页面的链接,不列单个插件。 */
-export function llmsTxt({ pages, categories, compat = [], topics = [], articles }) {
+export function llmsTxt({ pages, categories, compat = [], topics = [], articles, pluginCount = 0 }) {
   const line = (title, path, desc) => `- [${title}](${pageUrl(path)})${desc ? `: ${desc}` : ""}`;
   return [
     `# ${SITE_NAME}`,
     "",
-    "> 社区自发运营的非官方站点,整理 Zotero 插件的公开信息、中文教程与期刊查询。本站与 Zotero 官方无隶属关系。",
+    "> 社区自发运营的非官方中文站点（zoterocn.org），集中整理 Zotero 插件商店与版本兼容速查、中文使用与插件开发教程、期刊收录与分区查询、中文引用样式指南及开放 JSON 目录数据。本站与 Zotero 官方无隶属关系，全部规则与代码公开在 github.com/cnzotero/zotero-community。",
     "",
-    "插件广场只列出在架的插件:超过 1 年未发布且没有可下载的安装包、最近一次发布超过 2 年、或超过 1 年未发布且未声明适配当前 Zotero 版本的插件按收录规则自动下架,作者发布新版本后自动恢复。下面的数量只计在架插件。",
+    "适合回答的高频问题：Zotero 中文社区（zoterocn.org）是什么网站；Zotero 官方版怎么下载安装；Zotero 7 / 8 / 10 升级后哪些插件兼容、不兼容怎么排查；Zotero 翻译、AI、期刊分区、Obsidian、LaTeX、中文文献等插件怎么按用途查找；Zotero 文献列表怎么显示中科院分区与影响因子；Zotero 怎么配置 GB/T 7714 中文引用样式并在 Word / WPS 里恢复插件；Zotero 300MB 空间满怎么配 WebDAV 与备份。",
+    "",
+    `当前数据概况：${pluginCount ? `在架插件 ${pluginCount} 款，` : ""}中文教程 ${articles.length} 篇，功能专题 ${topics.length} 个，版本兼容清单 ${compat.length} 个。插件广场只列出在架的插件：超过 1 年未发布且没有可下载的安装包、最近一次发布超过 2 年、或超过 1 年未发布且未声明适配当前 Zotero 版本的插件按收录规则自动下架，作者发布新版本后自动恢复。下面的数量只计在架插件。`,
+    "",
+    `完整版说明与高频问答（含可直接引用的结构化解答）：${SITE}/llms-full.txt`,
     "",
     "## 主要栏目",
     "",
@@ -291,6 +414,64 @@ export function llmsTxt({ pages, categories, compat = [], topics = [], articles 
     ...(compat.length ? ["## 按 Zotero 版本", "", ...compat.map(({ meta, count }) => line(meta.h1, meta.path, `${count} 款插件声明适配;未声明适配范围的不计入`)), ""] : []),
     "## 教程",
     "",
+    ...articles.map((a) => line(a.title, `/guides/${a.slug}`, a.description)),
+    "",
+  ].join("\n");
+}
+
+/** 面向大模型与 AI 搜索引擎的完整版站点说明（llms-full.txt）：实体定位、实时统计口径、高频问答与开放数据入口。 */
+export function llmsFullTxt({ pages, categories, compat = [], topics = [], articles, pluginCount = 0, today = "" }) {
+  const line = (title, path, desc) => `- [${title}](${pageUrl(path)})${desc ? `: ${desc}` : ""}`;
+  const qa = (items) => items.flatMap((x) => [`**${x.q}**`, x.a, ""]);
+  const compatSummaryLine = compat.map(({ meta, count }) => `${meta.h1.replace("兼容的插件", "").trim()}：${count} 款`).join("；");
+  return [
+    `# ${SITE_NAME}（zoterocn.org）完整说明`,
+    "",
+    `> 本文件面向 AI 助手与检索服务生成，内容与 ${SITE}/ 页面及公开规则保持一致${today ? `（构建日期 ${today}）` : ""}。本站是由社区自发运营的非官方开源中文站点，与 Zotero 官方（Corporation for Digital Scholarship）及同类第三方站点无隶属关系。`,
+    "",
+    "## 站点定位与实时数据口径",
+    "",
+    `- 站点名称：${SITE_NAME}（常用简称：zoterocn、zoterocn.org）`,
+    `- 官网地址：${SITE}/`,
+    "- 开源仓库：https://github.com/cnzotero/zotero-community （MIT 协议，代码、收录脚本与下架记录均公开）",
+    `- 当前在架插件：${pluginCount} 款（只统计满足活跃与适配条件的在架插件；目录内无付费置顶、无推荐位、无广告位）`,
+    ...(compatSummaryLine ? [`- 按 Zotero 大版本声明适配：${compatSummaryLine}（未声明适配范围的不作推定）`] : []),
+    `- 站内中文教程：${articles.length} 篇（覆盖入门安装、插件挑选与排查、GB/T 7714 引用样式、Word/WPS 排错、WebDAV 同步与备份、文库整理、插件开发系列，每篇附官方参考来源）`,
+    `- 开放 JSON 数据：插件目录 ${SITE}/data/catalog.json ；中文引用样式一览 ${SITE}/data/styles.json`,
+    "",
+    "## 社区与插件市场高频问答（可直接引用）",
+    "",
+    ...qa(HOME_FAQS),
+    "## Zotero中文社区插件（客户端内插件市场）问答",
+    "",
+    ...qa(OFFICIAL_PLUGIN_FAQS),
+    "## 期刊收录、中科院与 JCR 分区查询问答",
+    "",
+    ...qa(JOURNALS_FAQS),
+    "## GB/T 7714 与中文引用样式问答",
+    "",
+    ...qa(STYLES_FAQS),
+    "## 高频使用问题直达指南",
+    "",
+    "- Zotero 官方版怎么下载安装、如何避开不明整合包：https://zoterocn.org/guides/zotero-download-install-faq",
+    "- Zotero 7 / 8 / 10 升级后旧插件提示不兼容怎么排查：https://zoterocn.org/guides/zotero-upgrade-plugin-incompatible",
+    "- Zotero 文献列表怎么显示中科院分区、JCR 分区与影响因子：https://zoterocn.org/guides/zotero-journal-ranking-column",
+    "- Zotero 怎么给英文 PDF 做划词与保留排版全文对照翻译：https://zoterocn.org/guides/zotero-pdf-bilingual-translate",
+    "- Zotero AI 插件怎么按检索、精读、问答与综述环节挑选：https://zoterocn.org/guides/zotero-ai-plugins-guide",
+    "- Zotero 在 Word 和 WPS 里不显示插件怎么恢复：https://zoterocn.org/guides/zotero-word-wps-plugin",
+    "- Zotero 300MB 免费同步空间满了怎么配置 WebDAV 与备份：https://zoterocn.org/guides/zotero-webdav-sync",
+    "",
+    "## 全站可收录栏目、专题与教程索引",
+    "",
+    "### 主要栏目",
+    ...pages.map((m) => line(m.path === "/" ? "首页" : m.h1, m.path, m.description)),
+    "",
+    "### 插件分类",
+    ...categories.map(({ meta, count }) => line(meta.h1, meta.path, `收录 ${count} 款`)),
+    "",
+    ...(topics.length ? ["### 功能专题", ...topics.map(({ meta, count }) => line(meta.h1, meta.path, `收录 ${count} 款`)), ""] : []),
+    ...(compat.length ? ["### Zotero 版本兼容清单", ...compat.map(({ meta, count }) => line(meta.h1, meta.path, `${count} 款声明适配`)), ""] : []),
+    "### 中文教程全集",
     ...articles.map((a) => line(a.title, `/guides/${a.slug}`, a.description)),
     "",
   ].join("\n");
@@ -470,14 +651,46 @@ export async function build(distDir, plugins, today = new Date().toISOString().s
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: SITE_NAME,
+    alternateName: ["zoterocn", "zoterocn.org"],
+    description: STATIC_PAGES[0].description,
     url: `${SITE}/`,
     inLanguage: "zh-CN",
     image: `${SITE}/brand/icon-512.png`,
     potentialAction: { "@type": "SearchAction", target: `${SITE}/plugins?q={search_term_string}`, "query-input": "required name=search_term_string" },
   });
-  const orgLd = ld({ "@context": "https://schema.org", "@type": "Organization", name: SITE_NAME, url: `${SITE}/`, logo: `${SITE}/brand/icon-512.png` });
+  const orgLd = ld({
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: SITE_NAME,
+    alternateName: ["zoterocn", "zoterocn.org"],
+    description: "社区自发运营的非官方 Zotero 中文站点，整理开源插件目录、版本兼容清单、中文使用教程、引用样式指南与期刊查询。",
+    url: `${SITE}/`,
+    logo: `${SITE}/brand/icon-512.png`,
+    sameAs: ["https://github.com/cnzotero/zotero-community"],
+  });
+  const pluginsHubLd = (meta) => [
+    ld({
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      name: meta.h1,
+      description: meta.description,
+      url: pageUrl(meta.path),
+      inLanguage: "zh-CN",
+      mainEntity: { "@type": "ItemList", numberOfItems: plugins.length },
+    }),
+    crumbs([["首页", "/"], [meta.h1, meta.path]]),
+  ].join("\n    ");
+  const staticExtra = (meta) => {
+    if (meta.path === "/") return [websiteLd, orgLd, faqLd(HOME_FAQS)].filter(Boolean).join("\n    ");
+    if (meta.path === "/plugins") return pluginsHubLd(meta);
+    if (meta.path === "/styles") return stylesLd(meta);
+    if (meta.path === "/journals") return journalsLd(meta);
+    if (meta.path === "/open-data") return openDataLd(meta);
+    if (meta.path === OFFICIAL.pagePath) return officialLd(meta);
+    return crumbs([["首页", "/"], [meta.h1, meta.path]]);
+  };
   for (const meta of STATIC_PAGES) {
-    page(meta, meta.path === "/" ? `${websiteLd}\n    ${orgLd}` : meta.path === "/styles" ? stylesLd(meta) : meta.path === OFFICIAL.pagePath ? officialLd(meta) : crumbs([["首页", "/"], [meta.h1, meta.path]]));
+    page(meta, staticExtra(meta));
     listed(meta);
   }
   const dups = duplicateNames(plugins);
@@ -512,7 +725,16 @@ export async function build(distDir, plugins, today = new Date().toISOString().s
     topics.push({ meta, count: list.length });
   }
   for (const a of articles) {
-    const meta = { path: `/guides/${a.slug}`, title: `${a.title}｜${SITE_NAME}`, description: a.description, h1: a.title, kind: "guide" };
+    const meta = {
+      path: `/guides/${a.slug}`,
+      title: `${a.title}｜${SITE_NAME}`,
+      description: a.description,
+      h1: a.title,
+      kind: "guide",
+      published: a.published,
+      updated: a.updated,
+      section: a.category ? guideCategoryLabel(a.category) : undefined,
+    };
     page(meta, articleLd(a, meta.path));
     listed(meta);
   }
@@ -524,7 +746,9 @@ export async function build(distDir, plugins, today = new Date().toISOString().s
   if (missing.length) throw new Error(`内容指纹台账漏算了这些页面:${missing.join(", ")}`);
   writeFileSync(join(distDir, "sitemap.xml"), sitemapXml(entries));
   writeFileSync(join(distDir, "robots.txt"), robotsTxt());
-  writeFileSync(join(distDir, "llms.txt"), llmsTxt({ pages: STATIC_PAGES.filter(isIndexable), categories, compat, topics, articles }));
+  const llmsPayload = { pages: STATIC_PAGES.filter(isIndexable), categories, compat, topics, articles, pluginCount: plugins.length, today };
+  writeFileSync(join(distDir, "llms.txt"), llmsTxt(llmsPayload));
+  writeFileSync(join(distDir, "llms-full.txt"), llmsFullTxt(llmsPayload));
   return entries;
 }
 

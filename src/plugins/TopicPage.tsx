@@ -2,7 +2,8 @@ import { useEffect, useMemo } from "react";
 import { Link } from "../link.tsx";
 import { PageHero } from "../pageHero.tsx";
 import { PluginCard, PluginIndex, usePluginData } from "./PluginsPage.tsx";
-import { MIN_TOPIC_PLUGINS, topicIndex, topicList, topicOf, topicRule } from "./topics.ts";
+import { MIN_TOPIC_PLUGINS, TOPIC_GUIDE_SLUGS, topicIndex, topicList, topicOf, topicRule } from "./topics.ts";
+import { articleBySlug, articlePath } from "../guides/content.ts";
 import { applyMeta } from "../seo/head.ts";
 import { topicIntro, topicMeta, topicPath } from "../seo/pages.ts";
 import { currentPath, useNow } from "../ssr.ts";
@@ -19,6 +20,10 @@ export function TopicPage() {
   const meta = useMemo(() => topicMeta(key, all), [key, all]);
   const list = useMemo(() => topicList(all, key), [all, key]);
   const others = useMemo(() => topicIndex(all).filter((x) => x.key !== key), [all, key]);
+  const relatedGuides = useMemo(
+    () => (TOPIC_GUIDE_SLUGS[key] ?? []).map((s) => articleBySlug(s)).filter((a): a is NonNullable<typeof a> => Boolean(a)),
+    [key],
+  );
 
   // 标题里的数量要等数据到了才算得准
   useEffect(() => {
@@ -48,6 +53,14 @@ export function TopicPage() {
           <p className="result-count">共 {list.length} 款,按 GitHub 星标排序,与分类页使用同一规则。{topicRule(topic)}</p>
           <div className="grid plugin-grid">{list.slice(0, SHOWN).map((p) => <PluginCard key={p.id} p={p} now={now} zv={null} />)}</div>
           {list.length > SHOWN && <PluginIndex list={list.slice(SHOWN)} label={`按名称浏览其余 ${list.length - SHOWN} 款插件`} />}
+          {relatedGuides.length > 0 && (
+            <>
+              <h2>相关使用教程</h2>
+              <ul>
+                {relatedGuides.map((g) => <li key={g.slug}><Link to={articlePath(g.slug)} className="inline-link">{g.title}</Link></li>)}
+              </ul>
+            </>
+          )}
           {others.length > 0 && (
             <>
               <h2>其他功能专题</h2>

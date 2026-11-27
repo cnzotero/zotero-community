@@ -1,6 +1,7 @@
 import { Link } from "../link.tsx";
 import { DownloadIcon } from "../icons.tsx";
 import { pageMeta } from "../seo/pages.ts";
+import { OFFICIAL_PLUGIN_FAQS } from "../seo/faqs.ts";
 import { OFFICIAL } from "./official.ts";
 
 function Ext({ href, children }: { href: string; children: React.ReactNode }) {
@@ -57,14 +58,15 @@ export function OfficialPluginPage() {
       </ul>
 
       <h2>常见问题</h2>
-      <h3>插件市场会自动安装或更新其他插件吗?</h3>
-      <p>不会。每次安装或更新都要你在确认框里核对并确认。</p>
-      <h3>为什么有的插件没有安装按钮?</h3>
-      <p>可能是它没有适配你当前 Zotero 版本的安装包,或者安装包不在它自己的 GitHub 仓库里。可以点「查看详情」到本站的插件页,再去作者主页核对。</p>
-      <h3>入口在哪里?「工具」菜单里能找到吗?</h3>
-      <p>入口在文库工具栏、搜索框左侧。需要在「工具」菜单里也显示入口的,可在 Zotero 设置的「高级 → 设置编辑器」里搜索 <code>zotero-community.showToolsMenuItem</code>,改为 true 后重启 Zotero。</p>
-      <h3>插件广场为什么把它单独放在顶部?</h3>
-      <p>它是本社区自己维护的工具,所以单独展示、明确标注;它不在插件目录里,不参与排序与排名,也不影响其他插件的收录与排序,见<Link to="/rules" className="inline-link">收录规则</Link>第 4 章。</p>
+      {OFFICIAL_PLUGIN_FAQS.map((item, idx) => (
+        <div key={item.q}>
+          <h3>{item.q}</h3>
+          <p>
+            {item.a}
+            {idx === OFFICIAL_PLUGIN_FAQS.length - 1 ? <>（<Link to="/rules" className="inline-link">查看收录规则</Link>）</> : null}
+          </p>
+        </div>
+      ))}
 
       <h2>开源与反馈</h2>
       <p>插件以 MIT 许可证开源,源代码见 <Ext href={OFFICIAL.sourceUrl}>GitHub 仓库</Ext>。问题与建议欢迎在仓库提交 Issue。</p>
