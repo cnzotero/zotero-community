@@ -331,37 +331,43 @@ export function PluginsList() {
       </PageHero>
       {/* 社区官方插件单独展示,不在下面的目录里,不参与筛选、排序与计数 */}
       <OfficialBox />
-      <input
-        className="search"
-        type="search"
-        value={f.query}
-        placeholder="搜索插件名称、作者或用途"
-        aria-label="搜索插件名称、作者或用途"
-        data-early="plugins-q"
-        onChange={(e) => set({ query: e.target.value })}
-      />
-      {loaded.state === "ready" && (
-        <p className="stats" aria-live="polite">
-          收录 <b>{stats.total}</b> 款 · 近 30 天有更新 <b>{stats.updated30}</b> 款 · 适配 Zotero 10 的 <b>{stats.zotero10}</b> 款
-          <span className="stats-date">数据更新于 {loaded.data.generatedAt}</span>
-        </p>
-      )}
+      <div className="plugins-toolbar">
+        <input
+          className="search"
+          type="search"
+          value={f.query}
+          placeholder="搜索插件名称、作者或用途"
+          aria-label="搜索插件名称、作者或用途"
+          data-early="plugins-q"
+          onChange={(e) => set({ query: e.target.value })}
+        />
+        {loaded.state === "ready" && (
+          <p className="stats" aria-live="polite">
+            收录 <b>{stats.total}</b> 款 · 近 30 天有更新 <b>{stats.updated30}</b> 款 · 适配 Zotero 10 的 <b>{stats.zotero10}</b> 款
+            <span className="stats-date">数据更新于 {loaded.data.generatedAt}</span>
+          </p>
+        )}
+      </div>
       <button className="chip filter-toggle" aria-expanded={mobileOpen} onClick={() => setMobileOpen((o) => !o)}>
         {mobileOpen ? "收起筛选" : "筛选与排序"}
       </button>
       <Filters_ f={f} set={set} openMobile={mobileOpen} authors={authors} />
-      {compat.length > 0 && (
-        <nav className="cat-link compat-nav" aria-label="按 Zotero 版本">
-          <span className="meta">按 Zotero 版本:</span>
-          {compat.map((c) => <Link key={c.major} to={compatPath(c.major)} className="inline-link">Zotero {c.major} 兼容的插件({c.count})</Link>)}
-        </nav>
-      )}
-      {topics.length > 0 && (
-        <nav className="cat-link compat-nav" aria-label="按功能找插件">
-          <span className="meta">按功能找插件:</span>
-          {topics.map((t) => <Link key={t.key} to={topicPath(t.key)} className="inline-link">{t.label}({t.count})</Link>)}
-        </nav>
-      )}
+      <div className="quick-taxonomies">
+        {compat.length > 0 && (
+          <nav className="compat-nav micro-pills" aria-label="按 Zotero 版本">
+            <span className="meta">按版本：</span>
+            {compat.map((c) => <Link key={c.major} to={compatPath(c.major)} className="micro-pill">Zotero {c.major} <span>{c.count}</span></Link>)}
+          </nav>
+        )}
+        {topics.length > 0 && (
+          <details className="topic-drawer">
+            <summary className="topic-drawer-toggle">按功能专题浏览（共 {topics.length} 个专题：翻译、AI、期刊分区、Obsidian、LaTeX 等）</summary>
+            <nav className="compat-nav micro-pills" aria-label="按功能找插件">
+              {topics.map((t) => <Link key={t.key} to={topicPath(t.key)} className="micro-pill">{t.label} <span>{t.count}</span></Link>)}
+            </nav>
+          </details>
+        )}
+      </div>
       {f.category !== "all" && (
         <p className="cat-link"><Link to={categoryPath(f.category)} className="inline-link">了解{CATEGORY_LABEL[f.category]}类插件 →</Link></p>
       )}

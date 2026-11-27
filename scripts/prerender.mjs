@@ -12,7 +12,7 @@ import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArticle, wordCount } from "../src/guides/markdown.ts";
 import { guideCategoryLabel } from "../src/guides/categories.ts";
-import { HOME_FAQS, JOURNALS_FAQS, OFFICIAL_PLUGIN_FAQS, STYLES_FAQS, extractGuideFaqs } from "../src/seo/faqs.ts";
+import { FORUM_FAQS, HOME_FAQS, JOURNALS_FAQS, OFFICIAL_PLUGIN_FAQS, STYLES_FAQS, SUBMISSION_FAQS, extractGuideFaqs } from "../src/seo/faqs.ts";
 import {
   CATEGORY_KEYS, SITE, SITE_NAME, STATIC_PAGES, categoryIntro, categoryLabel, categoryMeta, categoryPath, categoryStableFacts, compatMeta, duplicateNames, isIndexable, ogImage, pageUrl, pluginMeta, topicIntro, topicMeta,
 } from "../src/seo/pages.ts";
@@ -297,6 +297,42 @@ function journalsLd(meta) {
   ].filter(Boolean).join("\n    ");
 }
 
+/** 投稿建议页:TechArticle + FAQPage + 面包屑。 */
+function submissionLd(meta) {
+  return [
+    ld({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      headline: meta.h1,
+      description: meta.description,
+      image: ogImage(meta.kind),
+      inLanguage: "zh-CN",
+      url: pageUrl(meta.path),
+      mainEntityOfPage: pageUrl(meta.path),
+      author: { "@type": "Organization", name: SITE_NAME, url: `${SITE}/` },
+      publisher: { "@type": "Organization", name: SITE_NAME, logo: { "@type": "ImageObject", url: `${SITE}/brand/icon-512.png` } },
+    }),
+    faqLd(SUBMISSION_FAQS),
+    crumbs([["首页", "/"], [meta.h1, meta.path]]),
+  ].filter(Boolean).join("\n    ");
+}
+
+/** 问答讨论页:CollectionPage + FAQPage + 面包屑。 */
+function forumLd(meta) {
+  return [
+    ld({
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      name: meta.h1,
+      description: meta.description,
+      url: pageUrl(meta.path),
+      inLanguage: "zh-CN",
+    }),
+    faqLd(FORUM_FAQS),
+    crumbs([["首页", "/"], [meta.h1, meta.path]]),
+  ].filter(Boolean).join("\n    ");
+}
+
 /** 开放数据页:Dataset JSON-LD + 面包屑。 */
 function openDataLd(meta) {
   return [
@@ -451,6 +487,12 @@ export function llmsFullTxt({ pages, categories, compat = [], topics = [], artic
     "## GB/T 7714 与中文引用样式问答",
     "",
     ...qa(STYLES_FAQS),
+    "## 科研论文投稿建议问答",
+    "",
+    ...qa(SUBMISSION_FAQS),
+    "## Zotero 问答讨论与排错高频问答",
+    "",
+    ...qa(FORUM_FAQS),
     "## 高频使用问题直达指南",
     "",
     "- Zotero 官方版怎么下载安装、如何避开不明整合包：https://zoterocn.org/guides/zotero-download-install-faq",
@@ -460,6 +502,10 @@ export function llmsFullTxt({ pages, categories, compat = [], topics = [], artic
     "- Zotero AI 插件怎么按检索、精读、问答与综述环节挑选：https://zoterocn.org/guides/zotero-ai-plugins-guide",
     "- Zotero 在 Word 和 WPS 里不显示插件怎么恢复：https://zoterocn.org/guides/zotero-word-wps-plugin",
     "- Zotero 300MB 免费同步空间满了怎么配置 WebDAV 与备份：https://zoterocn.org/guides/zotero-webdav-sync",
+    "- Zotero 联动 Obsidian 记笔记与导出 PDF 批注：https://zoterocn.org/guides/zotero-obsidian-workflow",
+    "- iPad / 手机端怎么用 Zotero 读论文与 WebDAV 跨设备同步：https://zoterocn.org/guides/zotero-ipad-mobile-sync",
+    "- Zotero 配合 LaTeX 和 Overleaf 自动导出 BibTeX：https://zoterocn.org/guides/zotero-latex-overleaf",
+    "- 换新电脑怎么把 Zotero 文献库、PDF 附件与插件无损迁过去：https://zoterocn.org/guides/zotero-migration-new-computer",
     "",
     "## 全站可收录栏目、专题与教程索引",
     "",
@@ -550,7 +596,7 @@ const PAGE_SOURCES = {
   "/journals": "src/journals/JournalsPage.tsx",
   "/guides": "src/guides/GuidesPages.tsx",
   "/styles": "src/pages/StylesPage.tsx",
-  "/forum": "src/App.tsx",
+  "/forum": "src/pages/StaticPages.tsx",
   "/rules": "src/pages/StaticPages.tsx",
   "/open-data": "src/pages/OpenDataPage.tsx",
   "/about": "src/pages/StaticPages.tsx",
@@ -685,6 +731,8 @@ export async function build(distDir, plugins, today = new Date().toISOString().s
     if (meta.path === "/plugins") return pluginsHubLd(meta);
     if (meta.path === "/styles") return stylesLd(meta);
     if (meta.path === "/journals") return journalsLd(meta);
+    if (meta.path === "/submission") return submissionLd(meta);
+    if (meta.path === "/forum") return forumLd(meta);
     if (meta.path === "/open-data") return openDataLd(meta);
     if (meta.path === OFFICIAL.pagePath) return officialLd(meta);
     return crumbs([["首页", "/"], [meta.h1, meta.path]]);

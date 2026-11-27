@@ -112,17 +112,17 @@ test("sitemap 与 robots", async () => {
   assert.match(robotsTxt(), /User-agent: \*/);
 });
 
-test("筹备中的占位页:带 noindex、不进 sitemap 与 llms.txt;其它栏目页照常收录", async () => {
+test("不收录页面带 noindex、不进 sitemap 与 llms.txt;正式栏目页(含投稿建议与问答讨论)照常收录", async () => {
   const { dir, entries } = await run();
   const sm = readFileSync(join(dir, "sitemap.xml"), "utf8");
   const llms = readFileSync(join(dir, "llms.txt"), "utf8");
-  for (const path of ["/forum", "/submission"]) {
+  for (const path of ["/delisted"]) {
     assert.match(read(dir, path), /<meta name="robots" content="noindex,follow" \/>/, path);
     assert.ok(!entries.some((e) => e.path === path));
     assert.ok(!sm.includes(`zoterocn.org${path}<`));
     assert.ok(!llms.includes(`zoterocn.org${path})`));
   }
-  for (const path of ["/", "/plugins", "/rules", "/about", "/styles", "/guides", "/journals"]) {
+  for (const path of ["/", "/plugins", "/rules", "/about", "/styles", "/guides", "/journals", "/submission", "/forum"]) {
     assert.match(read(dir, path), /<meta name="robots" content="index,follow/, path);
     assert.ok(entries.some((e) => e.path === path), path);
   }
@@ -456,10 +456,11 @@ test("SEO/GEO 全面增强:llms-full.txt、FAQPage/Dataset 结构化数据、art
   assert.ok(homeLd.some((j) => j["@type"] === "Organization" && Array.isArray(j.sameAs) && j.sameAs.includes("https://github.com/cnzotero/zotero-community")));
   assert.ok(homeLd.some((j) => j["@type"] === "FAQPage" && j.mainEntity.length >= 4));
 
-  // /plugin、/journals、/styles 均有 FAQPage;/open-data 有 Dataset;/plugins 有 CollectionPage
-  for (const p of ["/plugin", "/journals", "/styles"]) {
+  // /plugin、/journals、/styles、/submission、/forum 均有 FAQPage;/open-data 有 Dataset;/plugins 有 CollectionPage
+  for (const p of ["/plugin", "/journals", "/styles", "/submission", "/forum"]) {
     assert.ok(jsonLd(read(dir, p)).some((j) => j["@type"] === "FAQPage" && j.mainEntity.length >= 3), `${p} 缺 FAQPage`);
   }
+  assert.match(read(dir, "/journals"), /高频代表期刊速览/);
   assert.ok(jsonLd(read(dir, "/open-data")).some((j) => j["@type"] === "Dataset" && j.distribution.length === 2));
   assert.ok(jsonLd(read(dir, "/plugins")).some((j) => j["@type"] === "CollectionPage" && j.mainEntity.numberOfItems === 3));
 

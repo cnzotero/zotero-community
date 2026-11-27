@@ -1,5 +1,4 @@
 import { Suspense, useEffect, useState, type ComponentType } from "react";
-import { FORUM_STATE } from "./content.ts";
 import { Link } from "./link.tsx";
 import { GithubIcon } from "./icons.tsx";
 import { lazyRoute } from "./lazy.ts";
@@ -26,6 +25,7 @@ const About = lazyRoute(() => import("./pages/StaticPages.tsx").then((m) => m.Ab
 const OpenDataPage = lazyRoute(() => import("./pages/OpenDataPage.tsx").then((m) => m.OpenDataPage));
 const StylesPage = lazyRoute(() => import("./pages/StylesPage.tsx").then((m) => m.StylesPage));
 const Submission = lazyRoute(() => import("./pages/StaticPages.tsx").then((m) => m.Submission));
+const Forum = lazyRoute(() => import("./pages/StaticPages.tsx").then((m) => m.Forum));
 const DelistedPage = lazyRoute(() => import("./pages/DelistedPage.tsx").then((m) => m.DelistedPage));
 const OfficialPluginPage = lazyRoute(() => import("./official/OfficialPluginPage.tsx").then((m) => m.OfficialPluginPage));
 
@@ -107,15 +107,6 @@ function NotFound() {
       <h1 className="page-title">页面不存在</h1>
       <p className="lead">你访问的地址没有对应的页面,可能是链接写错了,或者内容已经移动。</p>
       <p><Link to="/" className="btn">回到首页</Link> <Link to="/plugins" className="btn btn-ghost">插件广场</Link> <Link to="/guides" className="btn btn-ghost">教程</Link></p>
-    </section>
-  );
-}
-
-function Forum() {
-  return (
-    <section className="section">
-      <h1 className="page-title">{pageMeta("/forum").h1}</h1>
-      <div className="notice">{FORUM_STATE.note}</div>
     </section>
   );
 }

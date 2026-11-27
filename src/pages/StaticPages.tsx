@@ -2,6 +2,7 @@ import { Link } from "../link.tsx";
 import { PageHero } from "../pageHero.tsx";
 import { useDelisted } from "./DelistedPage.tsx";
 import { pageMeta } from "../seo/pages.ts";
+import { FORUM_FAQS, SUBMISSION_FAQS } from "../seo/faqs.ts";
 
 const REPO = "https://github.com/cnzotero/zotero-community";
 
@@ -114,9 +115,9 @@ export function About() {
         <li><b>教程:</b>从安装到日常使用的中文教程整理。</li>
         <li><b>插件广场:</b>按公开数据整理的 Zotero 插件,可以搜索、筛选并下载,见<Link to="/rules" className="inline-link">收录规则</Link>。</li>
         <li><b>期刊查询:</b>按名称、缩写或 ISSN 查询期刊的收录、分区、影响因子与核心榜单,规则见<Link to="/rules" className="inline-link">收录规则</Link>第 7 条。</li>
-        <li><b>投稿建议:</b>筹备中,上线前会写清内容来源与使用规则。</li>
+        <li><b>投稿建议:</b>整理选刊核对流程、投稿前检查清单与审稿意见回复框架,见<Link to="/submission" className="inline-link">投稿建议</Link>。</li>
         <li><b>引用样式:</b>按 Zotero 官方文档整理的样式添加与切换说明,以及中文样式的查找入口,见<Link to="/styles" className="inline-link">引用样式</Link>。</li>
-        <li><b>问答讨论:</b>筹备中。</li>
+        <li><b>问答讨论:</b>汇总高频排错入口与 GitHub Discussions 公开交流社区,见<Link to="/forum" className="inline-link">问答讨论</Link>。</li>
       </ul>
 
       <h2>我们的原则</h2>
@@ -136,36 +137,182 @@ export function About() {
   );
 }
 
-function Planned({ title, lead, items, rules }: { title: string; lead: string; items: string[]; rules: string[] }) {
+export function Submission() {
   return (
-    <article className="section prose">
-      <PageHero kind="hero-submission" title={title} lead={lead} />
-      <div className="notice">这个板块正在筹备中,下面是计划提供的内容和使用规则,上线时会按此执行。</div>
-      <h2>计划提供</h2>
-      <ul>{items.map((t) => <li key={t}>{t}</li>)}</ul>
-      <h2>数据与使用规则(预先说明)</h2>
-      <ul>{rules.map((t) => <li key={t}>{t}</li>)}</ul>
-      <p className="data-note">想第一时间知道上线,可以关注 <Ext href={REPO}>公开仓库</Ext>。</p>
-    </article>
+    <section className="section">
+      <PageHero
+        kind="hero-submission"
+        title={pageMeta("/submission").h1}
+        lead="从选刊核对、投稿前 10 项终检到审稿意见（Response to Reviewers）回复框架，帮科研人员少踩初审拒稿与格式返工的坑。"
+      >
+        <Link to="/journals" className="inline-link hero-link">去查期刊分区与影响因子 →</Link>
+        <span className="hero-sep"> · </span>
+        <Link to="/styles" className="inline-link hero-link">核对引用样式</Link>
+      </PageHero>
+
+      <div className="info-grid">
+        <div className="card info-card">
+          <h3>一、选刊 4 步核对</h3>
+          <ol className="compact-list">
+            <li>先读目标期刊官网的 <b>Aims &amp; Scope</b> 与近一年已发表文章，确认主题与方法契合。</li>
+            <li>在<Link to="/journals" className="inline-link">期刊查询</Link>核对中科院分区、JCR 分区、影响因子与中文核心收录情况，并以所在单位认定目录为准。</li>
+            <li>查清审稿周期、开放获取（OA）版面费（APC）政策与字数/图表上限。</li>
+            <li>警惕承诺“包录用”的第三方中介，始终通过期刊官网的正式投稿系统提交。</li>
+          </ol>
+        </div>
+        <div className="card info-card">
+          <h3>二、常见初审拒稿（Desk Reject）避坑</h3>
+          <ul className="compact-list">
+            <li><b>不在收稿范围</b>：最常见原因，投前先用自己参考文献里高频出现的期刊做候选池。</li>
+            <li><b>创新点没写透</b>：摘要和 Cover Letter 首段未用 2–3 句话说明研究空白与核心贡献。</li>
+            <li><b>格式与引用杂乱</b>：参考文献体例混用、缺少 DOI 或页码、图表文字模糊不可读。</li>
+            <li><b>合规声明缺失</b>：遗漏伦理审批编号、资金资助信息、作者贡献或利益冲突声明。</li>
+          </ul>
+        </div>
+        <div className="card info-card">
+          <h3>三、审稿意见回复 4 原则</h3>
+          <ol className="compact-list">
+            <li><b>逐条编号全回应</b>：把每位审稿人的意见拆分成独立条目（R1-C1、R1-C2），绝不遗漏合并。</li>
+            <li><b>先致谢再亮结论</b>：每条开头先给出明确答复，再粘贴修改后的原文段落并标明页码与行号。</li>
+            <li><b>补实验客观说明</b>：确因条件限制无法补做的实验，先在现有数据内做补充稳健性检验，并在正文 Limitation 如实说明。</li>
+            <li><b>保持专业克制</b>：即使遇到误解，也用数据与文献证据平和解释，避免情绪化措辞。</li>
+          </ol>
+        </div>
+      </div>
+
+      <article className="prose sub-card">
+        <h2>投稿前 10 项终检清单</h2>
+        <ol>
+          <li><b>标题与摘要</b>：关键词覆盖核心方法与研究对象，英文稿件避免中式长难句与拼写错误。</li>
+          <li><b>参考文献体例</b>：已在 Zotero 中切换目标期刊或 <Link to="/guides/gb-t-7714" className="inline-link">GB/T 7714</Link> 最新样式并在 Word / LaTeX 中刷新全篇；中文混排确认已填 <code>zh-CN</code> / <code>en-US</code> 语言字段。</li>
+          <li><b>正文引文与文末列表一一对应</b>：核对无遗漏引用、无重复条目、无预印本冒充正式发表版本。</li>
+          <li><b>图表清晰度与自明性</b>：线图尽量导出矢量图（PDF / EPS / SVG），位图满足期刊 DPI 要求（常见 ≥ 300 DPI），图注不看正文也能读懂。</li>
+          <li><b>统计与可复现细节</b>：样本量、显著性检验方法、软件版本与随机种子说明完整；开源代码与数据按要求附链接或匿名仓库。</li>
+          <li><b>盲审去痕迹</b>：双盲评审期刊务必清理文档属性里的作者信息、正文自引暴露措辞、致谢与基金号。</li>
+          <li><b>作者顺序与单位邮箱</b>：通讯作者邮箱、ORCID、全部作者署名顺序与单位英文译名经全体作者书面确认。</li>
+          <li><b>伦理与利益冲突声明</b>：涉及人体/动物实验附审批机构与批号，所有稿件明确填写利益冲突与资助来源声明。</li>
+          <li><b>Cover Letter 针对性定制</b>：写对主编与期刊全称，说明未一稿多投且所有作者同意投稿，简述 3 点核心发现。</li>
+          <li><b>合并 PDF 逐页通览</b>：投稿系统生成最终校样 PDF 后，从头到尾翻看一遍公式、表格跨页与中文/特殊符号是否乱码，再点提交。</li>
+        </ol>
+        <p className="data-note">免责说明：本页整理通用学术投稿核对规范，不承诺录用、不提供代写代投服务；具体体例与政策一律以目标期刊官网最新 Author Guidelines 为准。</p>
+      </article>
+
+      <h2 className="faq-heading">投稿常见问题</h2>
+      <div className="faq-list">
+        {SUBMISSION_FAQS.map((item, idx) => (
+          <details key={item.q} className="faq-item" open={idx === 0}>
+            <summary className="faq-q">{item.q}</summary>
+            <p className="faq-a">{item.a}</p>
+          </details>
+        ))}
+      </div>
+    </section>
   );
 }
 
-export function Submission() {
+const FORUM_CATEGORIES = [
+  {
+    title: "安装与版本升级",
+    desc: "官网下载慢、Zotero 7 / 8 / 10 版本选择、升级后插件变灰或提示不兼容排查。",
+    links: [
+      { to: "/guides/zotero-download-install-faq", label: "官方下载与安装常见问题" },
+      { to: "/guides/zotero-upgrade-plugin-incompatible", label: "升级后插件不兼容排查" },
+      { to: "/compat/zotero-10", label: "Zotero 10 兼容清单" },
+    ],
+  },
+  {
+    title: "插件安装与挑选",
+    desc: "`.xpi` 装不上、浏览器自动解压、翻译/AI/期刊分区等高频插件按需选型。",
+    links: [
+      { to: "/guides/plugin-wont-install", label: "插件装不上怎么办" },
+      { to: "/guides/zotero-ai-plugins-guide", label: "Zotero AI 插件怎么选" },
+      { to: "/guides/zotero-pdf-bilingual-translate", label: "PDF 翻译插件选型" },
+    ],
+  },
+  {
+    title: "Word / WPS 与 LaTeX 引用",
+    desc: "Word 或 WPS 菜单栏不显示 Zotero、无法通信、BibTeX 与 Overleaf 自动同步。",
+    links: [
+      { to: "/guides/zotero-word-wps-plugin", label: "Word / WPS 不显示插件恢复" },
+      { to: "/guides/zotero-latex-overleaf", label: "LaTeX / Overleaf 协作指南" },
+      { to: "/guides/word-switch-style", label: "在 Word 中切换引用样式" },
+    ],
+  },
+  {
+    title: "同步、WebDAV 与换机迁移",
+    desc: "300MB 空间满报错、iPad / 手机端同步打不开 PDF、换新电脑完整迁移数据目录。",
+    links: [
+      { to: "/guides/zotero-webdav-sync", label: "300MB 满配 WebDAV 排查" },
+      { to: "/guides/zotero-ipad-mobile-sync", label: "iPad / 手机端同步配置" },
+      { to: "/guides/zotero-migration-new-computer", label: "换新电脑无损迁移教程" },
+    ],
+  },
+  {
+    title: "中文文献、样式与期刊分区",
+    desc: "GB/T 7714 中英文混排“等 / et al.”、文献列表显示中科院/JCR 分区与影响因子。",
+    links: [
+      { to: "/guides/gb-t-7714", label: "GB/T 7714 样式查找与配置" },
+      { to: "/guides/chinese-references-language", label: "解决中文显示 et al." },
+      { to: "/guides/zotero-journal-ranking-column", label: "列表显示期刊分区列" },
+    ],
+  },
+  {
+    title: "笔记联动、开发与插件收录",
+    desc: "Zotero 联动 Obsidian 记笔记、插件开发入门、向插件广场申请收录或更正信息。",
+    links: [
+      { to: "/guides/zotero-obsidian-workflow", label: "Zotero 联动 Obsidian 流程" },
+      { to: "/guides/dev-01-overview", label: "Zotero 插件开发入门" },
+      { to: "/rules", label: "查看插件收录与更正规则" },
+    ],
+  },
+];
+
+export function Forum() {
   return (
-    <Planned
-      title={pageMeta("/submission").h1}
-      lead="从选刊、改稿到回复审稿意见,把投稿前后的经验整理成清单。"
-      items={[
-        "选刊清单:怎么按研究内容、周期、版面费与录用率缩小候选范围。",
-        "投稿前检查表:格式、图表、参考文献、伦理与利益冲突声明。",
-        "回复审稿意见的写法与示例(使用匿名化的公开范例)。",
-        "常见退稿原因与补救办法。",
-      ]}
-      rules={[
-        "只发布公开可查或经投稿人授权的内容,涉及具体稿件与审稿人的信息一律匿名化。",
-        "不承诺录用,不提供代写代投服务,不推荐任何收费的“包发表”渠道。",
-        "建议仅供参考,最终要求以期刊官网的投稿须知为准。",
-      ]}
-    />
+    <section className="section">
+      <PageHero
+        kind="hero"
+        title={pageMeta("/forum").h1}
+        lead="先按问题场景速查排错方案；未解决的问题欢迎直接前往社区公开讨论区（GitHub Discussions）发帖交流，所有解答公开可检索。"
+      >
+        <a href={`${REPO}/discussions`} target="_blank" rel="noopener noreferrer" className="btn btn-sm">前往社区讨论区</a>{" "}
+        <a href={`${REPO}/discussions/new/choose`} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm">发起新提问</a>{" "}
+        <a href={`${REPO}/issues/new`} target="_blank" rel="noopener noreferrer" className="inline-link hero-link">提交插件收录 / 纠错</a>
+      </PageHero>
+
+      <h2>按场景速查排错方案</h2>
+      <div className="info-grid forum-grid">
+        {FORUM_CATEGORIES.map((c) => (
+          <div key={c.title} className="card info-card">
+            <h3>{c.title}</h3>
+            <p>{c.desc}</p>
+            <ul className="compact-list">
+              {c.links.map((l) => (
+                <li key={l.to}><Link to={l.to} className="inline-link">{l.label}</Link></li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+
+      <article className="prose sub-card">
+        <h2>发帖前建议附上的 4 项信息（更快定位原因）</h2>
+        <p>在 <Ext href={`${REPO}/discussions`}>GitHub Discussions</Ext> 提问时，复制下面模板填完关键信息，其他用户和维护者通常一轮就能帮定位原因（发图前请遮挡个人账号与本地隐私路径）：</p>
+        <pre className="codeblock"><code>{`1. 操作系统与版本：例如 Windows 11 / macOS 15
+2. Zotero 版本号：例如 Zotero 8.0.x 或 10.0.x（在「帮助 → 关于 Zotero」查看）
+3. 涉及插件及版本：例如某插件 vX.Y.Z（或未使用第三方插件）
+4. 复现步骤与现象：做了哪一步操作 → 期望结果 → 实际报错文字或截图`}</code></pre>
+      </article>
+
+      <h2 className="faq-heading">高频问答</h2>
+      <div className="faq-list">
+        {FORUM_FAQS.map((item, idx) => (
+          <details key={item.q} className="faq-item" open={idx === 0}>
+            <summary className="faq-q">{item.q}</summary>
+            <p className="faq-a">{item.a}</p>
+          </details>
+        ))}
+      </div>
+    </section>
   );
 }
