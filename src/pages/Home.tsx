@@ -10,6 +10,7 @@ import { serverCompatIndex, serverHomeBoards, serverTopicIndex } from "../plugin
 import { PluginCard } from "../plugins/PluginsPage.tsx";
 import { CATEGORIES, HOME_BOARD_VISIBLE, SITE_DL_RANK_NOTE, type HomeBoardKey } from "../plugins/lib.ts";
 import { COMPAT_SCOPE, categoryPath, compatPath, pageMeta, topicPath } from "../seo/pages.ts";
+import { HOME_FAQS } from "../seo/faqs.ts";
 import { takeEarlyInput, useNow } from "../ssr.ts";
 import { OfficialBox } from "../official/OfficialBox.tsx";
 
@@ -135,6 +136,16 @@ export function Home() {
             <Link key={t.to} to={t.to} className="card tool-card"><h3>{t.title}</h3><p>{t.text}</p></Link>
           ))}
         </div>
+      </section>
+
+      <section className="section prose" aria-labelledby="home-faq-title">
+        <h2 id="home-faq-title">常见问题</h2>
+        {HOME_FAQS.map((item) => (
+          <div key={item.q}>
+            <h3>{item.q}</h3>
+            <p>{item.a}</p>
+          </div>
+        ))}
       </section>
       <p className="data-note">插件信息整理自各项目公开资料,收录不代表对安全性或质量的背书。所有插件按同一套规则展示。</p>
     </>

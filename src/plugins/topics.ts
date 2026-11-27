@@ -58,8 +58,8 @@ export const TOPICS: Topic[] = [
   {
     key: "chinese",
     label: "中文文献与知网",
-    terms: ["知网", "cnki", "万方", "维普", "中文文献", "中文题录", "中文 pdf", "中文pdf", "caj", "中文期刊"],
-    intro: "中文文献类插件针对知网、万方等中文来源的题录抓取、中文 PDF 识别和姓名整理。选择时可核对支持的网站与文件格式，以及网站改版后项目的维护情况。",
+    terms: ["知网", "cnki", "万方", "维普", "中文文献", "中文题录", "中文 pdf", "中文pdf", "caj", "中文期刊", "中文标题", "中文翻译", "中文元数据", "国标", "拼音"],
+    intro: "中文文献类插件针对知网、万方等中文来源的题录抓取、中文 PDF 识别、双语元数据与中文姓名拼音整理。选择时可核对支持的网站与文件格式，以及网站改版后项目的维护情况。",
   },
   {
     key: "journal",
@@ -121,7 +121,54 @@ export const TOPICS: Topic[] = [
     terms: ["阅读器", "pdf reader", "reader", "预览", "preview", "阅读模式", "pdf 阅读", "pdf阅读"],
     intro: "阅读增强类插件改进 PDF 阅读体验，例如预览、阅读界面、页面显示或阅读辅助。可先确认它作用于文库列表还是阅读器，再核对适配的 Zotero 版本。",
   },
+  {
+    key: "obsidian",
+    label: "Obsidian 与 Markdown",
+    terms: ["obsidian", "markdown", "logseq", "notion", "双向链接", "md 笔记"],
+    intro: "这类插件把 Zotero 的文献条目、PDF 高亮批注与笔记同步或导出到 Obsidian、Notion、Logseq 或标准 Markdown 文件。选择时可核对模板自定义能力、同步方向（单向导出还是增量更新），以及变更后是否覆盖已有手写笔记。",
+  },
+  {
+    key: "latex",
+    label: "LaTeX 与 BibTeX",
+    terms: ["bibtex", "biblatex", "latex", "overleaf", "citekey", "bib 文件"],
+    intro: "面向使用 LaTeX 或 Overleaf 写作的科研人员，提供稳定的引用键（Citekey）生成、自动导出与实时更新 `.bib` 文件等功能。选择时可核对支持的字段转义规则、中文条目处理方式以及适配的 Zotero 版本。",
+  },
+  {
+    key: "writing",
+    label: "Word 与论文写作",
+    terms: ["word", "wps", "libreoffice", "写作", "论文写作", "引文", "润色", "校对"],
+    intro: "写作辅助类插件用于增强 Word、WPS 或 LibreOffice 中的引文插入、参考文献核对与段落写作协作。选择时可先确认支持的文字处理软件与操作系统，并在投稿前对照目标期刊或学校要求核对最终排版。",
+  },
+  {
+    key: "summary",
+    label: "论文总结与综述梳理",
+    terms: ["综述", "总结", "摘要", "summar", "review", "研读", "精读", "解读", "提炼"],
+    intro: "这类插件帮助快速提炼论文核心方法、结论与局限，或围绕多篇文献做横向对比与梳理。选择时可重点核对输出能否回查原文页码、是否支持批量处理文件夹，以及是否需要自备外部服务密钥；关键论断仍须人工对照原文确认。",
+  },
 ];
+
+/** 与各功能专题强相关的站内教程 slug,用于专题页底部的内链互通。 */
+export const TOPIC_GUIDE_SLUGS: Partial<Record<string, string[]>> = {
+  translate: ["zotero-pdf-bilingual-translate", "read-and-annotate", "choose-plugins"],
+  "ai-chat": ["zotero-ai-plugins-guide", "choose-plugins", "zotero-upgrade-plugin-incompatible"],
+  search: ["add-items", "zotero-ai-plugins-guide"],
+  citation: ["gb-t-7714", "word-switch-style", "numeric-vs-author-date", "chinese-references-language"],
+  notes: ["take-notes", "read-and-annotate"],
+  metadata: ["chinese-metadata-fields", "chinese-items", "add-items"],
+  chinese: ["chinese-items", "chinese-metadata-fields", "chinese-references-language", "gb-t-7714"],
+  journal: ["zotero-journal-ranking-column", "choose-plugins"],
+  sync: ["sync-vs-backup", "zotero-webdav-sync", "restore-library"],
+  dedup: ["merge-duplicates", "organize-library"],
+  organize: ["organize-library", "manage-attachments"],
+  ocr: ["read-and-annotate", "zotero-pdf-bilingual-translate"],
+  export: ["import-export-formats", "take-notes"],
+  attachment: ["manage-attachments", "sync-vs-backup", "zotero-webdav-sync"],
+  reader: ["read-and-annotate", "zotero-pdf-bilingual-translate"],
+  obsidian: ["take-notes", "import-export-formats"],
+  latex: ["import-export-formats", "quick-copy-bibliography"],
+  writing: ["word-insert-citations", "zotero-word-wps-plugin", "word-switch-style", "libreoffice-google-docs"],
+  summary: ["zotero-ai-plugins-guide", "take-notes"],
+};
 
 export const TOPIC_KEYS = TOPICS.map((t) => t.key);
 export const topicOf = (key: string): Topic | undefined => TOPICS.find((t) => t.key === key);

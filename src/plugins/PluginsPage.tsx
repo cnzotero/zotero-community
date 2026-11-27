@@ -6,7 +6,7 @@ import { downloadLinkHandlers, siteDownloadsOf, useSiteDownloads } from "./site-
 import { cachedPluginData, loadPluginData, type PluginData } from "./data.ts";
 import { applyMeta } from "../seo/head.ts";
 import { categoryPath, compatPath, duplicateNames, pageMeta, pluginMeta, topicPath } from "../seo/pages.ts";
-import { topicIndex } from "./topics.ts";
+import { activeTopics, matchesTopic, topicIndex } from "./topics.ts";
 import { currentPath, currentSearch, takeEarlyInput, useImageOk, useNow } from "../ssr.ts";
 import { DownloadIcon, ExternalIcon, GithubIcon, ShareIcon, StarIcon } from "../icons.tsx";
 import { OfficialBox } from "../official/OfficialBox.tsx";
@@ -489,6 +489,10 @@ export function PluginDetail() {
   const all = loaded.state === "ready" ? loaded.data.plugins : [];
   const p = useMemo(() => (id ? all.find((x) => x.id === id) ?? null : null), [all, id]);
   const related = useMemo(() => (p ? relatedPlugins(all, p) : []), [all, p]);
+  const pluginTopics = useMemo(
+    () => (p ? activeTopics(all).filter(({ topic }) => matchesTopic(p, topic)) : []),
+    [all, p],
+  );
   const headerDl = useMemo(() => (p ? ([10, 9, 8, 7].map((v) => pickDownload(p, v)).find(Boolean) ?? null) : null), [p]);
   const siteStats = useSiteDownloads();
   const site = p ? siteDownloadsOf(siteStats, p.id, p.siteDl?.total) : null;
@@ -553,6 +557,14 @@ export function PluginDetail() {
           <p className="detail-summary">{p.summary}</p>
           {p.tags && p.tags.length > 0 && (
             <p className="card-tags">{p.tags.map((t) => <span key={t} className="tag">{CATEGORY_LABEL[t]}</span>)}</p>
+          )}
+          {pluginTopics.length > 0 && (
+            <>
+              <h2>所属功能专题</h2>
+              <nav className="chips" aria-label="所属功能专题">
+                {pluginTopics.map(({ topic, count }) => <Link key={topic.key} to={topicPath(topic.key)} className="chip">{topic.label}({count} 款)</Link>)}
+              </nav>
+            </>
           )}
           {related.length > 0 && (
             <>

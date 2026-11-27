@@ -4,7 +4,7 @@ import { PageHero } from "../pageHero.tsx";
 import { PluginCard, PluginIndex, usePluginData } from "./PluginsPage.tsx";
 import { CATEGORIES, sortPlugins } from "./lib.ts";
 import { applyMeta } from "../seo/head.ts";
-import { categoryIntro, categoryMeta } from "../seo/pages.ts";
+import { categoryIntro, categoryMeta, categoryPath } from "../seo/pages.ts";
 import { currentPath, useNow } from "../ssr.ts";
 
 const SHOWN = 24;
@@ -17,6 +17,10 @@ export function CategoryPage() {
   const all = loaded.state === "ready" ? loaded.data.plugins : [];
   const meta = useMemo(() => categoryMeta(key, all), [key, all]);
   const list = useMemo(() => sortPlugins(all.filter((p) => p.category === key), "stars"), [all, key]);
+  const others = useMemo(
+    () => CATEGORIES.filter((c) => c.key !== key).map((c) => ({ ...c, n: all.filter((p) => p.category === c.key).length })).filter((c) => c.n > 0),
+    [all, key],
+  );
 
   // 标题里的数量要等数据到了才算得准
   useEffect(() => {
@@ -26,6 +30,13 @@ export function CategoryPage() {
   if (!meta || !cat) return null;
   return (
     <section className="section">
+      <nav aria-label="面包屑" className="crumbs">
+        <Link to="/">首页</Link>
+        <span aria-hidden> › </span>
+        <Link to="/plugins">插件广场</Link>
+        <span aria-hidden> › </span>
+        <span aria-current="page">{meta.h1}</span>
+      </nav>
       <PageHero kind="hero" title={meta.h1} lead={categoryIntro(key)}>
         <Link to="/plugins" className="inline-link hero-link">← 返回插件广场</Link>
       </PageHero>
@@ -39,6 +50,14 @@ export function CategoryPage() {
             <p className="more-wrap"><Link to={`/plugins?cat=${key}`} className="btn btn-ghost">查看全部 {list.length} 款并筛选</Link></p>
           )}
           <PluginIndex list={list.slice(SHOWN)} label={`按名称浏览本分类其余 ${list.length - SHOWN} 款插件`} />
+          {others.length > 0 && (
+            <>
+              <h2>其他插件分类</h2>
+              <nav className="chips" aria-label="其他插件分类">
+                {others.map((c) => <Link key={c.key} to={categoryPath(c.key)} className="chip">{c.label}({c.n})</Link>)}
+              </nav>
+            </>
+          )}
           <p className="data-note">分类仅按主要用途归类,一个插件只归一个主分类。数据整理自各项目公开信息,收录不代表安全性或质量背书,详见<Link to="/rules" className="inline-link">收录规则</Link>。</p>
         </>
       )}

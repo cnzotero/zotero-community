@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "../link.tsx";
 import { PageHero } from "../pageHero.tsx";
 import { pageMeta } from "../seo/pages.ts";
+import { JOURNALS_FAQS } from "../seo/faqs.ts";
 import { currentSearch } from "../ssr.ts";
 import {
   casLabel, chineseLabel, formatIssn, hasAnyData, metric, queryOk, summaryBadges, versionLabel,
@@ -138,6 +139,21 @@ export function JournalsPage() {
           </div>
         </div>
       )}
+      <section className="section prose" aria-labelledby="journals-guide-title">
+        <h2 id="journals-guide-title">支持查询的指标与榜单</h2>
+        <ul>
+          <li><b>国际引文与分区：</b>影响因子（IF）、五年影响因子、JCI、JCR 分区与学科排名、中科院分区（升级版与基础版及 Top 标识）、SCIE / SSCI / EI 收录情况。</li>
+          <li><b>学科与中文核心榜单：</b>CCF 推荐目录、AJG、FT50、UTD24，以及北大核心、CSSCI、CSCD 等中文核心收录信息。</li>
+          <li><b>想在 Zotero 文献列表里直接显示分区列？</b>可参考<Link to="/guides/zotero-journal-ranking-column" className="inline-link">Zotero 文献列表显示期刊分区与影响因子指南</Link>，或在<Link to="/topics/journal" className="inline-link">期刊分区与影响因子插件专题</Link>按需筛选插件。</li>
+        </ul>
+        <h2>常见问题</h2>
+        {JOURNALS_FAQS.map((item) => (
+          <div key={item.q}>
+            <h3>{item.q}</h3>
+            <p>{item.a}</p>
+          </div>
+        ))}
+      </section>
       <p className="data-note">
         每次最多显示 20 条结果。指标均来自同一数据版本,没有数据的项显示「暂无」,不推算、不编造。详见<Link to="/rules" className="inline-link">使用规则</Link>。
       </p>
