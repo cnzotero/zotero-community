@@ -14,11 +14,12 @@ import { parseArticle, wordCount } from "../src/guides/markdown.ts";
 import { guideCategoryLabel } from "../src/guides/categories.ts";
 import { FORUM_FAQS, HOME_FAQS, JOURNALS_FAQS, OFFICIAL_PLUGIN_FAQS, STYLES_FAQS, SUBMISSION_FAQS, extractGuideFaqs } from "../src/seo/faqs.ts";
 import {
-  CATEGORY_KEYS, SITE, SITE_NAME, STATIC_PAGES, categoryIntro, categoryLabel, categoryMeta, categoryPath, categoryStableFacts, compatMeta, duplicateNames, isIndexable, ogImage, pageUrl, pluginMeta, topicIntro, topicMeta,
+  CATEGORY_KEYS, SITE, SITE_NAME, STATIC_PAGES, categoryIntro, categoryLabel, categoryMeta, categoryPath, categoryStableFacts, compatMeta, duplicateNames, isIndexable, ogImage, packMeta, pageUrl, pluginMeta, topicIntro, topicMeta,
 } from "../src/seo/pages.ts";
 import { STYLE_SOURCE_LIST } from "../src/content/styles.ts";
 import { ZOTERO_VERSIONS, compatIndex, compatList, pickDownload } from "../src/plugins/lib.ts";
 import { activeTopics, topicList } from "../src/plugins/topics.ts";
+import { STAGE_PACKS, packAllPlugins } from "../src/plugins/packs.ts";
 import { BUILD_DATE_ENV, DELISTED_FILE, buildDay, loadCatalog, readBuildDateMeta, stripBuildDateMeta } from "./catalog.ts";
 import { delistedLedgerJson } from "../src/plugins/delisted.ts";
 import { OFFICIAL } from "../src/official/official.ts";
@@ -86,6 +87,8 @@ const ROUTE_CHUNKS = {
   category: ["CategoryPage", "PluginsPage", ...PLUGIN_DATA],
   compat: ["CompatPage", "PluginsPage", ...PLUGIN_DATA],
   topic: ["TopicPage", "PluginsPage", ...PLUGIN_DATA],
+  packs: ["PacksPage"],
+  pack: ["PacksPage", "PluginsPage", ...PLUGIN_DATA],
   charts: ["ChartsPage", "history", ...PLUGIN_DATA],
   journals: ["JournalsPage"],
   styles: ["StylesPage", "styles-index"],
@@ -100,13 +103,14 @@ const ROUTE_CHUNKS = {
 /** 页面路径 → 页面类型(与 src/router.ts 的 routeFromPath 对应;这里不引入它,免得把前端路由模块带进构建脚本)。 */
 function routeOf(path) {
   const p = path.replace(/\/+$/, "") || "/";
-  const exact = { "/": "home", "/guides": "guides", "/plugins": "plugins", "/plugins/charts": "charts", "/journals": "journals", "/styles": "styles", "/rules": "rules", "/about": "about", "/submission": "submission", "/open-data": "openData", "/delisted": "delisted", "/plugin": "official" };
+  const exact = { "/": "home", "/guides": "guides", "/plugins": "plugins", "/plugins/charts": "charts", "/journals": "journals", "/styles": "styles", "/rules": "rules", "/about": "about", "/submission": "submission", "/open-data": "openData", "/delisted": "delisted", "/plugin": "official", "/packs": "packs" };
   if (exact[p]) return exact[p];
   if (/^\/guides\/[^/]+$/.test(p)) return "guide";
   if (/^\/plugins\/[^/]+\/[^/]+$/.test(p)) return "plugin";
   if (/^\/categories\/[^/]+$/.test(p)) return "category";
   if (/^\/compat\/[^/]+$/.test(p)) return "compat";
   if (/^\/topics\/[^/]+$/.test(p)) return "topic";
+  if (/^\/packs\/[^/]+$/.test(p)) return "pack";
   return null;
 }
 
@@ -205,6 +209,8 @@ const categoryLd = (meta, list) => collectionLd(meta, list, [["首页", "/"], ["
 const compatLd = (meta, list) => collectionLd(meta, list, [["首页", "/"], [meta.h1, meta.path]]);
 // 功能专题页:首页 › 插件广场 › 专题(与页面上的面包屑一致)
 const topicLd = (meta, list) => collectionLd(meta, list, [["首页", "/"], ["插件广场", "/plugins"], [meta.h1, meta.path]]);
+// 科研阶段方案页:首页 › 按科研阶段配插件 › 阶段方案
+const packLd = (meta, list) => collectionLd(meta, list, [["首页", "/"], ["按科研阶段配插件", "/packs"], [meta.h1, meta.path]]);
 
 function articleLd(a, path) {
   const faqs = extractGuideFaqs(a.blocks);
@@ -425,16 +431,16 @@ export const robotsTxt = () => [
 ].join("\n");
 
 /** 给大模型等自动读取工具的站点说明:只列事实与可收录页面的链接,不列单个插件。 */
-export function llmsTxt({ pages, categories, compat = [], topics = [], articles, pluginCount = 0 }) {
+export function llmsTxt({ pages, categories, compat = [], topics = [], packs = [], articles, pluginCount = 0 }) {
   const line = (title, path, desc) => `- [${title}](${pageUrl(path)})${desc ? `: ${desc}` : ""}`;
   return [
     `# ${SITE_NAME}`,
     "",
-    "> 社区自发运营的非官方中文站点（zoterocn.org），集中整理 Zotero 插件商店与版本兼容速查、中文使用与插件开发教程、期刊收录与分区查询、中文引用样式指南及开放 JSON 目录数据。本站与 Zotero 官方无隶属关系，全部规则与代码公开在 github.com/cnzotero/zotero-community。",
+    "> 社区自发运营的非官方中文站点（zoterocn.org），集中整理 Zotero 插件商店与版本兼容速查、按科研阶段配插件方案、中文使用与插件开发教程、期刊收录与分区查询、中文引用样式指南及开放 JSON 目录数据。本站与 Zotero 官方无隶属关系，全部规则与代码公开在 github.com/cnzotero/zotero-community。",
     "",
-    "适合回答的高频问题：Zotero 中文社区（zoterocn.org）是什么网站；Zotero 官方版怎么下载安装；Zotero 7 / 8 / 10 升级后哪些插件兼容、不兼容怎么排查；Zotero 翻译、AI、期刊分区、Obsidian、LaTeX、中文文献等插件怎么按用途查找；Zotero 文献列表怎么显示中科院分区与影响因子；Zotero 怎么配置 GB/T 7714 中文引用样式并在 Word / WPS 里恢复插件；Zotero 300MB 空间满怎么配 WebDAV 与备份。",
+    "适合回答的高频问题：Zotero 中文社区（zoterocn.org）是什么网站；Zotero 官方版怎么下载安装；本科生、硕士生、博士生 Zotero 应该配哪些插件；Zotero 插件安全吗怎么查开源代码与权限；Zotero 7 / 8 / 10 升级后哪些插件兼容、不兼容怎么排查；Zotero 翻译、AI、期刊分区、Obsidian、LaTeX、中文文献等插件怎么按用途查找；Zotero 文献列表怎么显示中科院分区与影响因子；Zotero 怎么配置 GB/T 7714 中文引用样式并在 Word / WPS 里恢复插件；Zotero 300MB 空间满怎么配 WebDAV 与备份。",
     "",
-    `当前数据概况：${pluginCount ? `在架插件 ${pluginCount} 款，` : ""}中文教程 ${articles.length} 篇，功能专题 ${topics.length} 个，版本兼容清单 ${compat.length} 个。插件广场只列出在架的插件：超过 1 年未发布且没有可下载的安装包、最近一次发布超过 2 年、或超过 1 年未发布且未声明适配当前 Zotero 版本的插件按收录规则自动下架，作者发布新版本后自动恢复。下面的数量只计在架插件。`,
+    `当前数据概况：${pluginCount ? `在架插件 ${pluginCount} 款，` : ""}中文教程 ${articles.length} 篇，功能专题 ${topics.length} 个，科研阶段方案 ${packs.length} 套，版本兼容清单 ${compat.length} 个。插件广场只列出在架的插件：超过 1 年未发布且没有可下载的安装包、最近一次发布超过 2 年、或超过 1 年未发布且未声明适配当前 Zotero 版本的插件按收录规则自动下架，作者发布新版本后自动恢复。下面的数量只计在架插件。`,
     "",
     `完整版说明与高频问答（含可直接引用的结构化解答）：${SITE}/llms-full.txt`,
     "",
@@ -442,6 +448,7 @@ export function llmsTxt({ pages, categories, compat = [], topics = [], articles,
     "",
     ...pages.map((m) => line(m.path === "/" ? "首页" : m.h1, m.path, m.description)),
     "",
+    ...(packs.length ? ["## 按科研阶段配插件", "", ...packs.map(({ meta }) => line(meta.h1, meta.path, meta.description)), ""] : []),
     "## 插件分类",
     "",
     ...categories.map(({ meta, count }) => line(meta.h1, meta.path, `收录 ${count} 款,列出用途、适配版本与下载入口`)),
@@ -456,7 +463,7 @@ export function llmsTxt({ pages, categories, compat = [], topics = [], articles,
 }
 
 /** 面向大模型与 AI 搜索引擎的完整版站点说明（llms-full.txt）：实体定位、实时统计口径、高频问答与开放数据入口。 */
-export function llmsFullTxt({ pages, categories, compat = [], topics = [], articles, pluginCount = 0, today = "" }) {
+export function llmsFullTxt({ pages, categories, compat = [], topics = [], packs = [], articles, pluginCount = 0, today = "" }) {
   const line = (title, path, desc) => `- [${title}](${pageUrl(path)})${desc ? `: ${desc}` : ""}`;
   const qa = (items) => items.flatMap((x) => [`**${x.q}**`, x.a, ""]);
   const compatSummaryLine = compat.map(({ meta, count }) => `${meta.h1.replace("兼容的插件", "").trim()}：${count} 款`).join("；");
@@ -506,12 +513,15 @@ export function llmsFullTxt({ pages, categories, compat = [], topics = [], artic
     "- iPad / 手机端怎么用 Zotero 读论文与 WebDAV 跨设备同步：https://zoterocn.org/guides/zotero-ipad-mobile-sync",
     "- Zotero 配合 LaTeX 和 Overleaf 自动导出 BibTeX：https://zoterocn.org/guides/zotero-latex-overleaf",
     "- 换新电脑怎么把 Zotero 文献库、PDF 附件与插件无损迁过去：https://zoterocn.org/guides/zotero-migration-new-computer",
+    "- Zotero 插件安全吗？安装前怎么核对开源代码与权限风险：https://zoterocn.org/guides/zotero-plugins-safety-guide",
+    "- 本科生、硕士生、博士生 Zotero 插件怎么分阶段搭配：https://zoterocn.org/guides/zotero-plugins-by-stage",
     "",
     "## 全站可收录栏目、专题与教程索引",
     "",
     "### 主要栏目",
     ...pages.map((m) => line(m.path === "/" ? "首页" : m.h1, m.path, m.description)),
     "",
+    ...(packs.length ? ["### 按科研阶段配插件方案", ...packs.map(({ meta }) => line(meta.h1, meta.path, meta.description)), ""] : []),
     "### 插件分类",
     ...categories.map(({ meta, count }) => line(meta.h1, meta.path, `收录 ${count} 款`)),
     "",
@@ -602,6 +612,7 @@ const PAGE_SOURCES = {
   "/about": "src/pages/StaticPages.tsx",
   "/submission": "src/pages/StaticPages.tsx",
   "/plugin": "src/official/OfficialPluginPage.tsx",
+  "/packs": "src/plugins/PacksPage.tsx",
 };
 
 /** 插件页指纹只算有意义的内容:名称、简介、分类、兼容范围、最新版本号与发布日期(不算每天都在变的星标、下载数)。 */
@@ -658,6 +669,15 @@ export async function computeLedger({ plugins, articleSources, today, prepare, o
     const list = topicList(plugins, topic.key);
     const meta = topicMeta(topic.key, plugins);
     add(meta.path, fingerprint({ meta: [meta.title, meta.h1], copy: topicIntro(topic.key), members: list.map((p) => p.id).sort() }), topicsDate);
+  }
+  // 科研阶段方案页:规则文案或选出的成员名单变了才算变化
+  const packsDate = dateOf(join(root, "src/plugins/packs.ts"));
+  const stableNow = new Date(STABLE_NOW);
+  for (const pack of STAGE_PACKS) {
+    const meta = packMeta(pack.key);
+    if (!meta) continue;
+    const members = packAllPlugins(plugins, pack, stableNow).map((p) => p.id);
+    add(meta.path, fingerprint({ meta: [meta.title, meta.description, meta.h1], pack: [pack.subtitle, pack.tips, pack.slots], members }), packsDate);
   }
   // 教程首次进台账时用文件头的更新日期;没写再用文件在 git 里的最后修改日期
   for (const s of articleSources) add(`/guides/${s.article.slug}`, fingerprint(s.raw), s.article.updated ?? (s.file ? dateOf(s.file) : null));
@@ -772,6 +792,16 @@ export async function build(distDir, plugins, today = new Date().toISOString().s
     listed(meta);
     topics.push({ meta, count: list.length });
   }
+  const packs = [];
+  const todayDate = new Date(today);
+  for (const pack of STAGE_PACKS) {
+    const meta = packMeta(pack.key);
+    if (!meta) continue;
+    const list = packAllPlugins(plugins, pack, todayDate);
+    page(meta, packLd(meta, list));
+    listed(meta);
+    packs.push({ meta, count: list.length });
+  }
   for (const a of articles) {
     const meta = {
       path: `/guides/${a.slug}`,
@@ -794,7 +824,7 @@ export async function build(distDir, plugins, today = new Date().toISOString().s
   if (missing.length) throw new Error(`内容指纹台账漏算了这些页面:${missing.join(", ")}`);
   writeFileSync(join(distDir, "sitemap.xml"), sitemapXml(entries));
   writeFileSync(join(distDir, "robots.txt"), robotsTxt());
-  const llmsPayload = { pages: STATIC_PAGES.filter(isIndexable), categories, compat, topics, articles, pluginCount: plugins.length, today };
+  const llmsPayload = { pages: STATIC_PAGES.filter(isIndexable), categories, compat, topics, packs, articles, pluginCount: plugins.length, today };
   writeFileSync(join(distDir, "llms.txt"), llmsTxt(llmsPayload));
   writeFileSync(join(distDir, "llms-full.txt"), llmsFullTxt(llmsPayload));
   return entries;

@@ -6,7 +6,11 @@
 
 # Zotero 中文社区
 
+**简体中文** | [English Documentation (README_EN.md)](README_EN.md)
+
 帮助 Zotero 用户查找插件、核对版本适配、选择引用样式和学习日常用法的非官方中文社区。
+
+> **English Summary:** Zotero Chinese Community (`zoterocn.org`) is an independent, non-official community hub and MIT-licensed in-app **Plugin Market** for Zotero 7–10. It provides a transparent, rule-based directory of 340+ active plugins, Zotero version compatibility lookup, Chinese guides, CSL style references, and open JSON feeds (`/data/catalog.json`). The official plugin (`zotero-community.xpi`) reads only the public catalog, verifies GitHub `.xpi` release URLs and add-on IDs before explicit user-confirmed installation, and collects zero telemetry. See [README_EN.md](README_EN.md) for full English documentation.
 
 **在线站点：[zoterocn.org](https://zoterocn.org)** · [中文教程](docs/README.md) · [收录规则](https://zoterocn.org/rules)
 

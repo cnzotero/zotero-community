@@ -1,6 +1,8 @@
-# Zotero中文社区 · 插件市场
+# Zotero中文社区 · 插件市场 (Zotero Chinese Community Plugin Market)
 
 Zotero 中文社区(<https://zoterocn.org>)的官方 Zotero 插件:在 Zotero 里浏览、搜索、安装与更新本站插件广场收录的插件。
+
+> **English Summary:** An open-source (MIT) in-app Plugin Market for Zotero 7–10 by Zotero Chinese Community (`zoterocn.org`). Browse and search 340+ active plugins by category or Zotero version compatibility, verify the plugin name, version, and GitHub release URL in an explicit confirmation dialog before installing or updating, with strict `github.com` `.xpi` allowlist checks, add-on ID verification, and zero telemetry. Full English overview: [../README_EN.md](../README_EN.md).
 
 - 插件标识:`zotero-community@zoterocn.org`
 - 适配:Zotero 7 至 10(`strict_min_version` 为 `7.0`,`strict_max_version` 为 `10.*`)。上限写到当前已发布的最新大版本为止:Zotero 每个大版本都可能改动插件接口,未验证的版本不提前声明;新的大版本发布并验证后,发布新版本把上限提高即可。

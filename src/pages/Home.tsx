@@ -9,7 +9,8 @@ import { ARTICLES, articlePath } from "../guides/content.ts";
 import { serverCompatIndex, serverHomeBoards, serverTopicIndex } from "../plugins/data.ts";
 import { PluginCard } from "../plugins/PluginsPage.tsx";
 import { CATEGORIES, HOME_BOARD_VISIBLE, SITE_DL_RANK_NOTE, type HomeBoardKey } from "../plugins/lib.ts";
-import { COMPAT_SCOPE, categoryPath, compatPath, pageMeta, topicPath } from "../seo/pages.ts";
+import { STAGE_PACKS } from "../plugins/packs.ts";
+import { COMPAT_SCOPE, categoryPath, compatPath, packPath, pageMeta, topicPath } from "../seo/pages.ts";
 import { HOME_FAQS } from "../seo/faqs.ts";
 import { takeEarlyInput, useNow } from "../ssr.ts";
 import { OfficialBox } from "../official/OfficialBox.tsx";
@@ -121,6 +122,22 @@ export function Home() {
           <p className="meta home-note">{COMPAT_SCOPE}</p>
         </section>
       )}
+
+      <section className="section">
+        <div className="section-head">
+          <h2>按科研阶段配插件</h2>
+          <Link to="/packs" className="more">查看全部搭配方案</Link>
+        </div>
+        <div className="pack-cards-grid home-pack-grid">
+          {STAGE_PACKS.map((pack) => (
+            <Link key={pack.key} to={packPath(pack.key)} className="card pack-card pack-card-sm">
+              <span className="pack-audience">{pack.audience}</span>
+              <h3>{pack.label}</h3>
+              <p>{pack.subtitle}</p>
+            </Link>
+          ))}
+        </div>
+      </section>
 
       <section className="section">
         <div className="section-head">

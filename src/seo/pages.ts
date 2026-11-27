@@ -3,6 +3,7 @@
 import { CATEGORIES, authorOf, cadenceText, compatSummary, downloadsText, formatStars, groupFacts, type Plugin } from "../plugins/lib.ts";
 
 import { topicList, topicOf } from "../plugins/topics.ts";
+import { packOf } from "../plugins/packs.ts";
 import categoryCopy from "../content/category-copy.json" with { type: "json" };
 
 export const SITE = "https://zoterocn.org";
@@ -10,7 +11,7 @@ export const SITE_NAME = "Zotero 中文社区";
 export const OG_IMAGE = `${SITE}/images/plugins/og-plugins.png`;
 
 /** 页面类型:决定分享图等按类型区分的设置。 */
-export type PageKind = "home" | "section" | "plugin" | "category" | "compat" | "topic" | "guide" | "notfound";
+export type PageKind = "home" | "section" | "plugin" | "category" | "compat" | "topic" | "pack" | "guide" | "notfound";
 
 /**
  * 各类页面的分享图(og:image)。目前只有一张通用图,全部回退到它;
@@ -50,6 +51,7 @@ export const STATIC_PAGES: PageMeta[] = ([
   { path: "/open-data", title: "开放数据｜插件目录与引用样式的 JSON 格式说明", description: "本站公开的机器可读文件：插件目录 /data/catalog.json 与中文引用样式一览 /data/styles.json。逐字段说明类型、含义与来源，附示例请求、更新方式和字段只增不改的兼容承诺。", h1: "开放数据" },
   { path: "/delisted", title: "已下架插件与原因｜Zotero 中文社区", description: "已下架插件名单,列出每个插件的下架原因、最近一次发布日期与下架日期。自动下架与社区管理下架分别按相应条件恢复。", h1: "已下架插件与原因", indexable: false },
   { path: "/plugin", title: "Zotero中文社区插件｜在 Zotero 里安装与更新插件", description: "本社区维护的 Zotero 插件:在 Zotero 里浏览、搜索本站收录的插件,核对来源后安装或更新。适配 Zotero 7–10,开源免费,附安装步骤与常见问题。", h1: "Zotero中文社区插件" },
+  { path: "/packs", title: "按科研阶段配 Zotero 插件｜本科生、硕士、博士与科研教师精选组合", description: "按本科毕业论文、硕士开题综述、博士 SCI 投稿与科研教师四个阶段，依据统一公开适配与活跃规则自动生成精简 Zotero 插件组合方案。", h1: "按科研阶段配插件" },
   { path: "/about", title: "关于本站｜Zotero 中文社区", description: "了解 Zotero 中文社区的用途与参与方式。本站由社区自发运营，提供插件信息、中文教程及期刊查询，与 Zotero 官方无隶属关系。", h1: "关于 Zotero 中文社区" },
 ] as PageMeta[]).map((m): PageMeta => ({ kind: "section", ...m }));
 
@@ -170,5 +172,21 @@ export function topicMeta(key: string, plugins: Plugin[]): PageMeta | null {
     description: `${facts}。按插件名称或简介里的用途词收录,逐一列出用途简介、适配版本与下载入口,按 GitHub 星标排序。`,
     h1: name,
     kind: "topic",
+  };
+}
+
+// ---------- 按科研阶段配插件页 ----------
+
+export const packPath = (key: string): string => `/packs/${key}`;
+
+export function packMeta(key: string): PageMeta | null {
+  const p = packOf(key);
+  if (!p) return null;
+  return {
+    path: packPath(key),
+    title: `${p.label} Zotero 插件搭配方案｜${SITE_NAME}`,
+    description: p.description,
+    h1: `${p.label} Zotero 插件搭配`,
+    kind: "pack",
   };
 }

@@ -1029,3 +1029,55 @@ main.container > article.prose:not(.article-paper) {
   main.container > article.prose:not(.article-paper) { padding: 20px 18px 24px; border-radius: 14px; }
 }
 
+/* 按科研阶段配插件(/packs & 首页入口) */
+.pack-cards-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin: 10px 0 14px; }
+.pack-card { padding: 18px 20px; gap: 8px; }
+.pack-card h2 { margin: 0; font-size: 18px; color: var(--ink); }
+.pack-card h3 { margin: 0; font-size: 16px; color: var(--ink); }
+.pack-card p { margin: 0; font-size: 13.5px; line-height: 1.65; color: var(--ink-soft); }
+.pack-audience {
+  align-self: flex-start;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.pack-slot-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.pack-tips { padding: 18px 22px; margin: 12px 0 18px; }
+.pack-tips h2 { margin: 0 0 8px; font-size: 17px; }
+.pack-slot { margin: 24px 0; }
+.pack-slot-why { margin: 0 0 12px; font-size: 13.5px; color: var(--muted); }
+@media (max-width: 1020px) { .pack-cards-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .pack-cards-grid { grid-template-columns: 1fr; } }
+
+/* 插件详情页 Zotero 各版本兼容明细矩阵 */
+.compat-matrix {
+  margin: 12px 0 18px;
+  padding: 16px 18px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow-xs);
+}
+.compat-matrix h2 { margin: 0 0 12px; font-size: 17px; }
+.compat-matrix-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 10px; }
+.compat-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--mist);
+}
+.compat-cell-ok { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 32%, var(--line)); }
+.compat-ver { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 14px; color: var(--ink); }
+.compat-cur { font-size: 11px; font-weight: 600; padding: 1px 6px; border-radius: 999px; background: var(--accent); color: var(--on-accent); }
+.compat-state { font-size: 12.5px; color: var(--muted); }
+.compat-state.is-ok { color: #166534; font-weight: 600; }
+@media (prefers-color-scheme: dark) { .compat-state.is-ok { color: #86efac; } }
+@media (max-width: 720px) { .compat-matrix-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+

@@ -481,4 +481,10 @@ test("SEO/GEO 全面增强:llms-full.txt、FAQPage/Dataset 结构化数据、art
   for (const bot of ["Baiduspider", "Bytespider", "Bingbot", "Googlebot", "OAI-SearchBot", "PerplexityBot"]) {
     assert.ok(robots.includes(`User-agent: ${bot}`), `robots.txt 缺少 ${bot}`);
   }
+
+  // 按科研阶段配插件页(/packs 及 4 个阶段)与插件详情页版本兼容矩阵
+  assert.ok(read(dir, "/packs").includes("/packs/phd"));
+  const phdHtml = read(dir, "/packs/phd");
+  assert.ok(jsonLd(phdHtml).some((j) => j["@type"] === "CollectionPage"));
+  assert.match(read(dir, "/plugins/a/evil"), /Zotero 版本兼容明细/);
 });
