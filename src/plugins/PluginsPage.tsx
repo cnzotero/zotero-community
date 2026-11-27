@@ -557,6 +557,24 @@ export function PluginDetail() {
             <div><dt>更新速度</dt><dd>{speedText(p) ?? "暂无"}</dd></div>
             <div><dt>近一年发布</dt><dd>{p.cadence ? `${p.cadence.r12}${p.cadence.capped ? "+" : ""} 次` : "暂无"}</dd></div>
           </dl>
+          <section className="compat-matrix" aria-labelledby="compat-matrix-title">
+            <h2 id="compat-matrix-title">Zotero 版本兼容明细</h2>
+            <div className="compat-matrix-grid">
+              {[...ZV].reverse().map((v) => {
+                const ok = p.zotero.declared && p.zotero.majors.includes(v);
+                return (
+                  <div key={v} className={ok ? "compat-cell compat-cell-ok" : "compat-cell"}>
+                    <span className="compat-ver">
+                      {ok ? <Link to={compatPath(v)} className="inline-link">Zotero {v}</Link> : `Zotero ${v}`}
+                      {v === Math.max(...ZV) ? <small className="compat-cur">当前</small> : null}
+                    </span>
+                    <span className={ok ? "compat-state is-ok" : "compat-state"}>{ok ? "✓ 已声明适配" : "未声明"}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="meta">按作者在公开发布说明中声明的范围展示，未声明不等于不兼容；升级主版本前建议查阅<Link to="/guides/zotero-upgrade-plugin-incompatible" className="inline-link">升级兼容排查指南</Link>。</p>
+          </section>
           <DownloadBox p={p} />
           <CadenceChart p={p} now={now} />
           <h2>简介</h2>

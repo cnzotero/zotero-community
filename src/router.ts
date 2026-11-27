@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
+import { PACK_KEYS } from "./plugins/packs.ts";
 import { TOPIC_KEYS } from "./plugins/topics.ts";
 import { currentPath } from "./ssr.ts";
 import { prefetch, waitUpTo } from "./prefetch.ts";
 
 const CATEGORY_SET = new Set(["ai", "reading", "metadata", "interface", "attachment", "integration", "notes", "utility", "writing", "visualization"]);
 
-export type Route = "home" | "guides" | "plugins" | "plugin" | "official" | "journals" | "submission" | "styles" | "forum" | "rules" | "openData" | "about" | "charts" | "guide" | "category" | "compat" | "topic" | "delisted" | "notfound";
+export type Route = "home" | "guides" | "plugins" | "plugin" | "official" | "journals" | "submission" | "styles" | "forum" | "rules" | "openData" | "about" | "charts" | "guide" | "category" | "compat" | "topic" | "packs" | "pack" | "delisted" | "notfound";
 
 export const ROUTES: { route: Route; path: string; label: string; footer?: boolean }[] = [
   { route: "home", path: "/", label: "首页" },
@@ -25,6 +26,7 @@ export const ROUTES: { route: Route; path: string; label: string; footer?: boole
 export const UNLISTED_ROUTES: { route: Route; path: string }[] = [
   { route: "delisted", path: "/delisted" },
   { route: "official", path: "/plugin" },
+  { route: "packs", path: "/packs" },
 ];
 
 /** 栏目页的路径(用来取页面标题等元信息);详情类页面返回 null。 */
@@ -39,6 +41,8 @@ export function routeFromPath(pathname: string): Route {
   if (/^\/compat\/zotero-\d+$/.test(clean)) return "compat";
   const topic = /^\/topics\/([a-z0-9-]+)$/.exec(clean);
   if (topic) return TOPIC_KEYS.includes(topic[1]) ? "topic" : "notfound";
+  const pack = /^\/packs\/([a-z0-9-]+)$/.exec(clean);
+  if (pack) return PACK_KEYS.includes(pack[1]) ? "pack" : "notfound";
   // 站内没有的路径一律是 404;服务器对这些路径也返回真正的 404 状态码
   return [...ROUTES, ...UNLISTED_ROUTES].find((r) => r.path === clean)?.route ?? "notfound";
 }
